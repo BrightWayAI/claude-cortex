@@ -33,6 +33,18 @@ If node is ambiguous or missing, infer from conversation context or ask.
 
 ## Step 2 — Write
 
+### Storage Location
+
+1. Determine the node file path from the node ID:
+   - If node has a prefix (e.g., `client:acme-corp`): `~/Documents/Claude/memory/{prefix}/{slug}.md`
+   - If no prefix (e.g., `hiring`): `~/Documents/Claude/memory/{node-id}.md`
+2. Read the node file if it exists
+3. Prepend the LOG entry to the Changelog section (newest first)
+4. If the node file doesn't exist, create it with the standard node file template
+5. If the directory doesn't exist, create it
+6. Update `~/Documents/Claude/memory/DASHBOARD.md` "Last updated" timestamp
+7. Only update the dashboard summary if the note represents a significant state change
+
 Append a lightweight LOG entry:
 
 ```

@@ -28,6 +28,15 @@ Cross-project, cross-type search across all working memory.
 
 ## Step 2 — Search memory
 
+### How to Search
+
+1. Read `~/Documents/Claude/memory/DASHBOARD.md` to get the list of all nodes
+2. For each active/warm node, read the node file and search for entries matching the query
+3. Use the entry type headers (## Knowledge, ### Models, ### Gotchas, etc.) to quickly navigate to relevant sections
+4. For person queries, search the ## People section of each node file
+5. For action/blocker queries, search ## Next Actions and ## Open Threads sections
+6. Compile and deduplicate results across all nodes
+
 Search all entry types: SUMMARY, LOG, INSIGHT, LESSON, MODEL, GOTCHA, RECIPE, CORRECTION, PEOPLE, SIGNAL.
 
 Note per match: node, entry type, date, relevant snippet.

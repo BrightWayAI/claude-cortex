@@ -49,6 +49,20 @@ If the user provides just natural language (e.g. `/learn that the API rate limit
 
 ## Step 3 — Write to memory
 
+### Storage Location
+
+1. Determine the node file path from the node ID:
+   - If node has a prefix (e.g., `client:acme-corp`): `~/Documents/Claude/memory/{prefix}/{slug}.md`
+   - If no prefix (e.g., `hiring`): `~/Documents/Claude/memory/{node-id}.md`
+2. Read the node file if it exists
+3. Append the knowledge entry to the appropriate section (Models, Gotchas, Lessons, etc.)
+4. If the node file doesn't exist, create it with just a Knowledge section using the standard node file template
+5. If the directory doesn't exist, create it
+6. Update `~/Documents/Claude/memory/DASHBOARD.md`:
+   - Add/update the node's summary in Active Nodes (if this is a new node)
+   - Add the entry to Recent Knowledge
+   - If the entry is a GOTCHA that applies broadly, also add to Global Gotchas
+
 Write a single knowledge entry:
 
 ```

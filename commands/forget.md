@@ -66,6 +66,14 @@ Wait for confirmation before modifying memory.
 
 ## Step 4 — Execute and report
 
+### File Operations
+
+Memory is stored in `~/Documents/Claude/memory/`.
+
+- **Archive** (default): Move the node file from its current location to `memory/archive/{filename}`. Remove the node's entry from DASHBOARD.md Active Nodes. Add a one-line entry to the Dormant or a new "Archived" section in DASHBOARD.md.
+- **Merge**: Read both node files. Append source's changelog, knowledge, and people entries to the target file. Delete the source file. Update DASHBOARD.md.
+- **Delete**: Remove the node file entirely. Remove from DASHBOARD.md.
+
 After execution, confirm what was done:
 - For archive: "Archived [node-id]. It's searchable but won't appear in dashboards."
 - For merge: "Merged [source] into [target]. Updated [target]'s summary."

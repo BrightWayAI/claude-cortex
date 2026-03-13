@@ -1,4 +1,4 @@
-# Session Memory Plugin v2.2
+# Session Memory Plugin v3.0
 
 **Build persistent intelligence — project state AND knowledge — across your working world.**
 
@@ -189,16 +189,57 @@ All commands also exist as skills that trigger from natural language:
 
 ---
 
-## Installation
+## How Memory is Stored
 
+Memory lives on your computer at `~/Documents/Claude/memory/`. The plugin creates and manages this folder automatically.
+
+```
+~/Documents/Claude/memory/
+├── DASHBOARD.md          ← Master index — one living summary per node, P0 list, recent knowledge
+├── archive/              ← Archived nodes get moved here
+├── client/
+│   ├── acme-corp.md      ← One file per node
+│   └── northstar.md
+├── bizdev/
+│   └── partnerships.md
+├── strategy/
+│   └── q2-growth.md
+├── hiring.md             ← Nodes without a prefix go in the root
+└── brand.md
+```
+
+Subdirectories are created dynamically from node prefixes. Any prefix is valid — use whatever fits your work.
+
+---
+
+## Setup
+
+### Cowork (Claude Desktop)
 1. Download the plugin zip
 2. Claude Desktop → Cowork tab → Customize → Upload custom plugin
 3. Select `session-memory-plugin.zip`
-4. Start with `/recall` or `/remember`
+4. When prompted, give access to your `~/Documents/Claude` folder
+5. Start with `/recall` or `/remember`
+
+### Claude Code
+Memory files are read/written directly since Claude Code has filesystem access. Add the memory path to your project's allowed directories if needed.
+
+### Chat
+Memory doesn't persist automatically in chat yet. You can manually paste node file contents into a project's system prompt for context.
 
 ---
 
 ## Changelog
+
+### v3.0.0
+- **File-based storage**: Memory now persists to `~/Documents/Claude/memory/` as markdown files
+- Two-tier structure: `DASHBOARD.md` for fast orientation + individual node files for detail
+- Node-to-file mapping: `client:acme-corp` → `memory/client/acme-corp.md`
+- Directories created dynamically from node prefixes — any prefix is valid
+- Every write operation updates both the node file and the dashboard
+- Archive support: `/forget --archive` moves files to `memory/archive/`
+- `/cleanup` now audits actual files on disk, detects orphaned entries and missing files
+- All 9 commands updated with explicit storage instructions
 
 ### v2.2.0
 - **Business-operator friendly**: All examples, taxonomy, and language updated for general business use — not just technical projects

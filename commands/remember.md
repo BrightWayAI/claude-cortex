@@ -136,6 +136,71 @@ QUESTIONS FOR NEXT TIME:
 
 ## Step 3 — Write to memory
 
+### Storage Location
+
+Memory is stored in `~/Documents/Claude/memory/`.
+
+1. Determine the file path from the node ID:
+   - If node has a prefix (e.g., `client:acme-corp`): `memory/{prefix}/{slug}.md`
+   - If no prefix (e.g., `hiring`): `memory/{node-id}.md`
+2. If the directory doesn't exist, create it
+3. If the node file doesn't exist, create it with the standard template (see Node File Format below)
+4. If the node file exists, READ it first, then update the relevant sections
+5. After writing the node file, ALWAYS update `memory/DASHBOARD.md`:
+   - Replace or add the node's living summary in the Active Nodes section
+   - Update the Unified P0 Actions list
+   - Update Waiting On if applicable
+   - Add any new knowledge entries to Recent Knowledge (keep last 7 days only)
+   - Update the "Last updated" timestamp
+
+#### Node File Format
+
+```markdown
+# {node-id}
+> Last updated: YYYY-MM-DD
+
+## Summary
+[Living summary — replaced each session]
+
+## Knowledge
+
+### Models
+[node] MODEL (date): [entry]
+
+### Gotchas
+[node] GOTCHA (date): [entry]
+
+### Lessons
+[node] LESSON (date): [entry]
+
+### Recipes
+[node] RECIPE (date): [entry]
+
+### Insights
+[node] INSIGHT (date): [entry]
+
+### Corrections
+[node] CORRECTION (date): [entry]
+
+## People
+[node] PEOPLE: Name (role) — context. Also in: [other nodes]
+
+## Changelog
+[node] LOG YYYY-MM-DD — title: content
+(append-only, newest first)
+
+## Open Threads
+- [FRESH/ONGOING/STALE] [description]
+
+## Next Actions
+- [P0] [action]
+- [P1] [action]
+- [WAITING:who] [action]
+
+## Signals
+[node] SIGNAL from [other-node] (date): [implication]
+```
+
 ### A. Living Summary (replace if exists, create if new)
 
 Format:

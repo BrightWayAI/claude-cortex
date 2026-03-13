@@ -10,6 +10,14 @@ You are performing maintenance on Claude's working memory. This keeps the memory
 
 ## Step 1 — Audit current memory
 
+### How to Audit
+
+1. Read `~/Documents/Claude/memory/DASHBOARD.md`
+2. List all `.md` files in `memory/` and subdirectories (excluding DASHBOARD.md and archive/)
+3. For each file, check: last modified date, number of LOG entries, staleness of open threads
+4. Compare dashboard entries against actual files (detect orphaned dashboard entries or node files missing from dashboard)
+5. Check `memory/archive/` for any archived nodes
+
 Scan all memory entries and compile:
 
 ```

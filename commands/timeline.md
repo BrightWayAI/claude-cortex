@@ -8,6 +8,14 @@ You are constructing a chronological view of session history from working memory
 
 ---
 
+### Data Source
+
+1. If a project is specified: read that node's file from `~/Documents/Claude/memory/`, extract all LOG entries, sort chronologically
+2. If no project: read all node files, extract all LOG entries, sort chronologically across all nodes
+3. Use `~/Documents/Claude/memory/DASHBOARD.md` to identify which nodes to scan
+
+---
+
 ## Step 1 — Determine scope
 
 - **With project**: Show timeline for that specific node
