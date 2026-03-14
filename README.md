@@ -220,12 +220,14 @@ Subdirectories are created dynamically from node prefixes. Any prefix is valid �
 3. Select `session-memory-plugin.zip`
 4. Start with `/recall` or `/remember`
 
-**Folder access**: This plugin stores memory as files on your computer (in `~/Documents/Claude/memory/`). The first time you use a memory command in a conversation, Claude will automatically request access to `~/Documents/Claude` — you'll see an approval prompt. Just approve it and you're set for the rest of the session.
+**How folder access works**: This plugin needs to read and write files on your computer to persist memory between conversations. The first time you use any memory command (`/remember`, `/recall`, `/learn`, etc.), Claude will automatically request access to `~/Documents/Claude` via the Cowork directory mounting system. You'll see an approval prompt — just approve it and you're set for the rest of the conversation.
 
-Why? Without file access, Claude's memory only lasts for a single conversation. This folder is what makes memory actually persist between sessions.
+This happens once per conversation. You don't need to manually find or attach the folder — the plugin handles it automatically.
+
+**Why this is necessary**: Without file access, everything Claude learns dies when the conversation ends. By storing memory as markdown files on your computer, your knowledge, decisions, and context carry forward into every future session. The files are plain text — you can read, edit, or back them up yourself anytime.
 
 ### Claude Code
-Memory files are read/written directly since Claude Code has filesystem access. No mounting needed.
+Memory files are read/written directly since Claude Code has filesystem access. No folder mounting needed — it just works.
 
 ### Chat
 Memory doesn't persist automatically in chat yet. You can manually paste node file contents into a project's system prompt for context.
