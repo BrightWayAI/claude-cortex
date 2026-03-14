@@ -30,6 +30,12 @@ Cross-project, cross-type search across all working memory.
 
 ### How to Search
 
+**Before searching**: Check if the `~/Documents/Claude/memory/` folder is accessible. If it is not mounted or accessible, ask the user to connect it:
+
+> "I need access to your memory folder to search it. Please mount `~/Documents/Claude` using the folder icon (📎) in the chat input area. This plugin stores memory as files on your computer — without this folder, there's nothing to search."
+
+Do not proceed until the folder is accessible.
+
 1. Read `~/Documents/Claude/memory/DASHBOARD.md` to get the list of all nodes
 2. For each active/warm node, read the node file and search for entries matching the query
 3. Use the entry type headers (## Knowledge, ### Models, ### Gotchas, etc.) to quickly navigate to relevant sections

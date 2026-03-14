@@ -10,6 +10,12 @@ Generate a weekly (or custom period) review that synthesizes project activity an
 
 ### Data Source
 
+**Before reviewing**: Check if the `~/Documents/Claude/memory/` folder is accessible. If it is not mounted or accessible, ask the user to connect it:
+
+> "I need access to your memory folder to generate this review. Please mount `~/Documents/Claude` using the folder icon (📎) in the chat input area."
+
+Do not proceed until the folder is accessible.
+
 1. Read `~/Documents/Claude/memory/DASHBOARD.md` for the overview
 2. Read node files for any nodes updated within the review period
 3. Focus on: new knowledge entries, decisions in changelogs, changes in P0/P1 actions, resolved vs. new threads

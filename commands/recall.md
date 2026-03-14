@@ -12,6 +12,12 @@ You are surfacing working memory to set up the current session.
 
 Memory is stored in `~/Documents/Claude/memory/`.
 
+**Before reading**: Check if the `~/Documents/Claude/memory/` folder is accessible. If it is not mounted or accessible, ask the user to connect it:
+
+> "I need access to your memory folder to load your context. Please mount `~/Documents/Claude` using the folder icon (📎) in the chat input area. This plugin stores memory as files on your computer — without this folder, I can't access your previous sessions."
+
+Do not proceed until the folder is accessible.
+
 - `/recall` with no arguments: Read `memory/DASHBOARD.md` and present the dashboard view
 - `/recall [node]`: Determine file path from node ID, read that file, present the full project view
   - If node has a prefix (e.g., `client:acme-corp`): `memory/{prefix}/{slug}.md`

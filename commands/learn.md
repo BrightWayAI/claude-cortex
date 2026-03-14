@@ -51,6 +51,12 @@ If the user provides just natural language (e.g. `/learn that the API rate limit
 
 ### Storage Location
 
+**Before writing**: Check if the `~/Documents/Claude/memory/` folder is accessible. If it is not mounted or accessible, ask the user to connect it:
+
+> "I need access to your memory folder to save this. Please mount `~/Documents/Claude` using the folder icon (📎) in the chat input area. This plugin stores memory as files on your computer so it persists between conversations."
+
+Do not proceed until the folder is accessible.
+
 1. Determine the node file path from the node ID:
    - If node has a prefix (e.g., `client:acme-corp`): `~/Documents/Claude/memory/{prefix}/{slug}.md`
    - If no prefix (e.g., `hiring`): `~/Documents/Claude/memory/{node-id}.md`

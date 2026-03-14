@@ -35,6 +35,12 @@ If node is ambiguous or missing, infer from conversation context or ask.
 
 ### Storage Location
 
+**Before writing**: Check if the `~/Documents/Claude/memory/` folder is accessible. If it is not mounted or accessible, ask the user to connect it:
+
+> "I need access to your memory folder to save this note. Please mount `~/Documents/Claude` using the folder icon (📎) in the chat input area. This plugin stores memory as files on your computer so it persists between conversations."
+
+Do not proceed until the folder is accessible.
+
 1. Determine the node file path from the node ID:
    - If node has a prefix (e.g., `client:acme-corp`): `~/Documents/Claude/memory/{prefix}/{slug}.md`
    - If no prefix (e.g., `hiring`): `~/Documents/Claude/memory/{node-id}.md`

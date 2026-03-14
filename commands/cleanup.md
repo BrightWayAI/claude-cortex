@@ -12,6 +12,12 @@ You are performing maintenance on Claude's working memory. This keeps the memory
 
 ### How to Audit
 
+**Before auditing**: Check if the `~/Documents/Claude/memory/` folder is accessible. If it is not mounted or accessible, ask the user to connect it:
+
+> "I need access to your memory folder to run maintenance. Please mount `~/Documents/Claude` using the folder icon (📎) in the chat input area."
+
+Do not proceed until the folder is accessible.
+
 1. Read `~/Documents/Claude/memory/DASHBOARD.md`
 2. List all `.md` files in `memory/` and subdirectories (excluding DASHBOARD.md and archive/)
 3. For each file, check: last modified date, number of LOG entries, staleness of open threads

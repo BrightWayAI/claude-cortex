@@ -70,6 +70,12 @@ Wait for confirmation before modifying memory.
 
 Memory is stored in `~/Documents/Claude/memory/`.
 
+**Before modifying**: Check if the `~/Documents/Claude/memory/` folder is accessible. If it is not mounted or accessible, ask the user to connect it:
+
+> "I need access to your memory folder to archive/remove this node. Please mount `~/Documents/Claude` using the folder icon (📎) in the chat input area."
+
+Do not proceed until the folder is accessible.
+
 - **Archive** (default): Move the node file from its current location to `memory/archive/{filename}`. Remove the node's entry from DASHBOARD.md Active Nodes. Add a one-line entry to the Dormant or a new "Archived" section in DASHBOARD.md.
 - **Merge**: Read both node files. Append source's changelog, knowledge, and people entries to the target file. Delete the source file. Update DASHBOARD.md.
 - **Delete**: Remove the node file entirely. Remove from DASHBOARD.md.

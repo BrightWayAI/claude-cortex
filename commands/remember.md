@@ -140,6 +140,12 @@ QUESTIONS FOR NEXT TIME:
 
 Memory is stored in `~/Documents/Claude/memory/`.
 
+**Before writing**: Check if the `~/Documents/Claude/memory/` folder is accessible. If it is not mounted or accessible, ask the user to connect it:
+
+> "I need access to your memory folder to save this session. Please mount `~/Documents/Claude` using the folder icon (📎) in the chat input area. This plugin stores memory as files on your computer so it persists between conversations — without this folder, nothing gets saved."
+
+Do not proceed until the folder is accessible.
+
 1. Determine the file path from the node ID:
    - If node has a prefix (e.g., `client:acme-corp`): `memory/{prefix}/{slug}.md`
    - If no prefix (e.g., `hiring`): `memory/{node-id}.md`

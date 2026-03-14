@@ -10,6 +10,12 @@ You are constructing a chronological view of session history from working memory
 
 ### Data Source
 
+**Before loading**: Check if the `~/Documents/Claude/memory/` folder is accessible. If it is not mounted or accessible, ask the user to connect it:
+
+> "I need access to your memory folder to build this timeline. Please mount `~/Documents/Claude` using the folder icon (📎) in the chat input area."
+
+Do not proceed until the folder is accessible.
+
 1. If a project is specified: read that node's file from `~/Documents/Claude/memory/`, extract all LOG entries, sort chronologically
 2. If no project: read all node files, extract all LOG entries, sort chronologically across all nodes
 3. Use `~/Documents/Claude/memory/DASHBOARD.md` to identify which nodes to scan
