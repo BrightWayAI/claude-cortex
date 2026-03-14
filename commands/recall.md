@@ -12,11 +12,13 @@ You are surfacing working memory to set up the current session.
 
 Memory is stored in `~/Documents/Claude/memory/`.
 
-**Before reading**: Check if the `~/Documents/Claude/memory/` folder is accessible. If it is not mounted or accessible, ask the user to connect it:
+**Before reading**: Check if `~/Documents/Claude/memory/` is accessible. If not, use the `request_cowork_directory` tool to request access:
 
-> "I need access to your memory folder to load your context. Please mount `~/Documents/Claude` using the folder icon (📎) in the chat input area. This plugin stores memory as files on your computer — without this folder, I can't access your previous sessions."
+```
+mcp__cowork__request_cowork_directory(path="~/Documents/Claude")
+```
 
-Do not proceed until the folder is accessible.
+The user will see an approval prompt. Wait for the mount to succeed before proceeding. If the user declines, explain that memory cannot be loaded without this folder and stop.
 
 - `/recall` with no arguments: Read `memory/DASHBOARD.md` and present the dashboard view
 - `/recall [node]`: Determine file path from node ID, read that file, present the full project view

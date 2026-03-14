@@ -140,11 +140,13 @@ QUESTIONS FOR NEXT TIME:
 
 Memory is stored in `~/Documents/Claude/memory/`.
 
-**Before writing**: Check if the `~/Documents/Claude/memory/` folder is accessible. If it is not mounted or accessible, ask the user to connect it:
+**Before writing**: Check if `~/Documents/Claude/memory/` is accessible. If not, use the `request_cowork_directory` tool to request access:
 
-> "I need access to your memory folder to save this session. Please mount `~/Documents/Claude` using the folder icon (📎) in the chat input area. This plugin stores memory as files on your computer so it persists between conversations — without this folder, nothing gets saved."
+```
+mcp__cowork__request_cowork_directory(path="~/Documents/Claude")
+```
 
-Do not proceed until the folder is accessible.
+The user will see an approval prompt. Wait for the mount to succeed before proceeding. If the user declines, explain that memory cannot be persisted without this folder and stop.
 
 1. Determine the file path from the node ID:
    - If node has a prefix (e.g., `client:acme-corp`): `memory/{prefix}/{slug}.md`

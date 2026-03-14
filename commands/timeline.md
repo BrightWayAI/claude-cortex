@@ -10,11 +10,13 @@ You are constructing a chronological view of session history from working memory
 
 ### Data Source
 
-**Before loading**: Check if the `~/Documents/Claude/memory/` folder is accessible. If it is not mounted or accessible, ask the user to connect it:
+**Before loading**: Check if `~/Documents/Claude/memory/` is accessible. If not, use the `request_cowork_directory` tool to request access:
 
-> "I need access to your memory folder to build this timeline. Please mount `~/Documents/Claude` using the folder icon (📎) in the chat input area."
+```
+mcp__cowork__request_cowork_directory(path="~/Documents/Claude")
+```
 
-Do not proceed until the folder is accessible.
+The user will see an approval prompt. Wait for the mount to succeed before proceeding. If the user declines, explain that the timeline cannot be built without this folder and stop.
 
 1. If a project is specified: read that node's file from `~/Documents/Claude/memory/`, extract all LOG entries, sort chronologically
 2. If no project: read all node files, extract all LOG entries, sort chronologically across all nodes

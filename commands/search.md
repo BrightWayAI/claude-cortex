@@ -30,11 +30,13 @@ Cross-project, cross-type search across all working memory.
 
 ### How to Search
 
-**Before searching**: Check if the `~/Documents/Claude/memory/` folder is accessible. If it is not mounted or accessible, ask the user to connect it:
+**Before searching**: Check if `~/Documents/Claude/memory/` is accessible. If not, use the `request_cowork_directory` tool to request access:
 
-> "I need access to your memory folder to search it. Please mount `~/Documents/Claude` using the folder icon (📎) in the chat input area. This plugin stores memory as files on your computer — without this folder, there's nothing to search."
+```
+mcp__cowork__request_cowork_directory(path="~/Documents/Claude")
+```
 
-Do not proceed until the folder is accessible.
+The user will see an approval prompt. Wait for the mount to succeed before proceeding. If the user declines, explain that memory cannot be searched without this folder and stop.
 
 1. Read `~/Documents/Claude/memory/DASHBOARD.md` to get the list of all nodes
 2. For each active/warm node, read the node file and search for entries matching the query

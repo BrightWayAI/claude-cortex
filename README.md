@@ -220,9 +220,9 @@ Subdirectories are created dynamically from node prefixes. Any prefix is valid �
 3. Select `session-memory-plugin.zip`
 4. Start with `/recall` or `/remember`
 
-**Important — folder access**: This plugin stores memory as files on your computer (in `~/Documents/Claude/memory/`). Claude needs access to this folder to read and write memory. You'll be prompted to mount it the first time you use any memory command in a conversation. This is a one-time step per conversation — once mounted, it stays accessible for the rest of the session.
+**Folder access**: This plugin stores memory as files on your computer (in `~/Documents/Claude/memory/`). The first time you use a memory command in a conversation, Claude will automatically request access to `~/Documents/Claude` — you'll see an approval prompt. Just approve it and you're set for the rest of the session.
 
-Why? Without file access, Claude's memory only lasts for a single conversation. Mounting the folder is what makes memory actually persist between sessions.
+Why? Without file access, Claude's memory only lasts for a single conversation. This folder is what makes memory actually persist between sessions.
 
 ### Claude Code
 Memory files are read/written directly since Claude Code has filesystem access. No mounting needed.

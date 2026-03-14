@@ -12,11 +12,13 @@ You are performing maintenance on Claude's working memory. This keeps the memory
 
 ### How to Audit
 
-**Before auditing**: Check if the `~/Documents/Claude/memory/` folder is accessible. If it is not mounted or accessible, ask the user to connect it:
+**Before auditing**: Check if `~/Documents/Claude/memory/` is accessible. If not, use the `request_cowork_directory` tool to request access:
 
-> "I need access to your memory folder to run maintenance. Please mount `~/Documents/Claude` using the folder icon (📎) in the chat input area."
+```
+mcp__cowork__request_cowork_directory(path="~/Documents/Claude")
+```
 
-Do not proceed until the folder is accessible.
+The user will see an approval prompt. Wait for the mount to succeed before proceeding. If the user declines, explain that memory cannot be audited without this folder and stop.
 
 1. Read `~/Documents/Claude/memory/DASHBOARD.md`
 2. List all `.md` files in `memory/` and subdirectories (excluding DASHBOARD.md and archive/)
