@@ -173,6 +173,24 @@ Use kebab-case. Organize however fits your work:
 
 ---
 
+## Git-Aware Memory
+
+When working in a git repository, `/remember` can optionally capture development context:
+
+- **Current branch** — which branch was being worked on
+- **Recent commits** — last 3-5 commit messages from the session
+- **Uncommitted changes** — high-level summary of staged/modified files
+- **Related branches** — feature branches, PRs, or upstream references mentioned
+
+This context is included in the changelog entry, making it easy to pick up exactly where you left off:
+```
+[crm-dashboard] LOG 2025-03-20 — API refactor: ... | Git: branch feature/api-v2, 3 commits (refactored auth middleware, added rate limiting, updated tests)
+```
+
+Git context is automatically skipped for non-code sessions (strategy, client work, etc.).
+
+---
+
 ## Auto-firing Skills
 
 All commands also exist as skills that trigger from natural language:
@@ -195,6 +213,11 @@ All commands also exist as skills that trigger from natural language:
 
 Memory lives on your computer at `~/Documents/Claude/memory/`. The plugin creates and manages this folder automatically.
 
+| Platform | Memory path |
+|----------|-------------|
+| macOS / Linux | `~/Documents/Claude/memory/` |
+| Windows | `%USERPROFILE%\Documents\Claude\memory\` (typically `C:\Users\YourName\Documents\Claude\memory\`) |
+
 ```
 ~/Documents/Claude/memory/
 ├── DASHBOARD.md          ← Master index — one living summary per node, P0 list, recent knowledge
@@ -211,6 +234,8 @@ Memory lives on your computer at `~/Documents/Claude/memory/`. The plugin create
 ```
 
 Subdirectories are created dynamically from node prefixes. Any prefix is valid — use whatever fits your work.
+
+Both Cowork and Claude Code use the same storage path, so memory is shared seamlessly across platforms. The files are plain markdown — you can read, edit, sync, or back them up with any tool.
 
 ---
 
@@ -239,6 +264,11 @@ Chat doesn't have file access or a plugin system. Memory can't persist automatic
 ---
 
 ## Changelog
+
+### v3.1.0
+- **Git-aware memory**: `/remember` now captures branch, recent commits, and uncommitted changes for code-focused sessions
+- **Cross-platform paths**: Windows path guidance (`%USERPROFILE%\Documents\Claude\memory\`) documented alongside Unix paths
+- **Shared memory across platforms**: Cowork and Claude Code use the same storage path, enabling seamless cross-platform workflows
 
 ### v3.0.0
 - **File-based storage**: Memory now persists to `~/Documents/Claude/memory/` as markdown files
