@@ -1,10 +1,10 @@
 ---
-description: Commit this conversation to working memory. Extracts knowledge, decisions, insights, open threads, and next actions — then writes a living summary and changelog entry for the detected project node. Run at the end of any conversation worth remembering.
+description: Commit this conversation to working memory. Extracts knowledge, decisions, insights, open threads, and next actions.
 ---
 
 # /remember
 
-You are committing this conversation to Claude's working memory. Work through the following steps precisely.
+You are committing this conversation to working memory. Work through the following steps precisely.
 
 ---
 
@@ -12,7 +12,7 @@ You are committing this conversation to Claude's working memory. Work through th
 
 Scan the full conversation and identify which project(s) this session belongs to.
 
-Check Claude's existing memory for any established project nodes first. If a matching node exists, use it. If the session covers something genuinely new, create a new node using kebab-case.
+Check existing memory for any established project nodes first. If a matching node exists, use it. If the session covers something genuinely new, create a new node using kebab-case.
 
 **Node naming conventions:**
 - Client work: prefix with `client:` (`client:acme-corp`, `client:northstar`)
@@ -93,36 +93,30 @@ INSIGHTS:
 - New understanding gained during this session
 - "Aha" moments, reframes, or realizations
 - Connections spotted between previously unrelated things
-- Example: "Realized our churn isn't a product problem — it's an onboarding problem. Customers who complete setup in week 1 retain at 92%."
 
 LESSONS LEARNED:
 - Things tried that worked → why they worked
 - Things tried that failed → why they failed, what to do instead
 - Mistakes made → what the correct approach is
-- Example: "Tried sending proposals same-day — close rate dropped. Waiting 48 hours with a tailored deck closes 3x better."
 
 MENTAL MODELS:
 - How something works, explained for future reference
 - Business processes, decision frameworks, domain rules, workflows
 - "The way X actually works is..."
-- Example: "Their approval process: department head → finance review → VP sign-off → procurement. Skip finance and it stalls for weeks."
 
 GOTCHAS & PITFALLS:
 - Specific traps or non-obvious behaviors in processes, tools, or relationships
 - Things that look like they should work but don't
 - Surprising rules, undocumented requirements, edge cases
-- Example: "Their fiscal year starts in April, not January — all budget conversations need to reference Q1 as April-June."
 
 PATTERNS & RECIPES:
 - Techniques or approaches that proved effective
 - Reusable solutions to specific types of problems
 - Workflows or processes worth repeating
-- Example: "For getting executive buy-in: lead with the metric they own, show the gap, propose one action, name the timeline."
 
 CORRECTED BELIEFS:
 - Assumptions that turned out to be wrong
 - Previous understanding that was updated or reversed
-- Example: "Previously assumed they were price-sensitive — actually they have budget, they just need ROI framing to get internal approval."
 
 CONTEXT & BACKGROUND:
 - Domain knowledge needed to understand this project or topic
@@ -137,7 +131,6 @@ CONTEXT & BACKGROUND:
 CROSS-PROJECT SIGNALS:
 - Anything with implications for a different node
 - Knowledge that applies across projects
-- "The caching pattern here would solve the performance issue in [other-node]"
 
 PEOPLE:
 - Anyone who came up: name, role, context
@@ -154,17 +147,7 @@ QUESTIONS FOR NEXT TIME:
 
 ## Step 3 — Write to memory
 
-### Storage Location
-
-Memory is stored in `~/Documents/Claude/memory/`.
-
-**Before writing**: Check if `~/Documents/Claude/memory/` is accessible. If not, use the `request_cowork_directory` tool to request access:
-
-```
-mcp__cowork__request_cowork_directory(path="~/Documents/Claude")
-```
-
-The user will see an approval prompt. Wait for the mount to succeed before proceeding. If the user declines, explain that memory cannot be persisted without this folder and stop.
+Memory is stored at `~/Documents/Claude/memory/`. Create directories as needed.
 
 1. Determine the file path from the node ID:
    - If node has a prefix (e.g., `client:acme-corp`): `memory/{prefix}/{slug}.md`

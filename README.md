@@ -9,7 +9,7 @@ Most AI conversations are disposable. This plugin makes them cumulative. Every s
 
 Works for any kind of work — client engagements, business development, strategy, operations, hiring, research, learning, and technical projects.
 
-> **Platform note:** This plugin is built for **Cowork** (Claude Desktop). Cowork is the only platform that supports both the plugin system and the file access needed for persistent memory. See [Setup](#setup) for details.
+> **Platform note:** This plugin supports **Cowork** (Claude Desktop) and **Claude Code**. Both platforms have full access to all 9 commands and the persistent memory system. See [Setup](#setup) for details.
 
 ---
 
@@ -176,6 +176,26 @@ Use kebab-case. Organize however fits your work:
 
 ---
 
+## Git-Aware Memory
+
+When working in a git repository, `/remember` can optionally capture development context:
+
+- **Current branch** — which branch was being worked on
+- **Recent commits** — last 3-5 commit messages from the session
+- **Uncommitted changes** — high-level summary of staged/modified files
+- **Related branches** — feature branches, PRs, or upstream references mentioned
+
+This context is included in the changelog entry, making it easy to pick up exactly where you left off:
+```
+[crm-dashboard] LOG 2025-03-20 — API refactor: ... | Git: branch feature/api-v2, 3 commits (refactored auth middleware, added rate limiting, updated tests)
+```
+
+Git context is automatically skipped for non-code sessions (strategy, client work, etc.).
+
+**Cowork vs Claude Code:** Cowork loads this behavior from `commands/remember.md`. **Claude Code** should use `.claude/commands/remember.md`, which mirrors the same Step 1b git context. Both capture matching `Git: branch …` detail in changelog lines when the session is code-focused.
+
+---
+
 ## Auto-firing Skills
 
 All commands also exist as skills that trigger from natural language:
@@ -198,6 +218,11 @@ All commands also exist as skills that trigger from natural language:
 
 Memory lives on your computer at `~/Documents/Claude/memory/`. The plugin creates and manages this folder automatically.
 
+| Platform | Memory path |
+|----------|-------------|
+| macOS / Linux | `~/Documents/Claude/memory/` |
+| Windows | `%USERPROFILE%\Documents\Claude\memory\` (typically `C:\Users\YourName\Documents\Claude\memory\`) |
+
 ```
 ~/Documents/Claude/memory/
 ├── DASHBOARD.md          ← Master index — one living summary per node, P0 list, recent knowledge
@@ -215,11 +240,13 @@ Memory lives on your computer at `~/Documents/Claude/memory/`. The plugin create
 
 Subdirectories are created dynamically from node prefixes. Any prefix is valid — use whatever fits your work.
 
+Both Cowork and Claude Code use the same storage path, so memory is shared seamlessly across platforms. The files are plain markdown — you can read, edit, sync, or back them up with any tool.
+
 ---
 
 ## Setup
 
-This plugin is designed for **Cowork** (Claude Desktop). It relies on two things that only Cowork provides: the custom plugin system (for loading commands and skills) and the directory mounting system (for reading and writing memory files to your computer). Other platforms have partial support at best.
+This plugin supports **Cowork** (Claude Desktop) and **Claude Code**. Each platform has its own integration mechanism, but they share the same memory format and storage location (`~/Documents/Claude/memory/`).
 
 ### Cowork (Claude Desktop) — Full Support
 1. Download the plugin zip
@@ -233,8 +260,31 @@ This happens once per conversation. You don't need to manually find or attach th
 
 **Why this is necessary**: Without file access, everything Claude learns dies when the conversation ends. By storing memory as markdown files on your computer, your knowledge, decisions, and context carry forward into every future session. The files are plain text — you can read, edit, or back them up yourself anytime.
 
-### Claude Code — Partial Support
-Claude Code has filesystem access, so the memory file format works. However, Claude Code doesn't support custom plugins — you'd need to add the command files to your project manually (e.g., as a CLAUDE.md reference or custom slash commands). It can work, but it's not plug-and-play.
+### Claude Code — Supported
+
+Claude Code has native filesystem access — no mounting or approval prompts needed.
+
+**Global setup (recommended):** Memory is shared across projects, so installing once in your user config usually matches how you work.
+
+1. Copy `CLAUDE.md` to `~/.claude/CLAUDE.md`
+2. Copy the contents of `.claude/commands/` to `~/.claude/commands/`
+3. Memory commands are now available in every project
+
+**Per-project setup:**
+1. Copy the `CLAUDE.md` file and `.claude/` directory into your project root
+2. Start with `/recall` or just ask — natural language triggers work automatically
+
+**What you get:**
+- `CLAUDE.md` loads automatically at session start, giving Claude awareness of your memory system and enabling natural language triggers ("save this", "any gotchas with X", "catch me up")
+- All 9 slash commands (`/remember`, `/recall`, `/learn`, `/note`, `/search`, `/review`, `/timeline`, `/forget`, `/cleanup`) work as custom commands
+- No approval prompts — Claude Code reads and writes memory files directly
+
+**How it differs from Cowork:**
+- No directory mounting step — filesystem access is native
+- `CLAUDE.md` auto-loads every session (in Cowork, the plugin system handles this)
+- Commands live in `.claude/commands/` instead of the plugin's `commands/` directory
+
+**Cowork `commands/` vs Claude Code:** Files under the plugin's `commands/` folder are written for Cowork. They invoke Cowork's directory-mounting tool (for example `mcp__cowork__request_cowork_directory`), which **does not exist in Claude Code**. **Claude Code users should follow `CLAUDE.md` and use the workflows in `.claude/commands/`** (same behavior, filesystem-native instructions). Do not point Claude Code at the raw `commands/*.md` from the plugin zip unless you replace those Cowork-only tool calls yourself.
 
 ### Chat — Not Supported
 Chat doesn't have file access or a plugin system. Memory can't persist automatically. You could manually paste node file contents into a project's system prompt, but that's a workaround, not a real integration.
