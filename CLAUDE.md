@@ -38,7 +38,7 @@ Knowledge entry types — these are first-class, high-value content:
 
 ## Auto-Fire Triggers
 
-When you detect these patterns in conversation, run the corresponding command automatically. If slash commands are installed (`.claude/commands/`), reference them; otherwise, follow the workflow described in `commands/`.
+When you detect these patterns in conversation, run the corresponding command automatically. **Claude Code:** use `.claude/commands/` when present. **Cowork:** the plugin loads the same workflows from `commands/` (those files may call Cowork-only directory tools that do not exist here).
 
 | Pattern | Action |
 |---------|--------|

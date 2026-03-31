@@ -234,14 +234,15 @@ This happens once per conversation. You don't need to manually find or attach th
 
 Claude Code has native filesystem access — no mounting or approval prompts needed.
 
-**Quick setup (per project):**
-1. Copy the `CLAUDE.md` file and `.claude/` directory into your project root
-2. Start with `/recall` or just ask — natural language triggers work automatically
+**Global setup (recommended):** Memory is shared across projects, so installing once in your user config usually matches how you work.
 
-**Global setup (all projects):**
 1. Copy `CLAUDE.md` to `~/.claude/CLAUDE.md`
 2. Copy the contents of `.claude/commands/` to `~/.claude/commands/`
 3. Memory commands are now available in every project
+
+**Per-project setup:**
+1. Copy the `CLAUDE.md` file and `.claude/` directory into your project root
+2. Start with `/recall` or just ask — natural language triggers work automatically
 
 **What you get:**
 - `CLAUDE.md` loads automatically at session start, giving Claude awareness of your memory system and enabling natural language triggers ("save this", "any gotchas with X", "catch me up")
@@ -252,6 +253,8 @@ Claude Code has native filesystem access — no mounting or approval prompts nee
 - No directory mounting step — filesystem access is native
 - `CLAUDE.md` auto-loads every session (in Cowork, the plugin system handles this)
 - Commands live in `.claude/commands/` instead of the plugin's `commands/` directory
+
+**Cowork `commands/` vs Claude Code:** Files under the plugin's `commands/` folder are written for Cowork. They invoke Cowork's directory-mounting tool (for example `mcp__cowork__request_cowork_directory`), which **does not exist in Claude Code**. **Claude Code users should follow `CLAUDE.md` and use the workflows in `.claude/commands/`** (same behavior, filesystem-native instructions). Do not point Claude Code at the raw `commands/*.md` from the plugin zip unless you replace those Cowork-only tool calls yourself.
 
 ### Chat — Not Supported
 Chat doesn't have file access or a plugin system. Memory can't persist automatically. You could manually paste node file contents into a project's system prompt, but that's a workaround, not a real integration.
