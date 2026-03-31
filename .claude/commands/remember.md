@@ -30,6 +30,24 @@ If the session spans multiple nodes, you'll commit to each one separately in Ste
 
 ---
 
+## Step 1b — Capture git context (if available)
+
+If the conversation involves code or a git repository, capture the development context:
+
+1. **Current branch**: Record the branch name being worked on
+2. **Recent commits**: Note the last 3-5 commit messages from this session (if any)
+3. **Uncommitted changes**: Summarize what's staged or modified (high-level, not full diffs)
+4. **Related branches**: Note any branches mentioned (feature branches, PRs, upstream)
+
+Include this as a `GIT CONTEXT` block in the changelog entry:
+```
+[node-id] LOG YYYY-MM-DD — title: ... | Git: branch [branch-name], [count] commits ([summary])
+```
+
+Skip this step entirely if the session doesn't involve code or version control.
+
+---
+
 ## Step 2 — Extract structured memory
 
 Pull from two categories: **what changed** (project state) and **what was learned** (knowledge).
