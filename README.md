@@ -189,6 +189,8 @@ This context is included in the changelog entry, making it easy to pick up exact
 
 Git context is automatically skipped for non-code sessions (strategy, client work, etc.).
 
+**Cowork vs Claude Code:** Cowork loads this behavior from `commands/remember.md`. **Claude Code** should use `.claude/commands/remember.md`, which mirrors the same Step 1b git context. Both capture matching `Git: branch …` detail in changelog lines when the session is code-focused.
+
 ---
 
 ## Auto-firing Skills
