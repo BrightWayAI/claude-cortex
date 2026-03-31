@@ -1,4 +1,7 @@
-# Session Memory Plugin v3.0
+# Session Memory Plugin v3.0.1
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/BrightWayAI/session-memory-plugin/actions/workflows/validate.yml/badge.svg)](https://github.com/BrightWayAI/session-memory-plugin/actions/workflows/validate.yml)
 
 **Build persistent intelligence — project state AND knowledge — across your working world.**
 
@@ -238,7 +241,18 @@ Chat doesn't have file access or a plugin system. Memory can't persist automatic
 
 ---
 
+## For contributors
+
+Contributions are welcome. Start with **[CONTRIBUTING.md](CONTRIBUTING.md)** (workflow, command/skill parity, versioning) and **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** (how the pieces fit together). Please read the **[Code of Conduct](CODE_OF_CONDUCT.md)**. Security-sensitive reports belong in **[SECURITY.md](SECURITY.md)**. Full release history: **[CHANGELOG.md](CHANGELOG.md)**.
+
+---
+
 ## Changelog
+
+See **[CHANGELOG.md](CHANGELOG.md)** for the complete version history. Summary below:
+
+### v3.0.1
+- Open source hygiene: `LICENSE`, contributing guides, templates, security policy, architecture doc, and CI validation for `plugin.json` and markdown frontmatter.
 
 ### v3.0.0
 - **File-based storage**: Memory now persists to `~/Documents/Claude/memory/` as markdown files

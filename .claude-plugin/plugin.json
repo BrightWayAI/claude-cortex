@@ -1,7 +1,7 @@
 {
   "name": "session-memory",
   "description": "Builds persistent intelligence — both project state and knowledge — across your working world. Nine commands for committing sessions, recalling context, searching knowledge, capturing lessons and gotchas, taking quick notes, running weekly reviews, viewing timelines, archiving projects, and maintaining memory health. Works for any kind of work: client engagements, business development, strategy, operations, hiring, research, learning, and technical projects.",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "author": {
     "name": "BrightWay AI",
     "url": "https://brightwayai.com"
