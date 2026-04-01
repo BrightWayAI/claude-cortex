@@ -23,6 +23,7 @@ Every command in `commands/` has a matching skill in `skills/`. If you change a 
 ## What to check before submitting
 
 - [ ] **Command ↔ skill parity** — changes to a command file are reflected in the corresponding skill.
+- [ ] **`.claude/commands/` parity** — if you change a command's behavior in `commands/`, apply the same changes to `.claude/commands/`, using direct filesystem access instead of `mcp__cowork__request_cowork_directory`.
 - [ ] **`plugin.json` version** — bump the version in `.claude-plugin/plugin.json` when your change is user-visible (new command, behavior change, storage format change). Patch for fixes, minor for features.
 - [ ] **README** — if you add or change a command, update the README command table and changelog section.
 - [ ] **CHANGELOG.md** — add an entry under `## [Unreleased]` describing your change.
