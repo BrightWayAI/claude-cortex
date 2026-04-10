@@ -1,159 +1,231 @@
-# Session Memory Plugin v3.0.1
+# Session Memory v4.0 — Always-On Learning
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/BrightWayAI/session-memory-plugin/actions/workflows/validate.yml/badge.svg)](https://github.com/BrightWayAI/session-memory-plugin/actions/workflows/validate.yml)
 
-**Build persistent intelligence — project state AND knowledge — across your working world.**
+**Claude gets smarter about you with every conversation.**
 
-Most AI conversations are disposable. This plugin makes them cumulative. Every session can produce two kinds of value: **what changed** (decisions, actions, progress) and **what was learned** (insights, gotchas, mental models, techniques). This plugin captures both and makes them retrievable.
+Most AI conversations are disposable. Session Memory makes them cumulative. It runs silently in the background — observing your preferences, capturing knowledge, learning from corrections — so every conversation builds on the last.
 
-Works for any kind of work — client engagements, business development, strategy, operations, hiring, research, learning, and technical projects.
+No commands required. Just use Claude normally. It learns.
 
-> **Platform note:** This plugin supports **Cowork** (Claude Desktop) and **Claude Code**. Both platforms have full access to all 9 commands and the persistent memory system. See [Setup](#setup) for details.
+Works on **Cowork** (Claude Desktop) and **Claude Code**.
+
+---
+
+## What's New in v4
+
+### The Always-On Brain
+
+v3 required you to say `/remember`. v4 doesn't wait.
+
+| Behavior | What it does | Platform |
+|----------|-------------|----------|
+| **Auto-recall** | Loads your profile and project context at conversation start | Both |
+| **Passive observation** | Silently learns preferences, corrections, and domain knowledge | Both |
+| **Contextual recall** | Surfaces relevant knowledge when you mention a project/topic mid-conversation | Both |
+| **Auto-commit** | Saves knowledge and observations when the conversation ends | Both |
+| **User profile** | Persistent model of who you are and how you like to work | Both |
+| **Per-project config** | Control capture aggressiveness per project via `.session-memory.json` | Both |
+| **Claude Code support** | Drop-in CLAUDE.md instructions + optional hooks | Claude Code |
+
+### The Learning Loop
+
+```
+Conversation starts
+  → Auto-recall loads your profile + project context
+  → Claude adapts to your known preferences
+
+Conversation happens
+  → Passive observation accumulates new signals
+  → Contextual recall surfaces relevant knowledge on mention
+  → Claude adapts in real-time
+
+Conversation ends
+  → Auto-commit saves decisions, knowledge, and observations
+  → Your profile and project nodes get smarter
+
+Next conversation starts
+  → Claude knows more. Repeats less. Helps better.
+```
 
 ---
 
 ## Quick Start
 
-| You want to... | Command |
-|----------------|---------|
-| Save a session's context and knowledge | `/remember` |
-| Load context before starting work | `/recall [project]` |
-| Look up how something works | `/recall [topic]` or `/search [topic]` |
-| Quickly capture a gotcha or technique | `/learn [node] [content]` |
-| Jot down a quick fact | `/note [node] [content]` |
-| Get a weekly digest | `/review` |
-| See what happened chronologically | `/timeline [project?]` |
-| Archive a finished project | `/forget [node]` |
-| Run memory maintenance | `/cleanup` |
+### Cowork (Claude Desktop) — Full Support
+
+1. Download the plugin zip
+2. Claude Desktop → Cowork tab → Customize → Upload custom plugin
+3. Select `session-memory-plugin.zip`
+4. Start talking. Memory activates automatically.
+
+### Claude Code — Full Support (new in v4)
+
+**Minimal setup (no hooks):**
+1. Copy the contents of `claude-code/INSTRUCTIONS.md` into your `~/.claude/CLAUDE.md` (global) or project-level `CLAUDE.md`
+2. `mkdir -p ~/Documents/Claude/memory`
+3. Start a new Claude Code session. Done.
+
+**With hooks (recommended):**
+1. Do the minimal setup above
+2. Add the hooks from `claude-code/hooks.json` to your `~/.claude/settings.json`
+3. Hooks make auto-recall more reliable by feeding data at session init
 
 ---
 
-## What gets captured
+## How It Works
 
-Every `/remember` extracts two categories:
+### Always-On Behaviors (no commands needed)
 
-### Project State — what changed
-- **Decisions made** — what was resolved and why
-- **Open threads** — things started but not finished
-- **Blockers** — what's preventing progress and who owns it
-- **Artifacts** — docs created, proposals sent, decks built
-- **Next actions** — prioritized (P0/P1/P2/WAITING)
+#### Auto-Recall
+At conversation start, Claude reads your user profile and checks for attention items. If you have overdue P0s or stale threads, it tells you. If you mention a known project, it loads context automatically. All silently — no "loading memory..." preamble.
 
-### Knowledge — what was learned
-- **Insights** — "Realized our churn is an onboarding problem, not a product problem"
-- **Lessons** — "Tried same-day proposals — close rate dropped. 48-hour tailored decks close 3x better"
-- **Mental Models** — "Their approval flow: dept head → finance → VP → procurement"
-- **Gotchas** — "Their fiscal year starts April, not January — adjust all budget timing"
-- **Recipes** — "For exec buy-in: lead with their metric, show the gap, propose one action"
-- **Corrections** — "They're not price-sensitive — they need ROI framing for internal approval"
+#### Passive Observation
+During every conversation, Claude watches for:
+- **Corrections** ("don't do that", "I prefer this") — highest priority, always saved
+- **Preferences** (communication style, tool choices, working patterns)
+- **Domain knowledge** (how your company works, industry terms, constraints)
+- **Relationship context** (who's who, who owns what)
 
-Knowledge entries are the highest-value content. They persist longer than session logs and surface automatically when you need them.
+It never interrupts to capture these. It adapts in real-time and saves at conversation end.
 
----
+#### Contextual Recall
+When you mention a project, person, or topic with memory, Claude surfaces relevant knowledge naturally — "Heads up, Acme's procurement requires 3 vendor quotes" — without dumping a formal recall block.
 
-## Commands
+#### Auto-Commit
+When the conversation ends, Claude silently commits what was learned. No confirmation prompt. If the conversation was trivial, it skips. Corrections and preferences are always saved.
 
-### Core — Commit & Recall
+### The User Profile
 
-#### `/remember`
-End-of-session commit. Extracts project state and knowledge, tracks people, spots cross-project signals. Works equally well for a strategy session, a client call debrief, or a pure learning session.
+New in v4: a `user` node that accumulates knowledge about **you**:
 
-#### `/recall [project | @person | topic]`
-Start-of-session context loading:
-- **Project**: full state + knowledge base + threads + actions
-- **Person**: cross-project profile (which projects, what they own, open items)
-- **Topic**: everything known about a subject across all projects
-- **No argument**: working world dashboard with all active projects at a glance
+- Communication preferences (terse vs. detailed, options vs. decisions)
+- Working style (batching, cadence, delegation patterns)
+- Corrections (things Claude should never do again)
+- Domain expertise (what you know, what needs explaining)
+- Relationships (who you work with, their roles)
+- Tool preferences (which platforms you use)
 
-### Quick Capture
-
-#### `/learn [node] [type?] [content]`
-Capture a single piece of knowledge — no full session extraction needed:
-```
-/learn client:acme gotcha Their procurement requires 3 vendor quotes even for renewals
-/learn bizdev:partnerships model Channel partners want co-marketing before signing
-/learn strategy:pricing lesson Usage-based pricing confused mid-market buyers — flat tiers landed better
-/learn domain:healthcare recipe For HIPAA BAAs: send our template first, let their legal redline, then negotiate
-```
-Types: `insight`, `lesson`, `model`, `gotcha`, `recipe`, `correction`. Auto-inferred if omitted.
-
-#### `/note [node] [content]`
-Fastest capture — one line, no ceremony:
-```
-/note client:acme Kim confirmed March 15 deadline
-/note hiring Sent offer letter to Jordan for ops manager
-/note strategy:pricing Competitor just dropped entry tier to $29/mo
-```
-
-### Analysis
-
-#### `/search [query]`
-Cross-project search. Finds knowledge, decisions, people, artifacts, blockers, actions:
-- "how does their approval process work" → finds MODEL entries
-- "any gotchas with Acme's procurement" → finds GOTCHA entries
-- "what worked for retention" → finds LESSON entries
-- "what's my P0 list" → unified action list across all nodes
-
-#### `/review [--since date] [--until date]`
-Synthesized weekly review (not just a timeline — an analytical digest):
-- **Progress**: what moved forward
-- **Learned**: new knowledge committed
-- **Stuck**: blockers and stale threads
-- **Decided**: key decisions for accountability
-- **Coming Up**: P0/P1 actions across all projects
-- **Connections**: cross-project patterns and signals
-
-#### `/timeline [project?] [--since date] [--until date]`
-Chronological activity log with velocity assessment and arc analysis.
-
-### Maintenance
-
-#### `/forget [node] [--archive | --merge target]`
-Archive (default), merge, or delete project nodes. Cleans up cross-references.
-
-#### `/cleanup`
-Memory health audit: stale threads, dormant nodes, orphaned entries, duplicates.
+This is what makes Claude feel like it "knows" you. It carries across all projects and both platforms.
 
 ---
 
-## Memory Types
+## Explicit Commands
 
-Knowledge entries persist longer than logs — they're the highest-value content.
+All commands from v3 still work. Use them when you want manual control.
 
-### Project State
-| Entry | Format | Behavior |
-|-------|--------|----------|
-| **Summary** | `[node] SUMMARY (date): ...` | Replaced each session (always current) |
-| **Changelog** | `[node] LOG date — title: ...` | Append-only (never modified) |
+| Command | What it does |
+|---------|-------------|
+| `/remember` | Full session commit with confirmation |
+| `/recall [project?]` | Dashboard (no arg) or specific project context |
+| `/learn [node] [type?] [content]` | Quick knowledge capture |
+| `/note [node] [content]` | One-liner fact |
+| `/search [query]` | Cross-project search |
+| `/review` | Weekly synthesis digest |
+| `/timeline [project?]` | Chronological activity |
+| `/forget [node]` | Archive a project |
+| `/cleanup` | Memory health audit |
 
-### Knowledge
-| Entry | Format | When to use |
-|-------|--------|-------------|
-| **Insight** | `[node] INSIGHT (date): ...` | New realization or connection |
-| **Lesson** | `[node] LESSON (date): tried → happened → takeaway` | Something that worked or failed |
-| **Model** | `[node] MODEL (date): ...` | How something works (process, workflow, system) |
-| **Gotcha** | `[node] GOTCHA (date): ...` | Trap, hidden requirement, or non-obvious behavior |
-| **Recipe** | `[node] RECIPE (date): name — when → how` | Reusable technique, playbook, or process |
-| **Correction** | `[node] CORRECTION (date): old → new` | Updated or reversed belief |
+### Always-On Skill
 
-### Cross-cutting
-| Entry | Format |
-|-------|--------|
-| **People** | `[node] PEOPLE: Name (role) — context. Also in: [nodes]` |
-| **Signal** | `[node] SIGNAL from [other-node] (date): implication` |
-| **Archive** | `[node] ARCHIVED (date): compressed summary` |
+| Skill | Behavior |
+|-------|----------|
+| `observe` | Runs silently in every conversation. No trigger needed. Captures preferences, corrections, and domain knowledge. |
+
+### Auto-firing Skills
+
+Commands also fire from natural language:
+
+| Trigger | Skill |
+|---------|-------|
+| "save this", wrapping up, farewell | `remember` (auto-commit) |
+| Conversation start, greeting, "catch me up" | `recall` (auto-recall) |
+| "TIL", "gotcha:", "the trick is...", "I was wrong about" | `learn` |
+| "note that", "jot down", "quick note" | `note` |
+| "any gotchas with", "what's blocked", "how does X work" | `search` |
+| "weekly review", "summarize my week" | `review` |
+| "we're done with X", "archive X" | `forget` |
+| "what have I been working on" | `timeline` |
+| "clean up memory", "what's stale" | `cleanup` |
 
 ---
 
-## Priority System
+## What Gets Captured
 
-Next actions: `[P0]` do now, `[P1]` this week, `[P2]` eventually, `[WAITING:person]` blocked on someone.
+### Project State (what changed)
+- Decisions made and reasoning
+- Open threads with staleness tracking
+- Blockers and who/what is blocking
+- Artifacts created (docs, decks, proposals)
+- Next actions (P0/P1/P2/WAITING)
 
-## Staleness Tracking
+### Knowledge (what was learned)
+| Type | Example |
+|------|---------|
+| **Insight** | "Churn is an onboarding problem, not a product problem" |
+| **Lesson** | "Same-day proposals fail. 48-hour tailored decks close 3x better" |
+| **Model** | "Their approval: dept head → finance → VP → procurement" |
+| **Gotcha** | "Fiscal year starts April, not January — adjust all budget timing" |
+| **Recipe** | "For exec buy-in: lead with their metric, show the gap, propose one action" |
+| **Correction** | "Not price-sensitive — they need ROI framing for internal approval" |
 
-Threads: `[FRESH]`, `[ONGOING]`, `[STALE]` (3+ sessions without progress).
-Nodes: Active (7 days), Warm (8-14), Cooling (15-30), Dormant (30+).
+### User Observations (who you are)
+| Type | Example |
+|------|---------|
+| **Preference** | "Prefers terse responses — told Claude to stop summarizing" |
+| **Correction** | "Don't add emojis to professional communications" |
+| **Pattern** | "Starts mornings with email triage, then deep work blocks" |
+| **Domain** | "Deep expertise in AI go-to-market — skip 101 explanations" |
+| **Relationship** | "Reports to [Name] (CEO), weekly 1:1s on Mondays" |
+
+---
+
+## Per-Project Config
+
+Control behavior per project via `.session-memory.json` in the project root:
+
+```json
+{
+  "node": "client:acme-corp",
+  "capture": "aggressive",
+  "auto_recall": true,
+  "auto_commit": true,
+  "observe": true
+}
+```
+
+| Capture Level | Behavior |
+|--------------|----------|
+| `"aggressive"` | Capture everything. Use for high-value client work. |
+| `"normal"` | Standard capture. Default. |
+| `"minimal"` | Only explicit commands. No auto behaviors. |
+
+See `session-memory.config.md` for the full spec.
+
+---
+
+## Memory Storage
+
+Memory lives on your computer at `~/Documents/Claude/memory/`. Shared between Cowork and Claude Code.
+
+```
+~/Documents/Claude/memory/
+├── DASHBOARD.md          ← Master index
+├── user.md               ← Your profile (NEW in v4)
+├── archive/              ← Archived nodes
+├── client/
+│   ├── acme-corp.md
+│   └── northstar.md
+├── bizdev/
+│   └── partnerships.md
+├── strategy/
+│   └── q2-growth.md
+├── hiring.md
+└── brand.md
+```
+
+All files are plain markdown. Human-readable. Editable. Backupable.
 
 ---
 
@@ -163,178 +235,68 @@ Use kebab-case. Organize however fits your work:
 
 | Pattern | Example |
 |---------|---------|
-| Client work | `client:acme-corp`, `client:northstar` |
-| Business development | `bizdev`, `bizdev:stripe-partnership` |
-| Internal ops | `company-ops`, `hiring`, `finance`, `brand` |
-| Strategy/planning | `strategy:q2-growth`, `strategy:pricing` |
-| Products/services | `onboarding-program`, `crm-dashboard` |
-| Learning | `learning:sales-ops`, `learning:ai-tools` |
-| Domain knowledge | `domain:tax-law`, `domain:healthcare-compliance` |
-| Research | `research:competitor-landscape` |
-| Infrastructure | `infra:crm`, `infra:data-pipeline` |
-| Personal | `personal`, `personal:finances` |
+| Client work | `client:acme-corp` |
+| Business dev | `bizdev:stripe-partnership` |
+| Internal ops | `company-ops`, `hiring`, `finance` |
+| Strategy | `strategy:q2-growth` |
+| Products | `onboarding-program`, `crm-dashboard` |
+| Learning | `learning:sales-ops` |
+| Domain | `domain:healthcare-compliance` |
+| Infrastructure | `infra:data-pipeline` |
+| Personal | `personal` |
+| **User profile** | `user` (auto-managed) |
 
 ---
 
-## Git-Aware Memory
+## Platform Comparison
 
-When working in a git repository, `/remember` can optionally capture development context:
+| Feature | Cowork | Claude Code |
+|---------|--------|-------------|
+| Plugin system | Native | Via CLAUDE.md |
+| Auto-recall | Skill auto-fire | CLAUDE.md instructions + hooks |
+| Auto-commit | Skill auto-fire | CLAUDE.md instructions |
+| Passive observation | Always on | Always on |
+| Contextual recall | Always on | Always on |
+| User profile | Shared | Shared |
+| Per-project config | Supported | Supported |
+| Explicit commands | All 10 | All 10 |
+| Memory files | Shared location | Shared location |
 
-- **Current branch** — which branch was being worked on
-- **Recent commits** — last 3-5 commit messages from the session
-- **Uncommitted changes** — high-level summary of staged/modified files
-- **Related branches** — feature branches, PRs, or upstream references mentioned
-
-This context is included in the changelog entry, making it easy to pick up exactly where you left off:
-```
-[crm-dashboard] LOG 2025-03-20 — API refactor: ... | Git: branch feature/api-v2, 3 commits (refactored auth middleware, added rate limiting, updated tests)
-```
-
-Git context is automatically skipped for non-code sessions (strategy, client work, etc.).
-
-**Cowork vs Claude Code:** Cowork loads this behavior from `commands/remember.md`. **Claude Code** should use `.claude/commands/remember.md`, which mirrors the same Step 1b git context. Both capture matching `Git: branch …` detail in changelog lines when the session is code-focused.
-
----
-
-## Auto-firing Skills
-
-All commands also exist as skills that trigger from natural language:
-
-| Trigger pattern | Skill |
-|----------------|-------|
-| "save this", wrapping up, "remember that X" | `remember` |
-| "catch me up", "status of X", "how does X work" | `recall` |
-| "TIL", "gotcha:", "the trick is...", "I was wrong about" | `learn` |
-| "note that", "jot down", "quick note" | `note` |
-| "when did we decide", "any gotchas with", "what's blocked" | `search` |
-| "weekly review", "summarize my week", "what did I accomplish" | `review` |
-| "we're done with X", "archive X" | `forget` |
-| "what have I been working on", "show last week" | `timeline` |
-| "clean up memory", "what's stale" | `cleanup` |
-
----
-
-## How Memory is Stored
-
-Memory lives on your computer at `~/Documents/Claude/memory/`. The plugin creates and manages this folder automatically.
-
-| Platform | Memory path |
-|----------|-------------|
-| macOS / Linux | `~/Documents/Claude/memory/` |
-| Windows | `%USERPROFILE%\Documents\Claude\memory\` (typically `C:\Users\YourName\Documents\Claude\memory\`) |
-
-```
-~/Documents/Claude/memory/
-├── DASHBOARD.md          ← Master index — one living summary per node, P0 list, recent knowledge
-├── archive/              ← Archived nodes get moved here
-├── client/
-│   ├── acme-corp.md      ← One file per node
-│   └── northstar.md
-├── bizdev/
-│   └── partnerships.md
-├── strategy/
-│   └── q2-growth.md
-├── hiring.md             ← Nodes without a prefix go in the root
-└── brand.md
-```
-
-Subdirectories are created dynamically from node prefixes. Any prefix is valid — use whatever fits your work.
-
-Both Cowork and Claude Code use the same storage path, so memory is shared seamlessly across platforms. The files are plain markdown — you can read, edit, sync, or back them up with any tool.
-
----
-
-## Setup
-
-This plugin supports **Cowork** (Claude Desktop) and **Claude Code**. Each platform has its own integration mechanism, but they share the same memory format and storage location (`~/Documents/Claude/memory/`).
-
-### Cowork (Claude Desktop) — Full Support
-1. Download the plugin zip
-2. Claude Desktop → Cowork tab → Customize → Upload custom plugin
-3. Select `session-memory-plugin.zip`
-4. Start with `/recall` or `/remember`
-
-**How folder access works**: This plugin needs to read and write files on your computer to persist memory between conversations. The first time you use any memory command (`/remember`, `/recall`, `/learn`, etc.), Claude will automatically request access to `~/Documents/Claude` via the Cowork directory mounting system. You'll see an approval prompt — just approve it and you're set for the rest of the conversation.
-
-This happens once per conversation. You don't need to manually find or attach the folder — the plugin handles it automatically.
-
-**Why this is necessary**: Without file access, everything Claude learns dies when the conversation ends. By storing memory as markdown files on your computer, your knowledge, decisions, and context carry forward into every future session. The files are plain text — you can read, edit, or back them up yourself anytime.
-
-### Claude Code — Supported
-
-Claude Code has native filesystem access — no mounting or approval prompts needed.
-
-**Global setup (recommended):** Memory is shared across projects, so installing once in your user config usually matches how you work.
-
-1. Copy `CLAUDE.md` to `~/.claude/CLAUDE.md`
-2. Copy the contents of `.claude/commands/` to `~/.claude/commands/`
-3. Memory commands are now available in every project
-
-**Per-project setup:**
-1. Copy the `CLAUDE.md` file and `.claude/` directory into your project root
-2. Start with `/recall` or just ask — natural language triggers work automatically
-
-**What you get:**
-- `CLAUDE.md` loads automatically at session start, giving Claude awareness of your memory system and enabling natural language triggers ("save this", "any gotchas with X", "catch me up")
-- All 9 slash commands (`/remember`, `/recall`, `/learn`, `/note`, `/search`, `/review`, `/timeline`, `/forget`, `/cleanup`) work as custom commands
-- No approval prompts — Claude Code reads and writes memory files directly
-
-**How it differs from Cowork:**
-- No directory mounting step — filesystem access is native
-- `CLAUDE.md` auto-loads every session (in Cowork, the plugin system handles this)
-- Commands live in `.claude/commands/` instead of the plugin's `commands/` directory
-
-**Cowork `commands/` vs Claude Code:** Files under the plugin's `commands/` folder are written for Cowork. They invoke Cowork's directory-mounting tool (for example `mcp__cowork__request_cowork_directory`), which **does not exist in Claude Code**. **Claude Code users should follow `CLAUDE.md` and use the workflows in `.claude/commands/`** (same behavior, filesystem-native instructions). Do not point Claude Code at the raw `commands/*.md` from the plugin zip unless you replace those Cowork-only tool calls yourself.
-
-### Chat — Not Supported
-Chat doesn't have file access or a plugin system. Memory can't persist automatically. You could manually paste node file contents into a project's system prompt, but that's a workaround, not a real integration.
-
----
-
-## For contributors
-
-Contributions are welcome. Start with **[CONTRIBUTING.md](CONTRIBUTING.md)** (workflow, command/skill parity, versioning) and **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** (how the pieces fit together). Please read the **[Code of Conduct](CODE_OF_CONDUCT.md)**. Security-sensitive reports belong in **[SECURITY.md](SECURITY.md)**. Full release history: **[CHANGELOG.md](CHANGELOG.md)**.
+Both platforms read/write the same memory files. Learn something in Cowork → Claude Code knows it. And vice versa.
 
 ---
 
 ## Changelog
 
-See **[CHANGELOG.md](CHANGELOG.md)** for the complete version history. Summary below:
-
-### v3.0.1
-- Open source hygiene: `LICENSE`, contributing guides, templates, security policy, architecture doc, and CI validation for `plugin.json` and markdown frontmatter.
+### v4.0.0 — Always-On Learning
+- **Passive observation engine**: Claude silently learns about you during every conversation
+- **User profile node**: Persistent model of preferences, corrections, patterns, domain expertise
+- **Auto-recall**: Context loads at conversation start without commands
+- **Auto-commit**: Knowledge saves at conversation end without commands
+- **Contextual recall**: Relevant knowledge surfaces mid-conversation on mention
+- **Claude Code support**: Full integration via CLAUDE.md instructions and optional hooks
+- **Per-project config**: `.session-memory.json` for per-directory behavior control
+- **Silent mode**: Auto-triggered commits produce no output (unless creating new nodes)
+- **The learning loop**: Every conversation makes the next one better
 
 ### v3.0.0
-- **File-based storage**: Memory now persists to `~/Documents/Claude/memory/` as markdown files
-- Two-tier structure: `DASHBOARD.md` for fast orientation + individual node files for detail
-- Node-to-file mapping: `client:acme-corp` → `memory/client/acme-corp.md`
-- Directories created dynamically from node prefixes — any prefix is valid
-- Every write operation updates both the node file and the dashboard
-- Archive support: `/forget --archive` moves files to `memory/archive/`
-- `/cleanup` now audits actual files on disk, detects orphaned entries and missing files
-- All 9 commands updated with explicit storage instructions
+- File-based storage at `~/Documents/Claude/memory/`
+- Two-tier structure: DASHBOARD.md + individual node files
+- Dynamic directory creation from node prefixes
+- Archive support
 
 ### v2.2.0
-- **Business-operator friendly**: All examples, taxonomy, and language updated for general business use — not just technical projects
-- Node conventions now lead with client work, bizdev, strategy, and ops
-- Added strategy/planning node type (`strategy:q2-growth`, `strategy:pricing`)
-- All knowledge examples rewritten for business contexts (proposals, procurement, pricing, onboarding, retention)
+- Business-operator friendly language and examples
+- Strategy/planning node types
 
 ### v2.1.0
-- **Knowledge-first redesign**: Memory now captures insights, lessons, mental models, gotchas, recipes, and corrected beliefs as first-class entry types
-- Added `/learn` — quick knowledge capture without full session extraction
-- Added `/note` — one-liner capture for quick facts
-- Added `/review` — synthesized weekly digest with "Learned" as a prominent section
-- `/recall` now surfaces knowledge entries prominently (not buried under project state)
-- `/recall [topic]` — topic-based knowledge recall across all projects
-- `/search` redesigned to prioritize knowledge entries for "how/what/why" queries
-- `/remember` extraction expanded to cover both project state and knowledge categories
-- Knowledge entries preserved longer than logs during memory consolidation
+- Knowledge-first redesign with six knowledge types
+- Added `/learn` and `/note` for quick capture
+- `/review` weekly digest
 
 ### v2.0.0
 - Added `/search`, `/forget`, `/timeline`, `/cleanup`
-- Priority system, staleness tracking, blocker tracking, people index
-- Genericized taxonomy, cross-project signals
+- Priority system, staleness tracking, cross-project signals
 
 ### v1.0.0
 - Initial release with `/remember` and `/recall`

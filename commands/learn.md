@@ -51,13 +51,11 @@ If the user provides just natural language (e.g. `/learn that the API rate limit
 
 ### Storage Location
 
-**Before writing**: Check if `~/Documents/Claude/memory/` is accessible. If not, use the `request_cowork_directory` tool to request access:
+**Before writing**: Check if `~/Documents/Claude/memory/` is accessible.
+- **Cowork**: Use `mcp__cowork__request_cowork_directory(path="~/Documents/Claude")` to request access. Wait for the user to approve.
+- **Claude Code**: The directory is accessible directly via the filesystem. Create it with `mkdir -p` if it doesn't exist.
 
-```
-mcp__cowork__request_cowork_directory(path="~/Documents/Claude")
-```
-
-The user will see an approval prompt. Wait for the mount to succeed before proceeding. If the user declines, explain that memory cannot be persisted without this folder and stop.
+If the directory cannot be accessed, explain that memory cannot be persisted without this folder and stop.
 
 1. Determine the node file path from the node ID:
    - If node has a prefix (e.g., `client:acme-corp`): `~/Documents/Claude/memory/{prefix}/{slug}.md`

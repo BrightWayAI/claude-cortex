@@ -12,13 +12,11 @@ You are performing maintenance on Claude's working memory. This keeps the memory
 
 ### How to Audit
 
-**Before auditing**: Check if `~/Documents/Claude/memory/` is accessible. If not, use the `request_cowork_directory` tool to request access:
+**Before auditing**: Check if `~/Documents/Claude/memory/` is accessible.
+- **Cowork**: Use `mcp__cowork__request_cowork_directory(path="~/Documents/Claude")` to request access. Wait for the user to approve.
+- **Claude Code**: The directory is accessible directly via the filesystem.
 
-```
-mcp__cowork__request_cowork_directory(path="~/Documents/Claude")
-```
-
-The user will see an approval prompt. Wait for the mount to succeed before proceeding. If the user declines, explain that memory cannot be audited without this folder and stop.
+If the directory cannot be accessed, explain that memory cannot be audited without this folder and stop.
 
 1. Read `~/Documents/Claude/memory/DASHBOARD.md`
 2. List all `.md` files in `memory/` and subdirectories (excluding DASHBOARD.md and archive/)
@@ -37,8 +35,9 @@ Scan all memory entries and compile:
 - Estimated usage: [rough assessment: light / moderate / heavy / near limit]
 
 ### Nodes
-- Active nodes: [count] (updated within 14 days)
-- Warm nodes: [count] (15-30 days)
+- Active nodes: [count] (updated within 7 days)
+- Warm nodes: [count] (8-14 days)
+- Cooling nodes: [count] (15-30 days)
 - Dormant nodes: [count] (30+ days)
 - Archived nodes: [count]
 ```

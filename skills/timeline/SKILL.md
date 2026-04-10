@@ -4,8 +4,10 @@ description: >
   Show a chronological timeline of activity across all projects or a single
   project. Auto-fires when a user asks "what have I been working on", "show me
   last week", "what happened this month", "give me a timeline of [project]",
-  "weekly review", "what did we do on [project] recently", or "show my activity".
-  Also triggers on "prep my weekly update" or "what's the arc of [project]".
+  "what did we do on [project] recently", or "show my activity".
+  Also triggers on "what's the arc of [project]" or "show me the history of [project]".
+  NOTE: "weekly review" and "prep my status update" should route to /review, not /timeline.
+  /timeline is raw chronology; /review is synthesized analysis.
 ---
 
 See commands/timeline.md for the full workflow.

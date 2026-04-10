@@ -70,13 +70,11 @@ Wait for confirmation before modifying memory.
 
 Memory is stored in `~/Documents/Claude/memory/`.
 
-**Before modifying**: Check if `~/Documents/Claude/memory/` is accessible. If not, use the `request_cowork_directory` tool to request access:
+**Before modifying**: Check if `~/Documents/Claude/memory/` is accessible.
+- **Cowork**: Use `mcp__cowork__request_cowork_directory(path="~/Documents/Claude")` to request access. Wait for the user to approve.
+- **Claude Code**: The directory is accessible directly via the filesystem.
 
-```
-mcp__cowork__request_cowork_directory(path="~/Documents/Claude")
-```
-
-The user will see an approval prompt. Wait for the mount to succeed before proceeding. If the user declines, explain that memory cannot be modified without this folder and stop.
+If the directory cannot be accessed, explain that memory cannot be modified without this folder and stop.
 
 - **Archive** (default): Move the node file from its current location to `memory/archive/{filename}`. Remove the node's entry from DASHBOARD.md Active Nodes. Add a one-line entry to the Dormant or a new "Archived" section in DASHBOARD.md.
 - **Merge**: Read both node files. Append source's changelog, knowledge, and people entries to the target file. Delete the source file. Update DASHBOARD.md.

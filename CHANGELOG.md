@@ -4,9 +4,30 @@ All notable changes to the Session Memory Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
-## [Unreleased]
+## [4.0.0] — Always-On Learning
 
-_Nothing yet._
+### Added
+- **Passive observation engine** (`commands/observe.md`, `skills/observe/SKILL.md`) — silently learns user preferences, corrections, domain knowledge, and relationship context during every conversation. Never interrupts. Adapts in real-time. Flushes observations to memory at conversation end.
+- **User profile node** (`user.md`) — persistent model of the user: communication preferences, working style, corrections, domain expertise, relationships, tool preferences. Carries across all projects and both platforms.
+- **Auto-recall at conversation start** — loads user profile silently, checks for overdue P0s and stale threads, surfaces attention items in <=8 lines.
+- **Auto-commit at conversation end** — detects farewell signals, silently commits decisions, knowledge, and observations. Skips trivial conversations.
+- **Contextual recall mid-conversation** — when user mentions a known project/person/topic, surfaces 1-3 relevant knowledge entries naturally (no recall block).
+- **Silent mode for `/remember`** — auto-triggered commits produce no output unless creating a new node.
+- **Claude Code full support** (`claude-code/INSTRUCTIONS.md`, `claude-code/hooks.json`) — drop-in CLAUDE.md instructions and optional hooks for auto-recall/auto-commit in Claude Code.
+- **Per-project config** (`.session-memory.json`, `session-memory.config.md`) — control capture aggressiveness (`aggressive`/`normal`/`minimal`), toggle auto behaviors, set default node, override memory path per project.
+- **Dashboard template** — `DASHBOARD.md` now has a defined format (table-based Active Nodes, P0 list, Waiting On, Recent Knowledge, Stale Threads, Dormant Nodes).
+
+### Changed
+- `skills/remember/SKILL.md` — now auto-fires on farewell signals (conversation end), runs silent extraction, flushes user observations.
+- `skills/recall/SKILL.md` — now auto-fires on conversation start and contextual mid-conversation mentions.
+- `skills/search/SKILL.md` — disambiguated trigger phrases from `/recall` (search is cross-project; recall is single-node context).
+- `skills/timeline/SKILL.md` — removed "weekly review" trigger (routes to `/review` instead).
+- `commands/remember.md` — added user observation extraction (Section D), user node write step, confidence gating, silent mode, dashboard template.
+- `commands/recall.md` — added Step 0 (always load user profile), auto-recall attention summary, contextual recall section.
+- `commands/cleanup.md` — aligned staleness thresholds to 4-tier system (7/14/30 days) matching recall.md.
+- All 9 command files — platform-aware directory access (Cowork `request_cowork_directory` vs Claude Code direct filesystem).
+- `CLAUDE.md` — updated to v4 with always-on behaviors, user profile, per-project config.
+- `plugin.json` — v4.0.0, updated description, added `platforms` field.
 
 ## [3.0.1]
 

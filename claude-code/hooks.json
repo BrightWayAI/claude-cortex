@@ -1,0 +1,37 @@
+{
+  "_README": "Session Memory hooks for Claude Code. Copy the 'hooks' object below into your ~/.claude/settings.json or project-level .claude/settings.json. Alternatively, just use INSTRUCTIONS.md in your CLAUDE.md — hooks are optional and only make auto-recall more reliable.",
+
+  "hooks": {
+    "ProjectInit": [
+      {
+        "matcher": {},
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat ~/Documents/Claude/memory/user.md 2>/dev/null; echo '---DASHBOARD---'; cat ~/Documents/Claude/memory/DASHBOARD.md 2>/dev/null"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": {},
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[session-memory] Session ending — ensure observations were committed to ~/Documents/Claude/memory/'"
+          }
+        ]
+      }
+    ]
+  },
+
+  "_setup": {
+    "step_1": "Open your settings file: ~/.claude/settings.json (global) or .claude/settings.json (project)",
+    "step_2": "Copy the 'hooks' object above and merge it into your settings file",
+    "step_3": "Add INSTRUCTIONS.md content to your CLAUDE.md (this is required — hooks alone are not enough)",
+    "step_4": "Run: mkdir -p ~/Documents/Claude/memory",
+    "step_5": "Start a new Claude Code session",
+    "minimal_setup": "If you don't want hooks, just add INSTRUCTIONS.md content to ~/.claude/CLAUDE.md. The always-on behaviors are instruction-driven and work without hooks."
+  }
+}

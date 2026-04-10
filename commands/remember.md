@@ -1,10 +1,28 @@
 ---
-description: Commit this conversation to working memory. Extracts knowledge, decisions, insights, open threads, and next actions — then writes a living summary and changelog entry for the detected project node. Run at the end of any conversation worth remembering.
+description: Commit this conversation to working memory. Extracts knowledge, decisions, insights, open threads, and next actions — then writes a living summary and changelog entry for the detected project node. Also flushes any observations accumulated by the passive learning engine. Can run in full mode (user-triggered) or silent mode (auto-triggered at conversation end).
 ---
 
 # /remember
 
 You are committing this conversation to Claude's working memory. Work through the following steps precisely.
+
+---
+
+## Mode Detection
+
+This command runs in one of two modes:
+
+### Full mode (default — user triggered /remember explicitly)
+- Complete extraction with all steps below
+- Confirmation output at the end
+- User sees what was committed
+
+### Silent mode (auto-triggered at conversation end)
+- Same extraction logic, but NO confirmation output
+- Triggered when the conversation is ending (farewell signals detected)
+- Skip if the conversation was trivial (no decisions, no knowledge, no meaningful observations)
+- Exception: if creating a NEW node, briefly mention: "Noted — started tracking [node-id]."
+- Always commit user observations (corrections, preferences) even from trivial conversations — these are never wasted
 
 ---
 
@@ -150,6 +168,28 @@ QUESTIONS FOR NEXT TIME:
 - Hypotheses to confirm or reject
 ```
 
+### D. User Observations (from passive learning engine)
+
+```
+PREFERENCES:
+- Communication style signals (terse vs. detailed, options vs. decisions)
+- Tool/platform preferences expressed or demonstrated
+- Working style patterns (batching, time-of-day, delegation)
+- Vocabulary and framing they use and expect
+
+CORRECTIONS:
+- Anything the user corrected about your approach
+- Implicit corrections (they ignored your suggestion and did it differently)
+- Format: [what was wrong] → [what they wanted] → [why, if given]
+
+DOMAIN CONTEXT:
+- Facts about their company, team, industry shared in passing
+- How their processes/systems work
+- Constraints they operate under
+```
+
+These observations are ALWAYS extracted, even in silent mode. They go to the `user` node, not project nodes (unless the observation is project-specific domain knowledge).
+
 ---
 
 ## Step 3 — Write to memory
@@ -158,13 +198,11 @@ QUESTIONS FOR NEXT TIME:
 
 Memory is stored in `~/Documents/Claude/memory/`.
 
-**Before writing**: Check if `~/Documents/Claude/memory/` is accessible. If not, use the `request_cowork_directory` tool to request access:
+**Before writing**: Check if `~/Documents/Claude/memory/` is accessible.
+- **Cowork**: Use `mcp__cowork__request_cowork_directory(path="~/Documents/Claude")` to request access. Wait for the user to approve.
+- **Claude Code**: The directory is accessible directly via the filesystem. Create it with `mkdir -p` if it doesn't exist.
 
-```
-mcp__cowork__request_cowork_directory(path="~/Documents/Claude")
-```
-
-The user will see an approval prompt. Wait for the mount to succeed before proceeding. If the user declines, explain that memory cannot be persisted without this folder and stop.
+If the directory cannot be accessed, explain that memory cannot be persisted without this folder and stop.
 
 1. Determine the file path from the node ID:
    - If node has a prefix (e.g., `client:acme-corp`): `memory/{prefix}/{slug}.md`
@@ -178,6 +216,35 @@ The user will see an approval prompt. Wait for the mount to succeed before proce
    - Update Waiting On if applicable
    - Add any new knowledge entries to Recent Knowledge (keep last 7 days only)
    - Update the "Last updated" timestamp
+
+#### Dashboard File Format
+
+If `DASHBOARD.md` doesn't exist, create it with this template:
+
+```markdown
+# Working World Dashboard
+> Last updated: YYYY-MM-DD
+
+## Active Nodes
+| Node | Summary | Last Updated |
+|------|---------|-------------|
+| [node-id] | [1-line living summary] | YYYY-MM-DD |
+
+## P0 Actions
+- [P0] [node-id]: [action]
+
+## Waiting On
+- [WAITING:who] [node-id]: [what]
+
+## Recent Knowledge (last 7 days)
+- [node-id] [TYPE] (date): [entry]
+
+## Stale Threads
+- [node-id]: [thread] — open since [date]
+
+## Dormant Nodes
+- [node-id]: Last active [date]
+```
 
 #### Node File Format
 
@@ -226,6 +293,45 @@ The user will see an approval prompt. Wait for the mount to succeed before proce
 ## Signals
 [node] SIGNAL from [other-node] (date): [implication]
 ```
+
+### User Node — Observation Flush
+
+**Before writing project data**, flush observations to the user profile node:
+
+1. File path: `~/Documents/Claude/memory/user.md`
+2. If it doesn't exist, create it with this template:
+
+```markdown
+# user
+> Last updated: YYYY-MM-DD
+
+## Communication Preferences
+
+## Working Style
+
+## Corrections
+
+## Domain Expertise
+
+## Relationships & Org Context
+
+## Tool & Platform Preferences
+```
+
+3. Append new observations to the appropriate section:
+   - Preferences → Communication Preferences or Working Style or Tool & Platform Preferences
+   - Corrections → Corrections (always — these are highest priority)
+   - Domain context → Domain Expertise
+   - Relationship info → Relationships & Org Context
+
+4. Before appending, check for duplicates or contradictions:
+   - If new observation reinforces existing → skip (already captured)
+   - If new observation contradicts existing → write a CORRECTION entry, remove the old one
+   - If new observation is genuinely new → append
+
+5. Update `DASHBOARD.md` with the user node's last-updated timestamp
+
+**Confidence gating**: Only commit observations with reasonable confidence. A single offhand remark is a signal, not a fact. But direct corrections — always commit.
 
 ### A. Living Summary (replace if exists, create if new)
 
@@ -298,18 +404,28 @@ Scan for:
 
 ## Step 5 — Confirm
 
+### Full mode (user-triggered)
+
 Respond with:
 1. **Node(s)** written to
 2. **Living summary** (for verification)
 3. **Knowledge captured** — list INSIGHT/LESSON/MODEL/GOTCHA/RECIPE/CORRECTION entries
-4. **Open threads** with staleness
-5. **Blockers** (if any)
-6. **Next actions** — P0 → P1 → P2 → WAITING
-7. **Cross-project signals** (if any)
-8. **Knowledge updates** — prior entries invalidated, reinforced, or corrected
-9. **Unanswered questions** carried forward
+4. **Observations captured** — count of preferences, corrections, patterns written to user node
+5. **Open threads** with staleness
+6. **Blockers** (if any)
+7. **Next actions** — P0 → P1 → P2 → WAITING
+8. **Cross-project signals** (if any)
+9. **Knowledge updates** — prior entries invalidated, reinforced, or corrected
+10. **Unanswered questions** carried forward
 
 Keep tight. Skimmable in 20 seconds.
+
+### Silent mode (auto-triggered)
+
+- Say nothing unless creating a new node
+- If creating a new node: "Noted — started tracking [node-id]."
+- If a critical correction was captured that changes future behavior, optionally note: "Got it — I'll [adjusted behavior] going forward."
+- Otherwise: complete silence. The user shouldn't notice the commit happened.
 
 ---
 

@@ -1,10 +1,11 @@
 {
   "name": "session-memory",
-  "description": "Builds persistent intelligence — both project state and knowledge — across your working world. Nine commands for committing sessions, recalling context, searching knowledge, capturing lessons and gotchas, taking quick notes, running weekly reviews, viewing timelines, archiving projects, and maintaining memory health. Works for any kind of work: client engagements, business development, strategy, operations, hiring, research, learning, and technical projects.",
-  "version": "3.0.1",
+  "description": "Always-on learning system that makes Claude smarter about you with every conversation. Passively observes preferences, corrections, and domain knowledge. Auto-recalls context at conversation start. Auto-commits knowledge at conversation end. Nine commands for explicit control plus one always-on observation engine. Works on both Cowork (Claude Desktop) and Claude Code. The more you use it, the better Claude gets.",
+  "version": "4.0.0",
   "author": {
     "name": "BrightWay AI",
     "url": "https://brightwayai.com"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "platforms": ["cowork", "claude-code"]
 }
