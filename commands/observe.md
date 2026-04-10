@@ -175,7 +175,7 @@ This is new in v4. A special node called `user` that accumulates knowledge about
 ### Claude Code
 - Observation runs via CLAUDE.md instructions — always active
 - Accumulates during conversation, flushes on session end (via hooks or manual /remember)
-- Writes to the configured memory directory (default: `~/Documents/Claude/memory/` or project-local via `.session-memory.json`)
+- Writes to the configured memory directory (default: `~/Documents/Claude/memory/` or project-local via `.cortex.json`)
 
 ---
 

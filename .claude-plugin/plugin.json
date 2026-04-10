@@ -1,5 +1,5 @@
 {
-  "name": "session-memory",
+  "name": "cortex",
   "description": "Always-on learning system that makes Claude smarter about you with every conversation. Passively observes preferences, corrections, and domain knowledge. Auto-recalls context at conversation start. Auto-commits knowledge at conversation end. Nine commands for explicit control plus one always-on observation engine. Works on both Cowork (Claude Desktop) and Claude Code. The more you use it, the better Claude gets.",
   "version": "4.0.0",
   "author": {

@@ -1,6 +1,6 @@
-# Contributing to Session Memory Plugin
+# Contributing to Cortex Plugin
 
-Thanks for your interest in improving session memory! This guide covers what you need to know before submitting a PR.
+Thanks for your interest in improving Cortex! This guide covers what you need to know before submitting a PR.
 
 ## How the repo is organized
 
@@ -18,7 +18,7 @@ Every command in `commands/` has a matching skill in `skills/`. If you change a 
 
 1. **Fork** the repo and create a feature branch from `main`.
 2. Make your changes (see guidelines below).
-3. Open a PR against `BrightWayAI/session-memory-plugin:main`.
+3. Open a PR against `BrightWayAI/cortex-plugin:main`.
 
 ## What to check before submitting
 

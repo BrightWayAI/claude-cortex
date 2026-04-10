@@ -2,7 +2,7 @@
 
 ## What this plugin does with your filesystem
 
-Session Memory reads and writes **plain-text markdown files** in a single directory on your computer:
+Cortex reads and writes **plain-text markdown files** in a single directory on your computer:
 
 ```
 ~/Documents/Claude/memory/
@@ -21,6 +21,7 @@ All memory files are human-readable markdown. You can inspect, edit, move, or de
 
 | Version | Supported |
 |---------|-----------|
+| 4.x     | Yes       |
 | 3.x     | Yes       |
 | < 3.0   | No        |
 

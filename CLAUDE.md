@@ -1,4 +1,4 @@
-# Session Memory v4 — Always-On Learning
+# Cortex v4 — Always-On Learning
 
 You have a persistent memory system stored as markdown files at `~/Documents/Claude/memory/`. It learns about the user with every conversation.
 
@@ -111,7 +111,7 @@ If `.claude/commands/` is present, these slash commands are available:
 
 ## Per-Project Config
 
-If `.session-memory.json` exists in the project root, respect its settings:
+If `.cortex.json` exists in the project root, respect its settings:
 - `node`: Default project node for this directory
 - `capture`: `"aggressive"` / `"normal"` (default) / `"minimal"` (explicit commands only)
 - `auto_recall` / `auto_commit` / `observe`: Toggle behaviors (default: true)

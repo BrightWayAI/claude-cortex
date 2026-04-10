@@ -1,16 +1,16 @@
 # Per-Project Configuration
 
-Session Memory supports per-project configuration via a `.session-memory.json` file placed in the project root. This lets you control capture behavior, auto-recall, and knowledge priorities on a per-project basis.
+Cortex supports per-project configuration via a `.cortex.json` file placed in the project root. This lets you control capture behavior, auto-recall, and knowledge priorities on a per-project basis.
 
 ---
 
 ## File Location
 
-Place `.session-memory.json` in your project root (same level as `package.json`, `.git`, etc.):
+Place `.cortex.json` in your project root (same level as `package.json`, `.git`, etc.):
 
 ```
 my-project/
-├── .session-memory.json    ← here
+├── .cortex.json    ← here
 ├── .git/
 ├── src/
 └── ...
@@ -39,12 +39,12 @@ For Claude Code: this file is read automatically from the working directory.
 ## Fields
 
 ### `node` (string, optional)
-Default project node ID for this directory. If not set, session-memory will auto-detect based on conversation context or directory name.
+Default project node ID for this directory. If not set, Cortex will auto-detect based on conversation context or directory name.
 
 Examples: `"client:acme-corp"`, `"infra:data-pipeline"`, `"strategy:q2-growth"`
 
 ### `capture` (string, optional)
-Controls how aggressively session-memory captures knowledge. Default: `"normal"`.
+Controls how aggressively Cortex captures knowledge. Default: `"normal"`.
 
 | Value | Behavior |
 |-------|----------|

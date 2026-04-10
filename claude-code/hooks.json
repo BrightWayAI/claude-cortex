@@ -1,5 +1,5 @@
 {
-  "_README": "Session Memory hooks for Claude Code. Copy the 'hooks' object below into your ~/.claude/settings.json or project-level .claude/settings.json. Alternatively, just use INSTRUCTIONS.md in your CLAUDE.md — hooks are optional and only make auto-recall more reliable.",
+  "_README": "Cortex hooks for Claude Code. Copy the 'hooks' object below into your ~/.claude/settings.json or project-level .claude/settings.json. Alternatively, just use INSTRUCTIONS.md in your CLAUDE.md — hooks are optional and only make auto-recall more reliable.",
 
   "hooks": {
     "ProjectInit": [
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '[session-memory] Session ending — ensure observations were committed to ~/Documents/Claude/memory/'"
+            "command": "echo '[cortex] Session ending — ensure observations were committed to ~/Documents/Claude/memory/'"
           }
         ]
       }

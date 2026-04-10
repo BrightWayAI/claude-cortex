@@ -1,11 +1,11 @@
-# Session Memory v4.0 — Always-On Learning
+# Cortex v4.0 — Always-On Learning
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/BrightWayAI/session-memory-plugin/actions/workflows/validate.yml/badge.svg)](https://github.com/BrightWayAI/session-memory-plugin/actions/workflows/validate.yml)
 
 **Claude gets smarter about you with every conversation.**
 
-Most AI conversations are disposable. Session Memory makes them cumulative. It runs silently in the background — observing your preferences, capturing knowledge, learning from corrections — so every conversation builds on the last.
+Most AI conversations are disposable. Cortex makes them cumulative. It runs silently in the background — observing your preferences, capturing knowledge, learning from corrections — so every conversation builds on the last.
 
 No commands required. Just use Claude normally. It learns.
 
@@ -26,7 +26,7 @@ v3 required you to say `/remember`. v4 doesn't wait.
 | **Contextual recall** | Surfaces relevant knowledge when you mention a project/topic mid-conversation | Both |
 | **Auto-commit** | Saves knowledge and observations when the conversation ends | Both |
 | **User profile** | Persistent model of who you are and how you like to work | Both |
-| **Per-project config** | Control capture aggressiveness per project via `.session-memory.json` | Both |
+| **Per-project config** | Control capture aggressiveness per project via `.cortex.json` | Both |
 | **Claude Code support** | Drop-in CLAUDE.md instructions + optional hooks | Claude Code |
 
 ### The Learning Loop
@@ -57,7 +57,7 @@ Next conversation starts
 
 1. Download the plugin zip
 2. Claude Desktop → Cowork tab → Customize → Upload custom plugin
-3. Select `session-memory-plugin.zip`
+3. Select `cortex.zip`
 4. Start talking. Memory activates automatically.
 
 ### Claude Code — Full Support (new in v4)
@@ -183,7 +183,7 @@ Commands also fire from natural language:
 
 ## Per-Project Config
 
-Control behavior per project via `.session-memory.json` in the project root:
+Control behavior per project via `.cortex.json` in the project root:
 
 ```json
 {
@@ -201,7 +201,7 @@ Control behavior per project via `.session-memory.json` in the project root:
 | `"normal"` | Standard capture. Default. |
 | `"minimal"` | Only explicit commands. No auto behaviors. |
 
-See `session-memory.config.md` for the full spec.
+See `cortex.config.md` for the full spec.
 
 ---
 
@@ -275,7 +275,7 @@ Both platforms read/write the same memory files. Learn something in Cowork → C
 - **Auto-commit**: Knowledge saves at conversation end without commands
 - **Contextual recall**: Relevant knowledge surfaces mid-conversation on mention
 - **Claude Code support**: Full integration via CLAUDE.md instructions and optional hooks
-- **Per-project config**: `.session-memory.json` for per-directory behavior control
+- **Per-project config**: `.cortex.json` for per-directory behavior control
 - **Silent mode**: Auto-triggered commits produce no output (unless creating new nodes)
 - **The learning loop**: Every conversation makes the next one better
 

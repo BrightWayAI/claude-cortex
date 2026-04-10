@@ -1,4 +1,4 @@
-# Session Memory — Claude Code Integration
+# Cortex — Claude Code Integration
 
 > Drop this into your project's `CLAUDE.md` or `~/.claude/CLAUDE.md` (global) to enable persistent memory in Claude Code.
 > For the full plugin with all 9 commands and the always-on observation engine, use Cowork (Claude Desktop). This file provides the core always-learning behaviors for Claude Code.
@@ -187,13 +187,13 @@ These work in Claude Code when the user types them:
 | `/forget [node]` | Archive a project node |
 | `/cleanup` | Memory health audit |
 
-For full command documentation, see the session-memory plugin's `commands/` directory.
+For full command documentation, see the Cortex plugin's `commands/` directory.
 
 ---
 
 ## Per-Project Config
 
-If a `.session-memory.json` file exists in the project root, respect its settings:
+If a `.cortex.json` file exists in the project root, respect its settings:
 
 ```json
 {

@@ -1,6 +1,6 @@
 # Architecture
 
-Session Memory is a **markdown-instruction plugin**: there is no runtime binary. Claude reads command and skill files as prompts, then reads and writes files under a single memory directory on disk.
+Cortex is a **markdown-instruction plugin**: there is no runtime binary. Claude reads command and skill files as prompts, then reads and writes files under a single memory directory on disk.
 
 ## High-level flow
 
