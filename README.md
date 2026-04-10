@@ -1,7 +1,7 @@
 # Cortex v4.0 — Always-On Learning
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/BrightWayAI/session-memory-plugin/actions/workflows/validate.yml/badge.svg)](https://github.com/BrightWayAI/session-memory-plugin/actions/workflows/validate.yml)
+[![CI](https://github.com/BrightWayAI/claude-cortex/actions/workflows/validate.yml/badge.svg)](https://github.com/BrightWayAI/claude-cortex/actions/workflows/validate.yml)
 
 **Claude gets smarter about you with every conversation.**
 

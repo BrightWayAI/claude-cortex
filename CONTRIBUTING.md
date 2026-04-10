@@ -18,7 +18,7 @@ Every command in `commands/` has a matching skill in `skills/`. If you change a 
 
 1. **Fork** the repo and create a feature branch from `main`.
 2. Make your changes (see guidelines below).
-3. Open a PR against `BrightWayAI/cortex-plugin:main`.
+3. Open a PR against `BrightWayAI/claude-cortex:main`.
 
 ## What to check before submitting
 
