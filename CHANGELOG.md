@@ -4,6 +4,11 @@ All notable changes to the Cortex Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [Unreleased]
+
+### Fixed
+- `.claude/commands/remember.md` now includes v4 features: silent mode, user observation extraction, user node writes, and dashboard template (parity with `commands/remember.md`).
+
 ## [4.0.0] — Always-On Learning
 
 ### Added
