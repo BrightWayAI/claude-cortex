@@ -151,6 +151,28 @@ Commands also fire from natural language:
 
 ---
 
+## Subagents (v4.1+)
+
+Cortex ships two specialist subagents that handle heavy memory work off the main conversation thread. Other plugins (or Cortex's own commands) can delegate to them via the Task tool.
+
+| Subagent | Purpose | Used by |
+|---|---|---|
+| **`memory-librarian`** | Search, synthesize, and deduplicate across all working-memory files for broad / cross-cutting queries. Returns a structured Summary / Source Entries / Open Threads / Confidence response. Read-only. | `/search` (cortex) for broad queries; any other skill that needs cross-node memory synthesis |
+| **`transcript-reviewer`** | Read recent Granola call transcripts and surface commitments the user made that aren't already tracked in CRM tasks or Cortex memory. Returns a delta — only what's missing from existing tracking. | Manual / scheduled weekly run |
+
+Subagents inherit parent tools at runtime, so they work with whichever connectors (Granola, CRM, etc.) the user has connected. Tool allowlists are kept tight where possible (e.g., memory-librarian uses only Read/Grep/Glob).
+
+To invoke a subagent directly via the Task tool (Cowork or Claude Code):
+
+```
+Use the Task tool with subagent_type="memory-librarian"
+and pass: query="[your question]"
+```
+
+The agents are registered automatically when Cortex is installed — they appear in Claude's `subagent_type` enum alongside built-in agents.
+
+---
+
 ## What Gets Captured
 
 ### Project State (what changed)
