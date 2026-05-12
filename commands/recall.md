@@ -350,3 +350,15 @@ When the user mentions a project, person, or topic with memory:
 - Stale threads or overdue P0s → flag proactively
 - User profile → apply silently, never announce
 - Auto-recall → be brief, be useful, get out of the way
+
+## `[recalled:...]` tag updates (v4.3+)
+
+When `/recall` (any mode) renders a knowledge entry from a node file, update that entry's `[recalled:YYYY-MM-DD]` tag to today's local date before exiting. This is the substrate for v4.4's decay layer — entries that get recalled stay fresh; entries that don't get recalled drift toward demotion.
+
+Rules:
+- Only the `[recalled:...]` tag changes. The `[confirmed:...]` tag stays put — confirmation is a stronger signal that requires an explicit re-affirmation event.
+- Auto-recall and Contextual recall update tags only on entries actually rendered to the user, not on every entry read internally for context. The threshold is "did the user see this?"
+- If an entry pre-dates v4.3 and has no tags, add both `[confirmed:<original-date>] [recalled:<today>]` — backfill the substrate as you touch entries.
+- Updates are append-style edits to the existing node file. No new file writes. Idempotent.
+
+This work happens silently. Don't announce tag updates to the user.

@@ -20,6 +20,71 @@ Determine `today_local` and `tomorrow_local` (next business day: Mon-Thu → tom
 
 ---
 
+## Pre-chain B — One-time Scope migration (v4.3+)
+
+The mining layer (Steps 2a / 2b below) routes extracted content to nodes using a Scope convention on each domain-shaped node. This migration runs **once** to adopt the convention on existing nodes. After it completes, a marker file at `<config-root>/memory/.scope-migration-done` prevents re-prompting.
+
+Skip this block if `<config-root>/memory/.scope-migration-done` exists. Otherwise:
+
+### A — Detect domain-shaped nodes
+
+Scan `<config-root>/memory/`. A node is "domain-shaped" if ALL of:
+
+- It's a `.md` file at root level (e.g., `<config-root>/memory/<name>.md`), OR a `.md` file in a non-reserved subdirectory
+- Its filename is NOT one of: `user.md`, `DASHBOARD.md`, `triage-log.md`, `CLAUDE.md`
+- Its containing directory is NOT one of: `client/`, `bizdev/`, `person/`, `archive/` (these are project / prospect / person / archive — not domain)
+- Its YAML front-matter (if present) does NOT set `type: project` (engagement state, handled separately)
+
+The detection is purely structural. The plugin does not know or care what specific domains the user has — it works against whatever nodes exist.
+
+### B — Synthesize a Scope draft per detected node
+
+For each detected node, read its current content and produce a draft Scope section pre-filled from what's already in the file:
+
+- **Topics:** lowercased keywords inferred from existing knowledge-entry tags, recurring nouns in the Summary, and recurring section headers
+- **Aliases:** alternate names mentioned in PEOPLE entries or Summary (e.g., a node named `studio.md` whose Summary references "Learning Production System" gets that as an alias)
+- **What goes here:** one-line synthesis from the Summary section
+- **What does NOT go here:** left empty in the draft — this is the most useful field but requires user judgment
+
+### C — Per-node confirmation
+
+Present each draft to the user, one node at a time:
+
+> "Node `<name>`. Proposed Scope section:
+>
+> [draft]
+>
+> (a)ccept / (e)dit / (s)kip"
+
+- `accept` → insert the Scope section as the first section of the node file (above existing Summary). Idempotent: if a Scope section already exists, replace it; if not, insert.
+- `edit` → drop into edit mode. User edits inline, then accept.
+- `skip` → skip this node. It can still receive routed content from miners, but routing accuracy drops without the Scope hint. The migration will not re-prompt for this node — user can re-run `/end-day` with `--rerun-scope-migration` later to revisit.
+
+### D — Offer new domain nodes (open-ended)
+
+After all detected nodes are processed, ask once:
+
+> "Want to create any new domain nodes now? (open-ended — list them comma-separated, or skip)"
+
+For each name the user lists:
+1. Confirm node ID (kebab-case, lowercased)
+2. Walk through the same Scope interview (topics / aliases / what goes here / what does NOT go here — all four asked, no draft to pre-fill since the node is new)
+3. Create the node file at `<config-root>/memory/<name>.md` with the Scope section, an empty Summary placeholder, and standard sections (Knowledge / People / Changelog / Open Threads / Next Actions)
+
+The plugin does not suggest names. The user drives the list.
+
+### E — Mark complete
+
+Write `<config-root>/memory/.scope-migration-done` with the ISO timestamp and the list of nodes processed (one line per node, `<status> <node-id>` — accepted, edited, skipped, or created). This file is the only check that prevents re-prompting on subsequent `/end-day` runs.
+
+If the user runs `/end-day --rerun-scope-migration`, delete the marker and re-run this block.
+
+### F — On failure
+
+If Pre-chain B errors partway through (e.g., a node file is unreadable), log the partial state to `<config-root>/memory/.scope-migration-partial` and prompt the user: "Scope migration hit an error on `<node>`. Resume later via `/end-day --rerun-scope-migration`? Or continue with the rest of `/end-day` now using whatever Scope sections were captured?" Default: continue.
+
+---
+
 ## Step 1 — Inbox triage for tomorrow
 
 **Goal:** surface threads that will need a reply tomorrow so they can populate tomorrow's brief.

@@ -435,24 +435,51 @@ Keep under 500 characters. Skip empty categories.
 
 For significant, reusable knowledge, write dedicated entries. These persist longer than logs — they're the highest-value memory content.
 
+#### C.0 Entry metadata convention (v4.3+)
+
+Every knowledge entry carries three timestamps. The first is the original date the entry was committed. The second is the date the entry was last meaningfully touched (re-affirmed, edited, or referenced as evidence in a downstream commit). The third is the date the entry was last surfaced via `/recall` or returned by `memory-librarian`.
+
+Encoded inline using key:value tags at the end of the entry line:
+
 ```
-[node-id] INSIGHT (YYYY-MM-DD): [the insight, compressed but precise]
+[node-id] <TYPE> (YYYY-MM-DD): <entry body>  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+```
+
+- The leading `(YYYY-MM-DD)` is the **original commit date** — set once at creation, never changed.
+- `[confirmed:YYYY-MM-DD]` is the **last-confirmed-at** timestamp — updated whenever:
+  - The user accepts a mining-layer proposal that references this entry (Pre-chain B + Step 2b)
+  - A new commit explicitly reinforces this entry (e.g., new evidence for an existing INSIGHT)
+  - The user re-confirms via a future v4.4 rehearsal prompt
+- `[recalled:YYYY-MM-DD]` is the **last-surfaced-at** timestamp — updated whenever `memory-librarian` returns this entry in a Source Entries list or `/recall` renders it in a project view.
+
+Both tags default to the original commit date if no later event has touched them.
+
+These tags are the substrate for v4.4's forgetting/decay layer. **In v4.3 we write and maintain them but do not yet decay or demote based on them.** v4.4 reads these timestamps and decides which entries to demote, surface for rehearsal, or auto-archive.
+
+Existing pre-v4.3 entries without tags are treated as if `confirmed:` and `recalled:` both equal the original commit date. No migration step needed — the absence of a tag is itself a legible default.
+
+#### C.1 Entry formats
+
+```
+[node-id] INSIGHT (YYYY-MM-DD): [the insight, compressed but precise]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
 ```
 ```
-[node-id] LESSON (YYYY-MM-DD): [what was tried] → [what happened] → [the takeaway]
+[node-id] LESSON (YYYY-MM-DD): [what was tried] → [what happened] → [the takeaway]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
 ```
 ```
-[node-id] MODEL (YYYY-MM-DD): [how something works, 1-3 sentences]
+[node-id] MODEL (YYYY-MM-DD): [how something works, 1-3 sentences]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
 ```
 ```
-[node-id] GOTCHA (YYYY-MM-DD): [the trap and how to avoid it]
+[node-id] GOTCHA (YYYY-MM-DD): [the trap and how to avoid it]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
 ```
 ```
-[node-id] RECIPE (YYYY-MM-DD): [technique name] — [when to use] → [how to do it]
+[node-id] RECIPE (YYYY-MM-DD): [technique name] — [when to use] → [how to do it]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
 ```
 ```
-[node-id] CORRECTION (YYYY-MM-DD): [old belief] → [corrected understanding]
+[node-id] CORRECTION (YYYY-MM-DD): [old belief] → [corrected understanding]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
 ```
+
+On new commit, both `confirmed` and `recalled` are set to the commit date.
 
 **Quality bar**: Only write knowledge entries for things that are genuinely reusable. The test: "Would future-me benefit from this surfacing automatically?"
 
