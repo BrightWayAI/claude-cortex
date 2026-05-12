@@ -13,5 +13,5 @@ jobs:
           curl -X POST \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: token ${{ secrets.MARKETPLACE_PAT }}" \
-            https://api.github.com/repos/BrightWayAI/claude-plugins/dispatches \
+            https://api.github.com/repos/BrightWayAI/nucleus/dispatches \
             -d '{"event_type":"plugin-updated","client_payload":{"submodule":"claude-cortex"}}'
