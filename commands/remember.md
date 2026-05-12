@@ -483,6 +483,66 @@ On new commit, both `confirmed` and `recalled` are set to the commit date.
 
 **Quality bar**: Only write knowledge entries for things that are genuinely reusable. The test: "Would future-me benefit from this surfacing automatically?"
 
+#### C.2 Concept-drift detection (v4.4+)
+
+Before writing a new INSIGHT / MODEL / GOTCHA / LESSON entry, check whether it contradicts, supersedes, or meaningfully refines an existing entry on the same node. RECIPE entries are excluded from this check (recipes are additive techniques, not competing facts). CORRECTION entries already encode supersede explicitly via `[old belief] → [corrected understanding]` and don't need the check.
+
+Process:
+
+1. Read all entries of the same type from the target node's active sections (skip `## Demoted knowledge` and `## Archive`). If the node is brand new with no prior entries of this type, skip the drift check.
+2. If there are more than 20 existing entries of the same type, scope to the most-recently-confirmed 20 (read each entry's `[confirmed:...]` tag; sort desc, take top 20). The drift check is most useful against recent beliefs; old beliefs that contradict are less likely to still be active.
+3. Send to a Haiku-tier classifier:
+
+   > "You are a concept-drift detector for working memory. New entry:
+   > `<new entry text>`
+   >
+   > Existing entries of the same type on this node (most recent 20):
+   > [1] `<entry text>`
+   > [2] `<entry text>`
+   > ...
+   >
+   > Does the new entry contradict, supersede, or meaningfully refine any of the existing entries? Output exactly:
+   > `{supersedes: [<index>], relationship: 'contradicts' | 'supersedes' | 'refines', reason: '<one line>'}`
+   > or
+   > `{supersedes: null}`
+   >
+   > Rules:
+   > - 'contradicts' = new entry asserts the opposite of the existing one
+   > - 'supersedes' = new entry replaces the existing one with an updated version
+   > - 'refines' = new entry sharpens or qualifies an existing one without replacing it
+   > - Be conservative — only flag when the relationship is clear. Most new entries are additive, not superseding."
+
+4. Parse the response. If `supersedes` is non-null:
+
+   In FULL mode (user-triggered `/remember`):
+   - Surface inline before writing:
+     > "New entry: '<text>'
+     >  Concept-drift detector flagged this against existing entry [<index>]: '<existing text>'
+     >  Relationship: <contradicts | supersedes | refines>. Reason: <one line>.
+     >
+     >  How to handle?
+     >  (s)upersede — move existing to ## Demoted knowledge; write new in its place
+     >  (k)eep both — write new alongside; existing stays active
+     >  (e)dit relationship — describe the relationship inline (e.g., "this is a refinement that should be cross-referenced, not a supersede")
+     >  (skip) skip new entry — don't commit it"
+
+   In SILENT mode (auto-commit at conversation end):
+   - **Never auto-supersede in silent mode.** Silently demoting a held belief is too destructive for an unattended path. Instead: write the new entry alongside the old, append a `## Concept-drift flags` note to the changelog entry ("New entry on [node] may supersede [existing entry] — review via /rehearse"), and let the user resolve at the next `/recall` or `/rehearse`.
+
+5. On user-chosen `supersede` action:
+   - Move the existing entry to the node's `## Demoted knowledge` section (create if missing)
+   - Append metadata under the demoted entry: `↳ demoted <today> by supersede` and `↳ superseded by: <new entry's first 60 chars>`
+   - Write the new entry in the active section as normal
+   - Preserve the old entry's `[confirmed:...]` and `[recalled:...]` tags
+
+6. On `keep both` → write the new entry alongside; both stay active.
+
+7. On `edit relationship` → drop into inline editing for the new entry. After save, write it normally without supersede.
+
+8. On `skip new entry` → do not commit the new entry. Log to triage-log: "skipped new <type> on <node> — concept-drift conflict with existing entry, user declined."
+
+Cost: one Haiku call per new knowledge entry that's being written to a node with > 0 prior entries of the same type. Typical commit writes 2-4 knowledge entries → 2-4 Haiku calls → ~$0.005 per `/remember` invocation. Negligible.
+
 ### D. People Index (append or update)
 
 ```

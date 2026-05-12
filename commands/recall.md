@@ -362,3 +362,82 @@ Rules:
 - Updates are append-style edits to the existing node file. No new file writes. Idempotent.
 
 This work happens silently. Don't announce tag updates to the user.
+
+## Decay-aware rendering (v4.4+)
+
+`/recall` now classifies every knowledge entry it renders into one of four states based on the age of `[confirmed:...]` and the effective threshold for the entry's type and the node's `decay_profile`. See `references/decay-model.md` for the full model.
+
+### Loading thresholds
+
+Before rendering, read `<config-root>/memory/.decay-config.md` (create with documented defaults if missing). Extract:
+
+- `threshold_fresh`, `threshold_dormant`, `threshold_cold` (in days)
+- `type_modifiers` (per-entry-type multipliers — `CORRECTION: 0` means immune to decay)
+
+For each node being rendered, check its front-matter for `decay_profile:` (values: `fast` = 0.5, `normal` = 1.0, `slow` = 2.0, or numeric). The effective threshold for an entry is:
+
+```
+effective_threshold = base_threshold × type_modifier × decay_profile_multiplier
+```
+
+If `type_modifier` is 0 (CORRECTION), the entry is never flagged regardless of age.
+
+### State classification
+
+For each entry, compute `age_days = today - confirmed_date`. State:
+
+| age_days vs. thresholds | State |
+|---|---|
+| `< threshold_fresh` | Fresh |
+| `threshold_fresh ≤ age < threshold_dormant` | Stale |
+| `threshold_dormant ≤ age < threshold_cold` | Dormant |
+| `age ≥ threshold_cold` | Cold |
+
+Entries in the `## Demoted knowledge` section are skipped from active rendering (rendered separately and de-emphasized — see "Rendering demoted entries" below).
+
+### Render flag inline
+
+Append a state flag at the end of each entry's rendered line (only for Stale / Dormant / Cold — Fresh entries render unflagged):
+
+- Stale → ` [stale-confidence]`
+- Dormant → ` [dormant — last confirmed <N> days ago]`
+- Cold → ` [cold — last confirmed <N> days ago; consider rehearse or archive]`
+
+The flag is rendering-only — it does NOT get written into the entry text. The entry's underlying line stays unchanged; the flag is decorative on the recall output.
+
+### Recall-time triage offer
+
+After rendering all entries, if any are flagged Stale / Dormant / Cold AND the user invoked `/recall` explicitly (not auto-recall, not contextual), offer:
+
+> "[N] entries flagged as aging:
+>  [N_stale] stale · [N_dormant] dormant · [N_cold] cold
+>
+>  Triage now?
+>  (r)e-confirm — mark them all as confirmed today
+>  (s)elect — walk one by one, choose per entry
+>  (d)emote all dormant + cold — move to Demoted knowledge sections
+>  (k)skip — leave as-is; they'll resurface on next recall or rehearsal"
+
+Do NOT offer this in auto-recall mode (the user is greeting you; don't interrupt with a triage prompt). Do NOT offer for contextual recall either (mid-conversation references shouldn't break flow).
+
+### Per-action behavior
+
+- **Re-confirm all** → for each flagged entry, update `[confirmed:<today>]`. Print a one-line confirmation.
+- **Select** → walk one entry at a time, prompt per entry:
+  > "<entry text>
+  >  (c)onfirm / (d)emote / (a)rchive entry / (s)kip / (e)dit then confirm"
+  - `confirm` — update `[confirmed:<today>]`
+  - `demote` — move entry to the node's `## Demoted knowledge` section (create if missing). Append demotion metadata: `↳ demoted <today> by user-recall-action`. Original tags travel with the entry.
+  - `archive entry` — there's no entry-level archive; this is the same as `demote` plus a note that the user asked to remove it. (For node-level archive, point user to `/forget`.)
+  - `edit then confirm` — drop into inline edit; on save, update `[confirmed:<today>]`
+  - `skip` — leave as-is
+- **Demote all dormant + cold** → bulk move every Dormant and Cold entry to `## Demoted knowledge` in its respective node. Stale entries stay active.
+- **Skip** → no changes.
+
+### Rendering demoted entries
+
+In project-view and topic-view recall, render the `## Demoted knowledge` section AFTER the active sections, with a header note: "Below: entries previously demoted. Kept for reference; not surfaced as active knowledge." Don't include demoted entries in knowledge-entry summary counts or in "What We Know" highlights.
+
+### Auto-create `.decay-config.md` if missing
+
+On first `/recall` after v4.4 lands, if `<config-root>/memory/.decay-config.md` doesn't exist, create it with the documented defaults from `references/decay-model.md`. Don't prompt the user — defaults are sensible; user can tune later.

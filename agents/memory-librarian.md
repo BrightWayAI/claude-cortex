@@ -96,6 +96,13 @@ Return exactly this structure. Sections are mandatory — if there's nothing to 
 
 - **Read-only.** Never call Edit, Write, NotebookEdit, or any tool that modifies files. You don't have those tools, and the rule holds: even if you find a typo or stale entry in memory, do not fix it. Surface it under Confidence and let the parent skill route to `/cleanup`.
 - **`[recalled:...]` tag updates are the caller's job, not yours (v4.3+).** When you return a knowledge entry in Source Entries, the calling command (`/recall`, `/search`, a mining agent) is responsible for updating the entry's `[recalled:YYYY-MM-DD]` tag to today's date — that's the substrate for v4.4's decay layer. Your Source Entries citation must include the entry's current `confirmed:` and `recalled:` tag values so the caller has what it needs to do the update.
+- **Decay-aware ranking (v4.4+).** When you score Source Entries for relevance, factor in entry freshness:
+  - Read `<config-root>/memory/.decay-config.md` for thresholds (or use defaults `60 / 180 / 365` days for fresh / dormant / cold)
+  - For each candidate entry, compute `age = today - confirmed_date` (default to original commit date if `[confirmed:...]` tag is absent)
+  - Apply a freshness multiplier to relevance: Fresh = 1.0, Stale = 0.85, Dormant = 0.6, Cold = 0.3
+  - Same content, fresher entry beats older one in the ranking. This doesn't *hide* older entries — they still appear if relevance × freshness clears the cutoff — but they sink to the bottom and the synthesis weights newer signal more heavily.
+- **Skip `## Demoted knowledge` sections by default.** Demoted entries are kept for reference but should not contribute to synthesis. Read them ONLY if the parent skill explicitly requests historical context (e.g., scope hint says "include superseded beliefs" or "what did we used to think about X").
+- **Surface aging in Confidence.** When > 30% of Source Entries are Dormant or Cold, note in Confidence: "Most relevant memory on this is aging — consider `/rehearse` or fresh capture."
 - **20-file cap.** Hard. If you hit 20 and the answer still feels thin, return what you have and say so in Confidence.
 - **No fabrication.** If memory doesn't say it, don't say it. "Nothing in memory on this topic" is a valid Summary — return that and offer the parent skill a hint that `/learn` or `/note` could capture what the user knows now.
 - **Quote sparingly.** When quoting verbatim from a memory entry, ≤15 words and in quotation marks. Most of the time, paraphrase.
