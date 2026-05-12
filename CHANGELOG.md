@@ -6,6 +6,42 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.2.0] — Second-brain v2 Phases 3-6 (2026-05-12)
+
+### Added — Person pages (Phase 3)
+- **`memory/person/<firstname-lastname>.md`** — new directory and schema for canonical per-contact pages. Identity / Relationship / Recent interactions / Open threads / Notes / Linked entities. Schema documented in `CLAUDE.md`.
+- **Usage-graduated, not mention-graduated.** Six triggers create a page (contact-researcher dossier, 3+ recalls, project-setup primary contact, time-log billing role, explicit `[ENTITY:person]` tag, 3+ calendar meetings in 30 days). Casual mentions stay in project-node PEOPLE indices.
+- **`memory/.person-recall-counter.json`** — JSON map tracking recall count per slug. After 3 recalls without a page, `/recall` offers to graduate.
+- **`/recall person:<slug>`** — new query form renders the full person page when it exists; falls back to legacy cross-project profile when it doesn't.
+- **`/remember` Step 3 D.1 person-page graduation logic** — detects triggers, creates pages with pre-filled content from the conversation, or appends Recent interactions to existing pages. Never overwrites Identity / Notes / Linked entities without explicit confirmation.
+- **memory-librarian agent** — now checks `memory/person/<slug>.md` first for person-shaped queries; falls back to project-node ## People sections only if no page exists.
+- **DASHBOARD.md** — new `## Active People` section (top 10 graduated pages, sorted by Last updated).
+
+### Added — Cheap-tier commit triage (Phase 4)
+- **`/remember` Step 0** — Haiku-class classifier decides `commit: true | false` plus affected node list before any Sonnet synthesis runs. Trivial conversations cost ~$0.001 (classifier only); substantive conversations skip the classifier overhead and proceed normally.
+- **`memory/triage-log.md`** — append-only audit log of triage decisions. User reviews weekly for false-negatives.
+- **`skills/observe/SKILL.md`** — auto-commit flush now always runs `/remember` Step 0. CORRECTION-type observations bypass the classifier and always commit to `user.md`.
+- **Bypass rules** — explicit `/remember <node-id>` invocations and conversations with `[ENTITY:person]` tags skip Step 0 (user is asserting commit-worthiness).
+
+### Changed — `/end-day` orchestration chain (Phase 5)
+- **Rewrote `commands/end-day.md`** as a five-step chain with user gates:
+  1. Inbox triage for tomorrow (delegates to `inbox-triage` plugin if installed; falls back to lighter Gmail search otherwise)
+  2. Transcript-reviewer agent surfaces uncaptured commitments → per-item user gate to convert to CRM task / cortex P0 / skip
+  3. Cortex auto-commit with Phase 4 cheap-tier triage
+  4. Three reflective prompts (biggest done / blockers / one thing to move tomorrow) — answers also append to today's brief markdown snapshot
+  5. Pre-stage tomorrow's brief artifact via `daily-brief` plugin (skipped if not installed)
+- **Default-wait on gates.** If no user response within ~10s, conservative default is chosen. The chain never blocks.
+
+### Added — Guardrails (Phase 6)
+- **`/cleanup` orphan / isolated-note detection** — section G in the cleanup audit. Flags nodes with no incoming/outgoing links and last updated > 30 days ago. Per-orphan suggestion: archive / merge into candidate / keep standalone. Surfaces in DASHBOARD.md's new `## Isolated Notes` section.
+- **`/cleanup` person-page maintenance** — section H. Flags dormant (no contact 12+ months), stale-interaction (entries > 90 days that haven't been archived to the page's archive section), and premature-graduation pages.
+- **`/recall` duplicate-topic surfacing** — Haiku-tier semantic match on topic queries. If an existing node summary is plausibly about the same topic, surface "Note: `<node>` may already cover this. Read that first?" before the regular topic answer.
+
+### Why this matters
+Phases 3-6 of SECOND-BRAIN-V2-SPEC. Brings cortex from project-state memory to a relationship-and-cost-aware knowledge graph. Person pages make "who is this in 5 seconds before a meeting" possible. Cheap-tier triage keeps per-commit cost predictable as commit volume grows. `/end-day` ties the day's work into a single ritual. Guardrails prevent silent drift into noise.
+
+Phase 2 (inbox-triage as a separate plugin) was deliberately skipped — `daily-brief`'s built-in Gmail fallback for section 2 is sufficient for now.
+
 ## [4.1.3] — Platform-agnostic Step 0 (2026-05-12)
 
 ### Changed

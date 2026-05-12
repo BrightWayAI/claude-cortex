@@ -17,17 +17,21 @@ All memory lives at `~/Documents/Claude/memory/`. Layout:
 
 ```
 ~/Documents/Claude/memory/
-├── DASHBOARD.md          # Master index — node list, P0 list, recent activity
+├── DASHBOARD.md          # Master index — node list, P0 list, recent activity, Active People
 ├── user.md               # User profile — preferences, corrections, patterns
+├── triage-log.md         # Cortex commit-triage decisions (v4.2+; usually skip — meta, not content)
 ├── archive/              # Archived nodes (ignore unless query is historical)
+├── person/               # Graduated person pages (v4.2+) — sarah-chen.md, etc.
 ├── client/               # Prefixed nodes — client/acme-corp.md, etc.
 ├── strategy/
 └── *.md                  # Unprefixed nodes at root
 ```
 
-Node-to-file mapping: `client:acme-corp` → `memory/client/acme-corp.md`. Unprefixed nodes map directly: `hiring` → `memory/hiring.md`.
+Node-to-file mapping: `client:acme-corp` → `memory/client/acme-corp.md`, `person:sarah-chen` → `memory/person/sarah-chen.md`. Unprefixed nodes map directly: `hiring` → `memory/hiring.md`.
 
-Each node file contains structured sections — ## Living Summary, ## Knowledge (### Insights, ### Lessons, ### Models, ### Gotchas, ### Recipes, ### Corrections), ## People, ## Open Threads, ## Next Actions, ## Changelog. Search the right section for the query type rather than scanning the whole file.
+Project node files contain — ## Living Summary, ## Knowledge (### Insights, ### Lessons, ### Models, ### Gotchas, ### Recipes, ### Corrections), ## People, ## Open Threads, ## Next Actions, ## Changelog.
+
+Person pages (`person/*.md`) follow a different schema — ## Identity, ## Relationship, ## Recent interactions, ## Open threads, ## Notes, ## Linked entities. Search the right section for the query type rather than scanning the whole file.
 
 ## Inputs
 
@@ -43,7 +47,7 @@ If the query is genuinely ambiguous or too broad to scope (e.g., bare "tell me a
 
 2. **Plan the search.** Decide what kind of query this is:
    - **Knowledge query** ("how does X work", "any gotchas with Y") → prioritize ### Models, ### Insights, ### Lessons, ### Gotchas, ### Recipes, ### Corrections sections
-   - **Person query** ("what do we know about Kim") → ## People sections + recent ## Changelog mentions
+   - **Person query** ("what do we know about Kim") → **check `memory/person/<slug>.md` first.** If a graduated page exists, that's the canonical answer; read its Identity + Relationship + Open threads + Notes. Then optionally scan project nodes' ## People sections for additional cross-project context. If no page exists, fall back to the legacy approach: ## People sections + recent ## Changelog mentions across project nodes.
    - **Decision query** ("when did we decide X") → ## Changelog entries with DECISION markers
    - **Status/blocker query** ("what's blocked", "what's my P0 list") → ## Living Summary + ## Next Actions + ## Open Threads
    - **Topic query** ("everything about onboarding") → search broadly across all entry types

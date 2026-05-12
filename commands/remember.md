@@ -26,6 +26,73 @@ This command runs in one of two modes:
 
 ---
 
+## Step 0 — Cheap-tier commit triage (v4.2+)
+
+Before running the full Sonnet-tier extraction below, run a cheap Haiku-class classifier on the conversation to decide whether to commit at all and, if yes, which nodes are affected. This keeps per-commit cost predictable as commit volume grows.
+
+### A — Classifier prompt
+
+Send the last ~30 conversation turns (or the whole conversation if shorter) to a Haiku-tier model with this prompt:
+
+> System: You are a memory-commit triage classifier for a personal working-memory system. Decide:
+>
+> 1. **Is this conversation commit-worthy?** Were decisions made, knowledge shared, corrections given, or entities mentioned in a way that should update existing memory nodes? Greetings, scheduling pings, and trivial Q&A without takeaways are NOT commit-worthy.
+> 2. **If yes, which nodes are affected?** Return only nodes that need updating. Don't over-attribute. Use the user's existing node namespace (you'll be told what nodes exist).
+>
+> Existing node namespace (truncated to active set from DASHBOARD.md): <list of active node ids>
+>
+> Output exactly one JSON object on a single line, no other text:
+>
+> `{"commit": true, "nodes": ["client:acme-corp", "person:sarah-chen"], "reason": "<one line>"}`
+>
+> or
+>
+> `{"commit": false, "reason": "<one line>"}`
+>
+> Rules:
+> - Always include any user-observation work (corrections, preferences) as commit-worthy AT MINIMUM to the `user` node, even if no project nodes apply. So if the user corrected your approach, `commit: true, nodes: ["user"]`.
+> - Person-page graduation triggers (explicit `[ENTITY:person]` tag, contact-researcher dossier produced this session, etc.) → include `person:<slug>` in nodes.
+> - When in doubt, lean conservative: `commit: false` is preferred over a noisy commit. The user reviews `triage-log.md` weekly to catch false-negatives.
+
+### B — Decision routing
+
+Parse the classifier's response. If parsing fails (malformed JSON, model timeout), default to `commit: true, nodes: ["<detected project node>"]` so we don't silently lose a substantive conversation.
+
+- **`commit: false`** → log one entry to `<config-root>/memory/triage-log.md` (format below), return silently. Do not run Steps 1-5. The conversation contributes nothing to memory beyond this audit line.
+- **`commit: true`** → log one entry to `triage-log.md` (with the node list), then proceed to Step 1 but **pass the node list forward** so Step 1's project-detection is informed (not overridden) by the classifier's call.
+
+### C — Triage log format
+
+Append to `<config-root>/memory/triage-log.md` (create file if missing). Format:
+
+```markdown
+# Triage Log
+
+_Auto-appended by cortex's two-stage commit triage. Audit weekly for false-negatives (commit:false when a real decision was made) and over-attribution (commit:true with too many nodes)._
+
+## YYYY-MM-DD HH:MM
+- Decision: [commit | skip]
+- Nodes: [list, or omit if skip]
+- Reason: <one-line from classifier>
+- Conversation context: <one-line synthesized from your own read of the turns — what the conversation was about>
+```
+
+### D — Cost discipline
+
+The Haiku call is the only model call until classification completes. If `commit: false`, Steps 1-5 (Sonnet synthesis) never run. Expected cost per `/remember` invocation:
+- Trivial conversations: ~$0.001 (Haiku classifier only)
+- Substantive conversations: previous cost + ~$0.001 (negligible overhead)
+
+Total Sonnet cost drops 30-50% measured weekly when ~30-40% of conversations are trivial.
+
+### E — When to bypass Step 0
+
+User-invoked `/remember` with an explicit node argument (e.g., `/remember client:acme-corp`) bypasses Step 0 entirely — the user is asserting commit-worthiness. Silent mode and auto-fire commits still run Step 0.
+
+Also bypass Step 0 if the conversation contains an explicit `[ENTITY:person]` tag with a new person — that's a strong-enough graduation signal to commit unconditionally.
+
+---
+
 ## Step 1 — Detect the project node
 
 Scan the full conversation and identify which project(s) this session belongs to.
@@ -161,6 +228,8 @@ PEOPLE:
 - Anyone who came up: name, role, context
 - What they know or own relative to this project
 - Tag with other nodes they appear in
+- If the user explicitly tagged someone with [ENTITY:person] in the conversation, that's an
+  explicit graduation trigger (#5 from the schema in CLAUDE.md) — record the slug.
 
 QUESTIONS FOR NEXT TIME:
 - Things to investigate, test, or verify
@@ -230,6 +299,13 @@ If `DASHBOARD.md` doesn't exist, create it with this template:
 |------|---------|-------------|
 | [node-id] | [1-line living summary] | YYYY-MM-DD |
 
+## Active People (v4.2+)
+Top 10 graduated person pages sorted by Last updated desc.
+
+| Person | Temperature | Last contact | Open threads | Page |
+|--------|-------------|--------------|--------------|------|
+| Sarah Chen | Active | 2026-05-10 | 2 | [person/sarah-chen](person/sarah-chen.md) |
+
 ## P0 Actions
 - [P0] [node-id]: [action]
 
@@ -244,6 +320,10 @@ If `DASHBOARD.md` doesn't exist, create it with this template:
 
 ## Dormant Nodes
 - [node-id]: Last active [date]
+
+## Isolated Notes (v4.2+)
+Surfaced by `/cleanup`'s orphan-detection guardrail. Nodes with no incoming/outgoing links and last updated >30 days ago.
+- [node-id]: Last updated [date] — suggest [archive / merge / keep]
 ```
 
 #### Node File Format
@@ -381,6 +461,31 @@ For significant, reusable knowledge, write dedicated entries. These persist long
 ```
 [node-id] PEOPLE: [Name] ([role]) — [context]. Also in: [other-node-ids]
 ```
+
+#### D.1 Person-page graduation (v4.2+)
+
+After writing PEOPLE entries to project nodes, check each person against the graduation triggers from cortex's CLAUDE.md:
+
+1. **Explicit `[ENTITY:person]` tag** in the conversation → graduate immediately. This is the strongest signal.
+2. **Three or more `/recall` invocations** for this person (check `memory/.person-recall-counter.json`) → graduate.
+3. **`contact-researcher` produced a dossier** earlier in this conversation (look for a recent run of that agent referencing this slug) → graduate; use the dossier as the page's initial Notes section.
+4. **`project-setup` named them as primary contact** for a new engagement that's also being committed in this run → graduate.
+
+To graduate:
+1. Compute slug: `firstname-lastname` lowercased, hyphenated. Check for name collision: if `memory/person/<slug>.md` exists but is about a different person (different company / different email), prompt the user once to disambiguate; recommend appending a company hint (`<slug>-<company-slug>.md`).
+2. Create `memory/person/<slug>.md` with the schema from CLAUDE.md. Pre-fill what you know from this conversation (Identity, Relationship line, first Recent interactions entry dated today). Leave unknown fields as `_(unknown — fill in next conversation)_`.
+3. Add an "Active people" entry to DASHBOARD.md (see DASHBOARD format in section "Dashboard File Format" below).
+4. If a recall counter entry exists for this slug, reset its count to `0` (the page now satisfies the trigger).
+
+If a page **already exists** for this person, treat this run as an additive update:
+
+- Append a new line to the page's **Recent interactions** section: `<today> — <conversation_or_activity_type> — <one-line summary>`. Don't duplicate; if an identical line already exists for today, skip.
+- Update **Last meaningful contact** in the Relationship section.
+- Update **Relationship temperature** if today's interaction crosses a threshold (e.g., from Cold → Warm after a meeting).
+- Never overwrite **Notes**, **Identity**, or **Linked entities** without explicit user confirmation. If new identity info contradicts existing, surface the conflict and ask.
+- Keep Recent interactions to the last 90 days; older entries get archived to the page's bottom under a `## Archive (>90 days)` section to keep the active surface readable.
+
+Casual mentions (a name appearing in conversation without any of the graduation triggers above) **do not** create or update a person page. They stay in the project node's PEOPLE index.
 
 ### E. Cross-Project Signals (if applicable)
 

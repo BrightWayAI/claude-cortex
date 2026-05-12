@@ -93,6 +93,44 @@ Duplicates found:
 - [Name]: appears [count] times in people index
 ```
 
+### G. Orphan / isolated notes (v4.2+)
+
+Scan all memory nodes for files that are floating off the map. A node is "isolated" when ALL of:
+
+- **No incoming links** — no other node file mentions this node's id (e.g., as `[client/acme]`, `[strategy/q2-growth]`, or a SIGNAL pointing here)
+- **No outgoing links** — this node file doesn't reference any other node id
+- **Last updated more than 30 days ago** (use the `> Last updated:` line at the top of the file, or `mtime` as fallback)
+
+For each isolated node, suggest one of three dispositions:
+
+- **Archive** — recommended if the node has < 5 entries total and no open threads
+- **Merge into <candidate>** — recommended if a sibling node covers the same topic; suggest by Haiku-tier semantic match against active node summaries (1 call, ~$0.01)
+- **Keep as standalone** — accept the orphan if it's a genuine one-off (a reference file, a personal log)
+
+Format:
+
+```
+Isolated notes (no inbound or outbound links, untouched 30+ days):
+- [node-id]: [last updated date], [entry count] entries — suggest: [archive | merge into <candidate> | keep]
+```
+
+Also reflect these in DASHBOARD.md's `## Isolated Notes` section so the user sees them on next conversation start.
+
+### H. Person-page maintenance (v4.2+)
+
+Check each file in `memory/person/`:
+
+- **Dormant pages** — Last meaningful contact > 12 months ago AND no recent recall-counter activity → suggest archive. Don't auto-archive; surface as a recommendation.
+- **Stale Recent interactions** — entries older than 90 days that haven't been moved to the page's `## Archive (>90 days)` section → propose moving them to keep the active surface readable.
+- **Person pages with no Linked entities and < 2 Recent interactions** — likely premature graduation. Surface for review.
+
+Format:
+
+```
+Person-page maintenance:
+- person:[slug]: [issue: dormant | stale-interactions | premature] — suggest: [archive | trim | keep with note]
+```
+
 ---
 
 ## Step 3 — Propose actions

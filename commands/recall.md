@@ -60,7 +60,8 @@ If the directory cannot be accessed, explain that memory cannot be loaded withou
 - `/recall [node]`: Determine file path from node ID, read that file, present the full project view
   - If node has a prefix (e.g., `client:acme-corp`): `memory/{prefix}/{slug}.md`
   - If no prefix (e.g., `hiring`): `memory/{node-id}.md`
-- `/recall @person`: Read DASHBOARD.md to find which nodes exist, then search node files for PEOPLE entries matching the name
+- `/recall person:<slug>` (v4.2+): Read `memory/person/<slug>.md`. If it exists, present the full person page (Identity → Relationship → Open threads → Recent interactions → Notes → Linked entities). If it doesn't, fall through to `/recall @<name>` behavior. **Increment the recall counter for this slug** at `memory/.person-recall-counter.json` (see "Person-page graduation counter" below). When the counter hits 3 for a person who has no page yet, prompt: "I've recalled <name> 3 times. Want to graduate them to a person page?" → if yes, run a one-shot synthesis pass over all node files mentioning them to seed the page.
+- `/recall @person`: Read DASHBOARD.md to find which nodes exist, then search node files for PEOPLE entries matching the name. **Also increment the recall counter** as above so casual `@person` recalls still count toward graduation trigger #2.
 - `/recall [topic]`: Read DASHBOARD.md to identify which nodes might be relevant, then search those node files for matching knowledge entries
 
 If the memory directory doesn't exist or is empty, tell the user and offer to help set it up.
@@ -178,7 +179,52 @@ End with: **"Which project are we picking up today?"**
 
 ---
 
-## If a person was specified (`/recall @kim`)
+## If a person page was specified (`/recall person:sarah-chen`) — v4.2+
+
+1. Read `memory/person/<slug>.md` if it exists.
+2. If it exists, present:
+
+```
+## [Name] — person page
+
+> Last updated: [date] · Temperature: [Cold|Warm|Active|Dormant]
+
+**Identity** — [title], [company link]. [email]
+**How we know each other** — [relationship line]
+
+**Open threads**
+- [WAITING:them] — [thread]
+- [WAITING:you] — [thread]
+- [P0] — [thread]
+
+**Recent interactions (last 90 days)**
+- [date] — [type] — [summary]
+- ... (top 5)
+
+**Linked projects** — [client/...], [bizdev/...]
+
+**Notes**
+[free-form]
+```
+
+3. If the page doesn't exist, fall through to the legacy `@person` cross-project profile below. Then surface the recall-counter check: "No person page for <slug> yet. After 3 recalls I'll offer to graduate them." (Show counter status if available.)
+
+4. **Increment the recall counter** at `memory/.person-recall-counter.json`:
+
+   ```json
+   {
+     "sarah-chen": { "count": 4, "last_recalled_at": "2026-05-12T14:23:00Z" },
+     "tom-reyes": { "count": 2, "last_recalled_at": "2026-05-10T09:11:00Z" }
+   }
+   ```
+
+   - Read the file (create if missing). Look up the slug. If absent, initialize `{count: 1, last_recalled_at: now}`. Otherwise increment count, update timestamp.
+   - **If count crosses 3 AND no page exists yet** → after rendering the legacy profile, ask: "I've recalled <name> 3 times now. Want to graduate them to a person page? I'll synthesize a starting page from existing mentions across nodes." If yes, scan all project node files for PEOPLE entries matching the name, synthesize an initial page following the schema in cortex's CLAUDE.md, write to `memory/person/<slug>.md`, add an "Active people" entry to DASHBOARD.md, and reset the counter for this slug to `count: 0` (since the page now exists).
+   - **If a page already exists** → still increment the counter (useful telemetry for `/cleanup` to identify cold pages later) but don't prompt.
+
+---
+
+## If a person was specified (`/recall @kim`) — legacy cross-project profile
 
 ```
 ## [Name] — Cross-Project Profile
@@ -189,6 +235,16 @@ End with: **"Which project are we picking up today?"**
 
 **Open items involving them:** [WAITING:them] [description]
 ```
+
+Apply the same recall-counter increment described in the person-page section above. If the counter crosses 3 for a person with no page yet, offer to graduate.
+
+---
+
+## Person-page graduation counter (v4.2+)
+
+`memory/.person-recall-counter.json` is a small JSON map keyed by slug. Cortex maintains it as part of any recall that names a person (`person:slug` or `@name` form). The file is private to cortex; other plugins should treat it as opaque.
+
+When the counter for a slug crosses 3 and `memory/person/<slug>.md` does not yet exist, the next `/recall` for that person surfaces the graduation prompt. Other graduation triggers (dossier from contact-researcher, project-setup primary contact, etc.) bypass the counter and create the page directly.
 
 ---
 
@@ -218,6 +274,27 @@ Search all knowledge entries + LOGs for the topic.
 ```
 
 End with: **"Want to dive deeper or add to what we know?"**
+
+### Duplicate-topic surfacing (v4.2+)
+
+Before rendering the topic answer above, run a one-pass Haiku-tier semantic check to catch the user re-discovering ideas they already wrote about:
+
+1. Read DASHBOARD.md's Active Nodes section (just the node-id + 1-line summary per row).
+2. Send the query + the dashboard summaries to a Haiku-tier classifier with this prompt:
+
+   > Given the query `<query>` and these node summaries: `<list>`, return the single closest semantic match if any node summary is plausibly about the same topic. Otherwise return `null`. Output exactly `{"match": "<node-id>"}` or `{"match": null}` — no other text.
+
+3. If `match` is non-null AND the matched node is NOT one the recall just rendered:
+
+   > Surface a heads-up BEFORE the main topic answer:
+   >
+   > "Note: `<matched-node>` may already cover this. Want to read that first?"
+   >
+   > Then continue rendering the regular topic answer below the note.
+
+4. If `match` is null, render the topic answer normally. No note.
+
+Cost: one Haiku call per topic recall (~$0.01). Trade-off: catches "I forgot I already wrote about this" cases ~80% of the time, in exchange for one cheap classification call per topic query.
 
 ---
 

@@ -6,9 +6,12 @@ You have a persistent memory system stored as markdown files at `~/Documents/Cla
 
 ```
 ~/Documents/Claude/memory/
-├── DASHBOARD.md          # Master index — living summaries, P0 list, recent knowledge
+├── DASHBOARD.md          # Master index — living summaries, P0 list, recent knowledge, active people
 ├── user.md               # User profile — preferences, corrections, patterns (NEW in v4)
+├── triage-log.md         # Append-only log of commit-triage decisions (v4.2+)
 ├── archive/              # Archived nodes
+├── person/               # Person pages (v4.2+) — graduated contacts only, not every mention
+│   └── sarah-chen.md
 ├── client/               # Node files organized by prefix
 │   └── acme-corp.md
 ├── strategy/
@@ -16,7 +19,60 @@ You have a persistent memory system stored as markdown files at `~/Documents/Cla
 └── hiring.md             # Unprefixed nodes live at root
 ```
 
-Node-to-file mapping: `client:acme-corp` → `memory/client/acme-corp.md`. Nodes without a prefix map directly to `memory/{node}.md`. Create directories as needed.
+Node-to-file mapping: `client:acme-corp` → `memory/client/acme-corp.md`, `person:sarah-chen` → `memory/person/sarah-chen.md`. Nodes without a prefix map directly to `memory/{node}.md`. Create directories as needed.
+
+### Person pages (v4.2+)
+
+`memory/person/<firstname-lastname>.md` holds a canonical view of contacts the user actually interacts with. Pages are **usage-graduated, not mention-graduated** — a casual mention in conversation does NOT create a page. A person becomes a page when ANY of:
+
+1. `contact-researcher` (lead-engine) produces a dossier — the dossier IS the initial page
+2. `/recall person:<slug>` is invoked 3+ times (counter at `memory/.person-recall-counter.json`)
+3. `project-setup` names them as the primary contact for a new engagement
+4. They appear in `time-log.csv` with a billing-contact role
+5. Explicit `[ENTITY:person]` tag in a `/remember` commit
+6. They're the attendee of 3+ meetings on the calendar over a rolling 30-day window
+
+Mention-count alone is too noisy. Usage signals real interest.
+
+**Schema** — each page follows this structure:
+
+```markdown
+# person:firstname-lastname
+
+> Last updated: YYYY-MM-DD
+
+## Identity
+- **Full name:** ...
+- **Title / role:** ...
+- **Company:** ... (link to cortex node if relevant, e.g., [client/acme-corp])
+- **Email:** ...
+- **LinkedIn / other:** ...
+- **First mentioned:** YYYY-MM-DD (source)
+
+## Relationship
+- **How we know each other:** ...
+- **Relationship temperature:** [Cold | Warm | Active | Dormant]
+- **Last meaningful contact:** YYYY-MM-DD ([type: email / meeting / DM])
+- **Relationship owner:** [you, or someone else]
+
+## Recent interactions (last 90 days, append-only)
+- YYYY-MM-DD — [type] — one-line summary
+
+## Open threads
+- [WAITING:them] — ...
+- [WAITING:you] — ...
+- [P0] — ...
+
+## Notes
+- [Free-form context]
+
+## Linked entities
+- Projects: [client/...], [bizdev/...]
+```
+
+**Name-collision rule** — if two people would slug to the same name (e.g., two Sarah Chens), append a company hint to the slug: `sarah-chen-acme.md`, `sarah-chen-globex.md`. When a new page is about to be created and a same-slug page exists, the creating plugin must prompt the user to disambiguate before writing.
+
+**Cross-plugin writes** — multiple plugins write to person pages, always additively (append to Recent interactions, update Last meaningful contact, never overwrite Notes or Identity without explicit user confirmation). See each plugin's CHANGELOG for which sections it touches.
 
 ## Always-On Behaviors (v4)
 
@@ -84,7 +140,7 @@ When you detect these patterns, run the corresponding command automatically. **C
 | Conversation start, greeting | Auto-recall (load user profile + attention items) |
 | Conversation end, farewell, "thanks", "goodbye" | Auto-commit (silent extraction + observation flush) |
 | "save this", "remember that X", "commit this to memory" | Run `/remember` — full session extraction with confirmation |
-| "catch me up", "status of X", "where did we leave off" | Run `/recall` — load project or topic context |
+| "catch me up", "status of X", "where did we leave off" | Run `/recall` — load project, person (`person:slug`), or topic context |
 | "TIL", "gotcha:", "the trick is...", "I was wrong about X" | Run `/learn` — capture standalone knowledge |
 | "note that", "jot down", "quick note" | Run `/note` — one-liner capture |
 | "any gotchas with", "what's blocked", "what are my P0s" | Run `/search` — cross-project search |
