@@ -1,6 +1,6 @@
 ---
 name: end-week
-description: End-of-week closing routine. Runs transcript-reviewer for uncaptured commitments, /cleanup for memory hygiene, /review for synthesized digest, prompts for weekly reflection, optionally pre-stages Monday's outreach via weekly-outreach. Auto-fires on "/end-week", "Friday wrap-up", "weekly close", "end of week", "Friday afternoon ritual", "close out the week", or any phrase signaling Friday wind-down. Takes ~15 minutes.
+description: End-of-week closing routine. Runs transcript-reviewer for uncaptured commitments, /cleanup for memory hygiene, /review for synthesized digest, /rehearse for aging-knowledge triage (v4.4+), prompts for weekly reflection, optionally pre-stages Monday's outreach via weekly-outreach. Auto-fires on "/end-week", "Friday wrap-up", "weekly close", "end of week", "Friday afternoon ritual", "close out the week", or any phrase signaling Friday wind-down. Takes ~15-20 minutes including the rehearsal step.
 ---
 
 See `commands/end-week.md` for the full workflow.
@@ -18,6 +18,7 @@ Works best with the full marketplace stack (cortex, brightway-core, weekly-outre
 - `/transcript-reviewer` requires cortex + Granola/transcript source — skipped otherwise
 - `/cleanup` requires cortex — skipped otherwise
 - `/review` requires cortex — skipped otherwise
+- `/rehearse` (v4.4+) requires cortex — skipped otherwise; exits cleanly if no aging entries qualify
 - Pre-stage Monday requires weekly-outreach — offered as optional
 
 Even with no dependencies, the reflective prompts in Step 4 still work and write to memory if cortex is present.

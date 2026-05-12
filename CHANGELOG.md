@@ -6,6 +6,58 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.4.0] — Forgetting / decay layer (2026-05-12)
+
+### Why this exists
+v4.3's mining layer ships the "perpetually learning" half of the second-brain vision. v4.4 ships the other half: forgetting, decay, and consolidation. Without it, cortex grows but never lets go — beliefs that get superseded silently linger, and "what do we know about X" returns mixed signal because the system can't tell fresh insight from stale.
+
+### Added — Decay model
+- **Knowledge entries pass through four states based on the age of `[confirmed:...]`**: Fresh → Stale → Dormant → Cold. State drives surfacing behavior but never deletes content.
+- **`<config-root>/memory/.decay-config.md`** auto-created on first v4.4 run with documented defaults: `threshold_fresh: 60`, `threshold_dormant: 180`, `threshold_cold: 365` (days). Per-type modifiers (GOTCHA and RECIPE decay 1.5× slower; CORRECTION is immune). Per-node `decay_profile: fast | normal | slow` front-matter override stacks with type modifiers multiplicatively.
+- **`references/decay-model.md`**: full spec covering read-time decay (via `/recall`), event-time decay (via `/cleanup` and `/rehearse`), state transitions, threshold computation, and rationale.
+
+### Added — Decay-aware `/recall`
+- Every entry surfaced by `/recall` is now state-classified inline. Stale entries render with `[stale-confidence]`; Dormant with `[dormant — last confirmed Nd ago]`; Cold with stronger flag.
+- **Recall-time triage offer** at the end of explicit `/recall` runs (not auto-recall or contextual): re-confirm all / select per-entry / demote all dormant+cold / skip. Per-entry actions: confirm (update tag) / demote (move to `## Demoted knowledge`) / edit-then-confirm / skip.
+- Demoted entries render after active sections in project-view and topic-view recall, de-emphasized and explicitly labeled.
+
+### Added — Concept-drift detection in `/remember`
+- Before writing a new INSIGHT / MODEL / GOTCHA / LESSON entry, a Haiku-tier classifier compares it against existing same-type entries on the same node (scoped to most-recent-20 by `[confirmed:...]` for cost).
+- If the classifier flags `supersedes` / `contradicts` / `refines` → FULL mode prompts the user: supersede (move old to Demoted knowledge, write new in its place) / keep both / edit relationship / skip new entry.
+- SILENT mode (auto-commit) never auto-supersedes — writes alongside and flags in changelog for review at next `/recall` or `/rehearse`. Silently demoting a held belief is too destructive for an unattended path.
+- On `supersede`: old entry moves to the node's `## Demoted knowledge` section with metadata trail (`↳ demoted <today> by supersede`, `↳ superseded by: <new entry first 60 chars>`). Tags preserved on the moved entry.
+- RECIPE excluded from the check (additive, not competing). CORRECTION already encodes supersede explicitly.
+
+### Added — `/rehearse` command and skill
+- New `commands/rehearse.md` and `skills/rehearse/SKILL.md` — active retention loop.
+- Selects 3-5 aging entries past their freshness threshold but not yet cold. Walks the user through each: confirm / update / demote / archive / skip.
+- Selection algorithm: composite score by age × type-weight, diversified across nodes. Entries from `<config-root>/memory/.rehearse-queue.md` (deferred by `/cleanup`) get priority.
+- Skip-log at `<config-root>/memory/.rehearse-skip-log.md` suppresses skipped entries for 30 days so they don't immediately resurface.
+- Default cadence: weekly via `/end-week` (new Step 3.5). Can run on demand any time.
+- Cost: zero model calls in steady state — date arithmetic + file edits.
+
+### Added — Decay-aware `memory-librarian`
+- Freshness multiplier on relevance ranking: Fresh 1.0, Stale 0.85, Dormant 0.6, Cold 0.3. Older entries sink, never hidden.
+- Skips `## Demoted knowledge` sections by default. Reads them only when the parent skill explicitly requests historical context (e.g., "what did we used to think about X").
+- Surfaces aging in Confidence when > 30% of Source Entries are Dormant or Cold ("Most relevant memory on this is aging — consider `/rehearse` or fresh capture").
+
+### Added — `/cleanup` deepening
+- **Section H expanded** for person-page maintenance: cooling / dormant / cold-archive states drive concrete archive proposals. On accept, moves files from `memory/person/<slug>.md` to `memory/person/archive/<slug>.md`. `/recall person:<slug>` continues to find archived pages but flags them.
+- **New section I — Dormant knowledge entries**: scans all active nodes for entries past `threshold_dormant`. Per-entry suggestion: rehearse (defer to `/rehearse` via the queue file) / demote / archive. Cold entries surface separately with stronger flags. CORRECTIONs are excluded (immune to decay).
+
+### Added — `/end-week` chain integration
+- **New Step 3.5 — Rehearse**: invokes `/rehearse` between `/review` (Step 3) and reflective prompts (Step 4). Exits cleanly if the candidate pool is empty.
+
+### Added — CLAUDE.md schema updates
+- New `Decay model` section pointing at `references/decay-model.md`
+- New `Demoted knowledge convention` section documenting the per-node `## Demoted knowledge` format
+- `/rehearse` added to auto-fire trigger table and slash command list
+
+### Why this matters
+Now the second-brain learns AND forgets. `/remember` adds, `/recall` flags aging, `/rehearse` consolidates, `/cleanup` audits, drift detection prevents silent belief-flipping. The system carries less stale weight over time without ever silently deleting content — every transition is user-gated or logged, and demoted entries stay readable for as long as the node exists.
+
+The combination of v4.3 (mining) + v4.4 (decay) is the bidirectional learning the user asked for: "perpetually updating and learning (and in some cases forgetting or moving things to the back of my memory similarly to how the brain is always learning)."
+
 ## [4.3.0] — `/end-day` mining layer (2026-05-12)
 
 ### Added — Mining layer (the main change)

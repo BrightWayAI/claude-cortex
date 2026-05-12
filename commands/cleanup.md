@@ -116,20 +116,63 @@ Isolated notes (no inbound or outbound links, untouched 30+ days):
 
 Also reflect these in DASHBOARD.md's `## Isolated Notes` section so the user sees them on next conversation start.
 
-### H. Person-page maintenance (v4.2+)
+### H. Person-page maintenance (v4.2+, deepened in v4.4)
 
-Check each file in `memory/person/`:
+Check each file in `memory/person/`. Load thresholds from `<config-root>/memory/.decay-config.md`:
 
-- **Dormant pages** — Last meaningful contact > 12 months ago AND no recent recall-counter activity → suggest archive. Don't auto-archive; surface as a recommendation.
-- **Stale Recent interactions** — entries older than 90 days that haven't been moved to the page's `## Archive (>90 days)` section → propose moving them to keep the active surface readable.
-- **Person pages with no Linked entities and < 2 Recent interactions** — likely premature graduation. Surface for review.
+- `person_threshold_cooling` (default 90)
+- `person_threshold_dormant` (default 180)
+- `person_threshold_archive` (default 365)
+
+For each page:
+
+- **Cooling pages** — `person_threshold_cooling ≤ days_since_last_contact < person_threshold_dormant` AND < 2 recall-counter increments in last 90 days → flag in DASHBOARD's Active People table with `[cooling]` badge. No action proposed.
+- **Dormant pages** — `person_threshold_dormant ≤ days_since_last_contact < person_threshold_archive` AND no recalls in 180+ days → propose `archive`.
+- **Cold-archive candidates** — `days_since_last_contact ≥ person_threshold_archive` AND no recalls in 180+ days → propose `archive` with a stronger recommendation flag.
+- **Stale Recent interactions** — entries older than 90 days that haven't been moved to the page's `## Archive (>90 days)` section → propose `trim` (move them to the page's archive section).
+- **Person pages with no Linked entities and < 2 Recent interactions** — likely premature graduation. Surface for review with `keep with note` or `archive` options.
 
 Format:
 
 ```
 Person-page maintenance:
-- person:[slug]: [issue: dormant | stale-interactions | premature] — suggest: [archive | trim | keep with note]
+- person:[slug]: [state] (last contact <N>d ago, <M> recalls in 180d) — suggest: [archive | trim | keep with note]
 ```
+
+**On accept of `archive`**: move `<config-root>/memory/person/<slug>.md` to `<config-root>/memory/person/archive/<slug>.md`. Remove the row from DASHBOARD's Active People table. The recall counter entry for the slug is preserved (so if the user later interacts with this person again, `/recall person:<slug>` finds the archived page and can offer to unarchive).
+
+`/recall person:<slug>` on an archived page renders the content but flags it: `**[archived person page]** — moved to archive <date>. To bring back: edit <slug>'s file or run \`/recall person:<slug> --unarchive\`.`
+
+### I. Dormant knowledge entries (v4.4+)
+
+Load thresholds from `<config-root>/memory/.decay-config.md`. Scan all active node files (skip `## Demoted knowledge` sections — those entries are already user-demoted).
+
+For each knowledge entry, compute `age = today - [confirmed:...]` (default to original commit date if tag absent). Cross-reference with the entry's type modifier and the node's `decay_profile` front-matter to get the effective threshold (see `references/decay-model.md`).
+
+Surface:
+
+- **Dormant entries** (`threshold_dormant ≤ age < threshold_cold`) — list them grouped by node, sorted by age desc, capped at 15 per cleanup run. Per-entry suggestion: `rehearse | demote | archive`.
+- **Cold entries** (`age ≥ threshold_cold`) — list separately with a stronger flag. Suggest `demote` or `archive` by default.
+
+Format:
+
+```
+Dormant knowledge:
+- [node-id] INSIGHT (2025-09-12, confirmed:2025-09-12): "<first 80 chars>..." [<N>d dormant] — suggest: rehearse | demote | archive
+- ...
+
+Cold knowledge:
+- [node-id] MODEL (2024-11-03, confirmed:2024-11-03): "<first 80 chars>..." [<N>d cold] — suggest: demote | archive
+- ...
+```
+
+CORRECTIONs are excluded from this audit (immune to decay).
+
+**On accept of `rehearse`**: tag the entry for the next `/rehearse` batch (this defers the decision rather than acting now). Logged to `<config-root>/memory/.rehearse-queue.md` so `/rehearse` picks them up.
+
+**On accept of `demote`**: move entry to the node's `## Demoted knowledge` section with metadata trail.
+
+**On accept of `archive`**: there's no entry-level archive directory; this is equivalent to `demote` plus a note that the user chose archive. (Entry stays readable, just out of active rotation.)
 
 ---
 

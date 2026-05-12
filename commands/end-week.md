@@ -52,6 +52,20 @@ Render the digest to the user.
 
 ---
 
+## Step 3.5 — Rehearse aging knowledge (v4.4+)
+
+Invoke `/rehearse` (its full workflow lives in `commands/rehearse.md`). The skill:
+
+1. Builds a candidate pool of knowledge entries past their freshness threshold but not yet cold
+2. Selects up to 5 entries (configurable via `<config-root>/memory/.decay-config.md`)
+3. Walks the user through each: confirm / update / demote / archive / skip
+
+This is the active retention loop — the explicit consolidation pass that converts dormancy into either re-confirmation or removal. Different from Step 2's `/cleanup` (which audits memory health broadly) — `/rehearse` is per-entry, deliberate, and small-batch.
+
+If the candidate pool is empty ("memory is fresh"), the skill exits cleanly and the user sees a one-line confirmation. Don't pad.
+
+---
+
 ## Step 4 — Reflective prompts
 
 Ask, one at a time:
