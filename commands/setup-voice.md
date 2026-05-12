@@ -1,18 +1,29 @@
 ---
-description: Capture your writing voice once (descriptors, banned phrases, sentence-length preference, hook patterns, sign-off style) in one canonical file at ~/Documents/Claude/voice.md. All drafting plugins (bizdev-outreach, weekly-outreach, lead-engine, news-curator) read from this file so your voice stays consistent and you only update it in one place. Re-run anytime to refine.
+description: Capture your writing voice once (descriptors, banned phrases, sentence-length preference, hook patterns, sign-off style) in one canonical voice.md. All drafting plugins (bizdev-outreach, weekly-outreach, lead-engine, news-curator, post-assembler, client-status, referral-engine) read from this file so your voice stays consistent and you only update it in one place. Honors `~/.claude-plugin-config-root` if set; otherwise writes to `~/Documents/Claude/voice.md` by default. Re-run anytime to refine.
 ---
 
 # /setup-voice
 
-One-time voice bootstrap. Captures the writing-voice rules every drafting plugin needs and writes them to a canonical shared file at `~/Documents/Claude/voice.md`.
+One-time voice bootstrap. Captures the writing-voice rules every drafting plugin needs and writes them to a canonical shared file. Lives in whatever folder you've designated as your plugin config root (or `~/Documents/Claude/` by default for backward compatibility).
 
-After this is done, every drafting plugin (bizdev-outreach for outreach, weekly-outreach for weekly BD, lead-engine for DMs, news-curator's post-assembler for LinkedIn posts) reads voice from this file. You update voice in one place, every drafter benefits.
+After this runs, every drafting plugin reads voice from this file. You update voice in one place, every drafter benefits.
+
+---
+
+## Step 0 — Resolve the voice file path
+
+Read `~/.claude-plugin-config-root` to determine where the canonical config files live. You may need to call `request_cowork_directory(~)` once if access hasn't been granted; after that, re-read the pointer.
+
+- **If `~/.claude-plugin-config-root` exists**: read the absolute path from line 1. That's the plugin config root (set by an earlier plugin's first-run setup). Call `request_cowork_directory(<config-root>)` to mount it. The voice file lives at `<config-root>/voice.md`.
+- **If the pointer does not exist**: fall back to the legacy default — `~/Documents/Claude/voice.md`. Call `request_cowork_directory(~/Documents/Claude)`. Other marketplace plugins will offer to standardize the config-root location on their first setup; if the user picks a different root later, voice.md migrates there automatically.
+
+For the rest of this document, **`<voice-path>`** refers to the resolved path: either `<config-root>/voice.md` or `~/Documents/Claude/voice.md`.
 
 ---
 
 ## Step 1 — Check for existing voice config
 
-Read `~/Documents/Claude/voice.md` if it exists.
+Read `<voice-path>` if it exists.
 
 - **Populated** → ask: "Voice already captured. Update specific sections, or start over?"
   - "Update [section]" → jump there.
@@ -78,13 +89,13 @@ Pick your top 1–2 patterns. Note any you actively want to AVOID (often "story"
 
 If you have 1–3 short writing samples you'd point to as "this is exactly the voice I want to hit," paste them or link them. The drafters read these to calibrate.
 
-If you don't have exemplars handy, skip this section. You can add them later by editing `~/Documents/Claude/voice.md` directly.
+If you don't have exemplars handy, skip this section. You can add them later by editing `<voice-path>` directly.
 
 ---
 
 ## Step 3 — Write the voice file
 
-Populate `~/Documents/Claude/voice.md` using this exact structure (every drafter parses it):
+Populate `<voice-path>` using this exact structure (every drafter parses it):
 
 ```markdown
 # Writing Voice
@@ -123,7 +134,7 @@ _Created by /setup-voice (cortex plugin)_
 
 Summarize what was saved (one short paragraph). Then offer:
 
-> "Voice saved. All drafting plugins (bizdev-outreach, weekly-outreach, lead-engine, news-curator/post-assembler) will read this automatically — your voice stays consistent across every channel. Update anytime by re-running `/setup-voice` or editing `~/Documents/Claude/voice.md` directly."
+> "Voice saved to `<voice-path>`. All drafting plugins (bizdev-outreach, weekly-outreach, lead-engine, news-curator/post-assembler, client-status, referral-engine) will read this automatically — your voice stays consistent across every channel. Update anytime by re-running `/setup-voice` or editing `<voice-path>` directly."
 
 ---
 
@@ -132,7 +143,7 @@ Summarize what was saved (one short paragraph). Then offer:
 - One section at a time. Don't bombard.
 - The interview should feel like talking to an editor who's about to ghostwrite for you. Not a form.
 - Idempotent. Re-running updates existing sections.
-- The file lives at `~/Documents/Claude/voice.md` — a stable canonical location independent of any specific plugin.
+- The file lives at `<voice-path>` — wherever the plugin config root points (or the legacy default).
 
 ## What this is NOT for
 

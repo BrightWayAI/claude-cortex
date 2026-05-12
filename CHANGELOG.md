@@ -9,6 +9,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 ### Fixed
 - `.claude/commands/remember.md` now includes v4 features: silent mode, user observation extraction, user node writes, and dashboard template (parity with `commands/remember.md`).
 
+## [4.1.0] — Config-root awareness
+
+### Added
+- **`/setup-identity` and `/setup-voice` now honor `~/.claude-plugin-config-root`**, a single-line text pointer file at the user-level home that records the user-chosen plugin config root (set by any marketplace plugin's first-time setup, including these two commands). When the pointer exists, identity and voice files are written to `<config-root>/identity.md` and `<config-root>/voice.md` respectively. When the pointer does not exist, both commands either fall back to a pre-existing legacy default at `~/Documents/Claude/` or prompt the user to pick a config root.
+- **Step 0** added to both commands: resolve the canonical file path before any read or write. Documented variables `<identity-path>` and `<voice-path>` for downstream references inside each command body.
+
+### Why this matters
+The other plugins in this marketplace previously tried to write per-plugin config to their own folder (read-only under Cowork's mount), which failed silently. The refactor across all plugins centralizes user-writable config under a user-chosen folder. Cortex was already writing to a writable user-level path, but adopting the same pointer means cortex's identity and voice files live alongside the other plugins' per-plugin configs when the user picks a non-default config root — and the convention is generic enough that any user (not just the original maintainer) can install or fork this marketplace.
+
 ## [4.0.0] — Always-On Learning
 
 ### Added
