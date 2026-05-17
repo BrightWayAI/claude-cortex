@@ -107,13 +107,11 @@ If the subagent reports `status: aborted` or `average_confidence: low`, surface 
 
 ---
 
-## Step 4.5 — Log to chronicle (v4.7.1+)
+## Step 4.5 — Log to chronicle (v4.7.1+, centralized in v4.7.2+)
 
-Append one line to `<config-root>/memory/log.md` per `references/log-chronicle.md`:
-
-```
-## [<today HH:MM>] research-gaps | scanned <N> nodes, found <G> gaps. Researched <R> (<H> high confidence, <M> medium, <L> low). Draft at .research-drafts/<date>-research-gaps.md.
-```
+Invoke the `log-writer` skill (see `skills/log-writer/SKILL.md`) with:
+- **op_name:** `research-gaps`
+- **summary:** `scanned <N> nodes, found <G> gaps. Researched <R> (<H> high confidence, <M> medium, <L> low). Draft at .research-drafts/<date>-research-gaps.md.`
 
 ---
 

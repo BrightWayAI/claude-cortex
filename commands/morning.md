@@ -117,13 +117,11 @@ Both happen unconditionally so the morning ends with fresh substrate.
 
 ---
 
-## Step 4.5 — Log to chronicle (v4.7.1+)
+## Step 4.5 — Log to chronicle (v4.7.1+, centralized in v4.7.2+)
 
-Append one line to `<config-root>/memory/log.md` per `references/log-chronicle.md`:
-
-```
-## [<today HH:MM>] morning | merged <a> / <total> proposals from <draft-date> draft. <r> rejected, <d> deferred. hot.md + memory/index.md refreshed.
-```
+Invoke the `log-writer` skill (see `skills/log-writer/SKILL.md`) with:
+- **op_name:** `morning`
+- **summary:** `merged <a> / <total> proposals from <draft-date> draft. <r> rejected, <d> deferred. hot.md + memory/index.md refreshed.`
 
 ---
 

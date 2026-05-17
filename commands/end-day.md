@@ -368,15 +368,13 @@ No user gate. If hot-cache generation fails, log and continue to Step 5.7.
 
 ---
 
-## Step 5.7 — Log to chronicle (v4.7.1+)
+## Step 5.7 — Log to chronicle (v4.7.1+, centralized in v4.7.2+)
 
-Append one line to `<config-root>/memory/log.md` per `references/log-chronicle.md`:
+Invoke the `log-writer` skill (see `skills/log-writer/SKILL.md`) with:
+- **op_name:** `end-day`
+- **summary:** `<quick|full> mode. <N> commitments captured, <M> reflection answers, <K> memory entries committed. tomorrow brief pre-staged.`
 
-```
-## [<today HH:MM>] end-day | <quick|full> mode. <N> commitments captured, <M> reflection answers, <K> memory entries committed. tomorrow brief pre-staged.
-```
-
-Adjust the metric counts based on what actually ran (don't include reflection-count if Step 4 was skipped).
+Adjust the metric counts based on what actually ran (don't include reflection-count if Step 4 was skipped; omit "tomorrow brief pre-staged" if daily-brief isn't installed).
 
 ---
 

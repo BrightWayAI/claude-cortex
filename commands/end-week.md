@@ -103,13 +103,11 @@ Skip this step silently if cortex is below v4.5 (no `/research-gaps` available).
 
 ---
 
-## Step 5.7 — Log to chronicle (v4.7.1+)
+## Step 5.7 — Log to chronicle (v4.7.1+, centralized in v4.7.2+)
 
-Append one line to `<config-root>/memory/log.md` per `references/log-chronicle.md`:
-
-```
-## [<today HH:MM>] end-week | transcript-reviewer flagged <T> commitments, cleanup <C> actions, rehearse <R> entries, research-gaps <G>. Monday outreach <staged|skipped>.
-```
+Invoke the `log-writer` skill (see `skills/log-writer/SKILL.md`) with:
+- **op_name:** `end-week`
+- **summary:** `transcript-reviewer flagged <T> commitments, cleanup <C> actions, rehearse <R> entries, research-gaps <G>. Monday outreach <staged|skipped>.`
 
 ---
 

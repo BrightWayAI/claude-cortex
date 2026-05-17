@@ -137,13 +137,11 @@ If `/rehearse` was invoked by `/end-week` (Step 5 of that chain), surface the co
 
 ---
 
-## Step 4.5 — Log to chronicle (v4.7.1+)
+## Step 4.5 — Log to chronicle (v4.7.1+, centralized in v4.7.2+)
 
-Append one line to `<config-root>/memory/log.md` per `references/log-chronicle.md`:
-
-```
-## [<today HH:MM>] rehearse | walked <N> entries. <C> re-confirmed, <D> demoted, <S> skipped (in skip-log for 30d).
-```
+Invoke the `log-writer` skill (see `skills/log-writer/SKILL.md`) with:
+- **op_name:** `rehearse`
+- **summary:** `walked <N> entries. <C> re-confirmed, <D> demoted, <S> skipped (in skip-log for 30d).`
 
 ---
 

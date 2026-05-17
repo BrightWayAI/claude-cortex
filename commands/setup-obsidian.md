@@ -36,7 +36,14 @@ If `identity.md` doesn't exist, fall back to "Nucleus vault" as the title and th
 
 ---
 
-## Step 2 — Print the plan and confirm
+## Step 2 — Print the plan and confirm (autonomy-aware in v4.7.2+)
+
+**Consult autonomy mode** per `references/autonomy.md`. Default for `/setup-obsidian`: `confirm`.
+
+- **Mode = `auto`**: skip the confirmation prompt; proceed straight to Step 3 after a single-line "Scaffolding Obsidian vault at `<config-root>/` (preserving existing files)." Use when the user has already decided.
+- **Mode = `suggest` / `confirm`** (default): use the standard plan-and-confirm prompt below.
+
+Default prompt (suggest / confirm modes):
 
 ```
 I'll scaffold an Obsidian vault config at <config-root>/:
@@ -60,7 +67,7 @@ After this completes:
 Proceed?
 ```
 
-Wait for user confirmation. On no, abort.
+Wait for user confirmation (unless autonomy mode = `auto`). On no, abort.
 
 ---
 

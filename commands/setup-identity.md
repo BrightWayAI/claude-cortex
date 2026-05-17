@@ -130,6 +130,19 @@ Create the parent directory if it doesn't exist.
 
 ---
 
+## Step 3.5 — Write privacy defaults (.gitignore) (v4.7.2+)
+
+After the identity file is written, ensure `<config-root>/.gitignore` exists with the privacy-sensitive paths excluded. Defensive — protects future `/listen` runs from accidentally committing raw email / Slack / transcript content to a git repo.
+
+Logic:
+1. If `<config-root>/.gitignore` exists, leave it alone (idempotent — `/listen` Step 0.5 will append missing patterns later if needed).
+2. If it doesn't exist, write the full template from `references/gitignore-template.md`. Log one line to the user: "Wrote `.gitignore` with privacy defaults — protects raw archive content from accidental git commits. See `references/gitignore-template.md` for what's covered."
+3. If `<config-root>/` lives inside a common cloud-sync path (iCloud, Dropbox, OneDrive, Google Drive), also surface a one-line note: "`.gitignore` doesn't prevent cloud sync. If you sync this folder via <provider>, see `references/gitignore-template.md` for the local-only archive pattern."
+
+No user gate. Best-effort — if the write fails, log internally and continue.
+
+---
+
 ## Step 4 — Confirm and offer next step
 
 Summarize what was captured (one short paragraph). Then offer:

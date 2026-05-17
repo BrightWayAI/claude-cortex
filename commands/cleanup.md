@@ -176,9 +176,15 @@ CORRECTIONs are excluded from this audit (immune to decay).
 
 ---
 
-## Step 3 — Propose actions
+## Step 3 — Propose actions (autonomy-aware in v4.7.2+)
 
-For each issue found, propose a specific action:
+**Consult autonomy mode** per `references/autonomy.md`. Default for `/cleanup`: `suggest`.
+
+- **Mode = `auto`**: execute all proposed actions without the gate. Print the actions inline as they happen ("Consolidating [node-id]... Escalating [thread]..."). This is for trusting users running scheduled cleanups.
+- **Mode = `suggest`** (default): standard menu prompt as below; user picks `all` / numbered / `none`.
+- **Mode = `confirm`**: walk one action at a time; each gets a per-item yes/no/skip prompt instead of the batch menu.
+
+Default prompt (suggest mode):
 
 ```
 ## Recommended Actions
@@ -219,13 +225,11 @@ If no actions touched memory in Step 4, skip this step.
 
 ---
 
-## Step 4.7 — Log to chronicle (v4.7.1+)
+## Step 4.7 — Log to chronicle (v4.7.1+, centralized in v4.7.2+)
 
-Append one line to `<config-root>/memory/log.md` per `references/log-chronicle.md`:
-
-```
-## [<today HH:MM>] cleanup | <A> actions taken. Section H: <person-pages-archived>. Section I: <dormant-entries-deferred> deferred, <demoted> demoted.
-```
+Invoke the `log-writer` skill (see `skills/log-writer/SKILL.md`) with:
+- **op_name:** `cleanup`
+- **summary:** `<A> actions taken. Section H: <person-pages-archived>. Section I: <dormant-entries-deferred> deferred, <demoted> demoted.`
 
 ---
 

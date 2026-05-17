@@ -14,6 +14,18 @@ The output is a single review-ready draft the user merges via `/morning` the nex
 
 Standard config-root pattern.
 
+## Step 0.5 — Privacy defaults (v4.7.2+)
+
+Before pulling any external data, ensure `<config-root>/.gitignore` exists and contains the privacy-sensitive paths. This is defensive — `/listen` is about to write raw email / Slack / transcript content to `archive/`, and we don't want that committed to a git repo silently.
+
+Logic:
+1. Check whether `<config-root>/.gitignore` exists.
+2. If it doesn't exist, write it with the full template from `references/gitignore-template.md`. Log to stdout: "Wrote `.gitignore` with privacy defaults — see `references/gitignore-template.md` for what's protected and why."
+3. If it exists, check whether `archive/` and `memory/.commit-drafts/` are listed. If either is missing, append the missing patterns under a section: `# Added by cortex /listen first-run — privacy defaults`. Don't reorder or delete user content.
+4. Cloud-sync warning: check whether `<config-root>/` lives inside common cloud-sync paths (`~/Library/Mobile Documents/com~apple~CloudDocs/` for iCloud, `~/Dropbox/`, `~/OneDrive*/`, `~/Google Drive/`). If it does, log one line: "Heads up — `<config-root>` is inside <provider>. `.gitignore` does NOT prevent cloud sync. See `references/gitignore-template.md` cloud-sync section for alternatives (local-only archive via symlink)."
+
+This step never blocks. If file write fails, log the error and continue — privacy defaults are best-effort, not blocking.
+
 Determine target date:
 - **No argument** → yesterday in identity time zone (most common case; default for scheduled runs at e.g. 11pm or 6am).
 - `/listen --date YYYY-MM-DD` → that date.
@@ -178,17 +190,13 @@ If today is not Sunday, skip Step 7.
 
 ---
 
-## Step 7.5 — Log to chronicle (v4.7.1+)
+## Step 7.5 — Log to chronicle (v4.7.1+, centralized in v4.7.2+)
 
-Append one line to `<config-root>/memory/log.md` per `references/log-chronicle.md`:
+Invoke the `log-writer` skill (see `skills/log-writer/SKILL.md`) with:
+- **op_name:** `listen`
+- **summary:** `archived <target_date> (<events> events, <inbox> inbox, <mentions> mentions, <transcripts> transcripts, <errors> errors). <P> proposals staged.`
 
-```
-## [<today HH:MM>] listen | archived <target_date> (<events> events, <inbox> inbox, <mentions> mentions, <transcripts> transcripts, <errors> errors). <P> proposals staged.
-```
-
-Create `log.md` if it doesn't exist (with the standard header per spec).
-
-If the chronicle write fails, log internally and continue — don't fail the run on an audit-log error.
+The log-writer creates `log.md` if missing, writes the timestamped entry, and returns a best-effort status. If the write fails, continue — don't fail the `/listen` run on an audit-log error.
 
 ---
 

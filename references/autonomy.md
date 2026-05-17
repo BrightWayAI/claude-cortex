@@ -139,3 +139,20 @@ The `nucleus-router` skill consults `autonomy` for the routed command. When the 
 - Users who don't edit their `cortex.user-context.md` get the defaults above. Most behavior is unchanged from v4.7 (suggest+confirm).
 - Users on v4.7 who want autonomy: add the `autonomy:` section to their user-context file. No reload or restart needed — commands consult the file on each invocation.
 - Setup commands (`setup-identity`, etc.) could prompt about autonomy preference on first run. Not required for v4.7.1 — defaults are fine; users discover the slider via docs.
+
+## Where autonomy is currently wired (v4.7.2)
+
+The autonomy slider is consulted at three levels:
+
+1. **Router level (nucleus-router v0.1.3+).** Before suggesting confirmation for any routed command, the router reads the autonomy mode. `auto` skips the suggest+confirm prompt entirely; `confirm` adds emphasis. This affects ALL commands routed through the router.
+2. **Command-level confirmation gates (cortex v4.7.2+).** Three cortex commands have their internal "Proceed?" gates updated to consult autonomy mode and conditionally skip:
+   - `/forget` Step 3 (default mode: `confirm`)
+   - `/cleanup` Step 3 (default mode: `suggest`)
+   - `/setup-obsidian` Step 2 (default mode: `confirm`)
+3. **Future wirings.** Other commands' internal gates haven't been updated:
+   - `/remember` Step 5 is a summary, not a gate — autonomy doesn't apply naturally. Could add verbose-vs-terse output preference in future.
+   - `/morning` and `/merge-research-draft` walk proposals one-by-one with per-item gates; auto-mode there would be dangerous and is intentionally not implemented.
+   - `/rehearse` per-entry gates — same reasoning.
+   - `/setup-identity`, `/setup-voice`, `/setup-sources` are interactive interview-style; autonomy=auto would mean "skip the interview and use defaults" which is structurally different from confirmation skipping. Not wired.
+
+If a user sets a command to `auto` but the command's gates aren't wired (e.g., `/morning: auto`), the router still skips its prompt — but the command will still walk its internal gates. This is intentional: protect destructive proposal-merging from runaway autonomy.

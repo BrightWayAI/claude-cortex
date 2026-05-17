@@ -6,6 +6,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.7.2] — Wiring + privacy: autonomy gates, log centralization, gitignore defaults (2026-05-16)
+
+### Added — `.gitignore` privacy defaults
+- New `references/gitignore-template.md` — the canonical privacy gitignore + cloud-sync notes for `<config-root>/`. Documents what's protected (archive/, .commit-drafts/, .research-drafts/, queue markers, plugin runtime state, Obsidian local-only state) and what's still versioned (active node files, briefs, hot.md, log.md, identity/voice/VAULT).
+- `/setup-identity` Step 3.5 (new) — writes `.gitignore` with privacy defaults if missing. Surfaces a one-line cloud-sync warning if `<config-root>/` is inside iCloud / Dropbox / OneDrive / Google Drive (since `.gitignore` doesn't apply to cloud sync).
+- `/listen` Step 0.5 (new) — defensive check before pulling raw substrate. If `.gitignore` doesn't exist, creates it. If it exists but is missing `archive/` or `memory/.commit-drafts/`, appends them under a "Added by cortex /listen first-run" section. Idempotent.
+- Cloud-sync caveat documented in the template — iCloud lacks selective sync; recommended pattern is symlinking `archive/` to `~/.cache/nucleus/archive/` (out of the synced directory) before the first `/listen` run.
+
+### Added — autonomy wiring at command level (Karpathy Iron Man slider, take 2)
+- `/forget` Step 3 — consults `autonomy` mode (default `confirm`). `auto` skips the gate; `confirm` per-effect prompts; `suggest` single yes/no.
+- `/cleanup` Step 3 — consults mode (default `suggest`). `auto` executes all proposed actions inline; `confirm` walks per-item.
+- `/setup-obsidian` Step 2 — consults mode (default `confirm`). `auto` skips the plan-and-confirm prompt.
+- `references/autonomy.md` updated with "Where autonomy is currently wired (v4.7.2)" section documenting the three levels (router, command gates, future) and listing which commands are/aren't wired and why.
+
+### Added — log centralization
+- New `skills/log-writer/SKILL.md` — programmatic primitive invoked by other cortex commands at their "Log to chronicle" steps. Takes `op_name` + `summary` (and optional `body`, `timestamp`); writes one formatted entry to `<config-root>/memory/log.md`. Single source of truth for the log format.
+- All 9 commands with Log steps (`/listen`, `/morning`, `/end-day`, `/end-week`, `/reindex`, `/research-gaps`, `/merge-research-draft`, `/cleanup`, `/rehearse`) updated to invoke `log-writer` with structured inputs instead of inlining the format string. If the chronicle format ever changes, only `log-writer` needs updating.
+
+### Why this matters
+- **Privacy defaults shipped.** First-run `/listen` no longer risks committing raw email / Slack / transcript content to git. Cloud-sync gap is documented for users to address.
+- **Autonomy slider actually moves the needle.** Three high-traffic cortex commands now respect user-set autonomy preferences at their internal gates. `auto` mode for `/cleanup` lets scheduled cleanups run unattended; `auto` mode for `/forget` is hands-off for users who trust the operation.
+- **Log format is now single-source-of-truth.** Future format changes won't require touching 9 command files.
+
 ## [4.7.1] — Karpathy patterns: memory/log.md chronicle + autonomy slider (2026-05-16)
 
 ### Added — `memory/log.md` chronicle
