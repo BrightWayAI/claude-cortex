@@ -6,6 +6,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.6.0] — /end-day cleanup: quick-default + --full opt-in (2026-05-16)
+
+### Why this exists
+Real-user feedback: the v4.5 8-step `/end-day` chain felt like overhead on days without transcripts, inbox volume, or things to triage. The user gates fired even when nothing needed gating. This release reshapes `/end-day` so the default chain is the actionable spine and heavy work is opt-in.
+
+### Changed — `/end-day` defaults to quick mode
+- **Quick mode (default).** Runs Step 3 (cortex auto-commit with cheap-tier triage), Step 4 (reflective prompts), Step 5 (pre-stage tomorrow's brief), Step 5.5 (refresh memory index), Step 6 (close). 30s – 3 min.
+- **Full mode (`/end-day --full`).** Adds Step 1 (inbox triage), Step 2 (transcript review), Step 2a (mining of non-transcript sources), Step 2b (unified review gate) before the quick chain. The full chain from v4.5. 10-15 min.
+- **Auto-offer prompt.** In quick mode, before Step 3, run a fast pre-check counting today's transcripts and today's unread inbox where the user is To/Cc. If transcripts ≥ 2 OR inbox ≥ 5, surface a one-line prompt offering the full close. Default `no` after ~5s. If both are low, no prompt at all — no friction for nothing.
+- **Step 4 reflection write target changed.** Reflection answers now append to today's brief markdown as a `## Reflection` section (was Section 7 in daily-brief v0.2.x; daily-brief v0.3.0 removed Section 7). Idempotent re-runs replace existing reflection content rather than duplicating. Tomorrow's `/brief` Section 6 reads from this section.
+- **Step 5 inbox-triage handoff is now conditional.** Full mode passes Step 1 results to tomorrow's brief; quick mode lets the brief query Gmail itself in the morning. No shared-state requirement in quick mode.
+
+### Why this matters
+Most days are quiet days. The user gates on Steps 1 and 2 fired even when there was nothing to gate, training users to skim through empty motions. After v4.6 the chain auto-shrinks to the actionable spine and asks for more only when the data justifies it. Skipped-by-default steps stay available via `--full` for the days that need them.
+
+### Coordinated with daily-brief v0.3.0
+This release lands alongside daily-brief v0.3.0, which removes Section 7 (end-of-day prompts) from `/brief`. The `## Reflection` section written by `/end-day` Step 4 is the new contract between the two plugins — daily-brief reads it; cortex writes it.
+
 ## [4.5.0] — Legibility upgrade: memory index + research-gaps + Obsidian (2026-05-16)
 
 ### Why this exists

@@ -1,6 +1,21 @@
 ---
 name: end-day
-description: End-of-day closing routine with v4.3 mining layer. Chains seven steps with user gates — Pre-chain B Scope-section migration (one-time), inbox triage for tomorrow, transcript review (commitments + learnings via configured note sources), parallel mining of other Cowork sessions and CRM/email/calendar events, unified review gate, cortex auto-commit with cheap-tier triage, reflective prompts, pre-stage tomorrow's brief. Auto-fires on "/end-day", "wrapping up", "calling it a day", "done for today", "end of day", "closing out today". 10-15 minutes including review gates on a busy day; ~5 minutes on a quiet day.
+description: >
+  End-of-day closing routine. Quick mode by default (v4.6+) — runs cortex
+  auto-commit, reflective prompts, brief pre-stage, memory-index refresh, and
+  close in 30 seconds to 3 minutes. Heavy steps (inbox triage, transcript
+  review, mining of non-transcript sources) only run in `/end-day --full`, or
+  when auto-offered because the day actually had transcripts (≥2) or inbox
+  volume (≥5).
+
+  Auto-fires on "/end-day", "wrapping up", "calling it a day", "done for
+  today", "end of day", "closing out today". Quick mode is the default for
+  every trigger; the user passes `--full` or accepts the auto-offer prompt to
+  get the full chain.
+
+  Reflection (Step 4) appends a `## Reflection` section to today's brief
+  markdown — that's the canonical write surface and what tomorrow's `/brief`
+  Section 6 reads (daily-brief v0.3.0+).
 ---
 
 See `commands/end-day.md` for the full workflow.
@@ -13,13 +28,13 @@ See `commands/end-day.md` for the full workflow.
 
 ## Pre-flight
 
-This skill works best when:
-- `<config-root>/identity.md` exists (time zone for "today"/"tomorrow" boundaries)
+Quick mode (the default) has minimal pre-flight requirements — just `<config-root>/identity.md` for time zone, and `daily-brief` if you want the brief pre-staged.
+
+Full mode (`--full`) works best when:
 - At least one note source is configured via `/setup-sources` (otherwise the transcript-review step skips)
 - Connectors are wired: HubSpot for commitments dedup, Gmail for activity-miner, Calendar MCP, session-info MCP for conversation-miner
-- `daily-brief` plugin installed for the pre-stage-tomorrow step
 
-Without any of these, the chain skips the affected step silently and continues. Only the cortex auto-commit step is structurally required.
+Without any of these, the chain skips the affected step silently and continues. Only the cortex auto-commit step (Step 3) is structurally required.
 
 ## What this skill is NOT for
 

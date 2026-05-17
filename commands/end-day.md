@@ -85,7 +85,28 @@ If Pre-chain B errors partway through (e.g., a node file is unreadable), log the
 
 ---
 
-## Step 1 — Inbox triage for tomorrow
+## Modes (v4.6+) — quick close (default) vs `--full`
+
+`/end-day` runs in **quick mode by default** as of cortex v4.6.0. Real-user feedback: the previous 8-step chain felt like overhead on days when there were no transcripts, no inbox volume, and nothing to triage. The quick chain is the actionable spine:
+
+- **Quick mode** (default): Step 3 (auto-commit), Step 4 (reflection), Step 5 (pre-stage brief), Step 5.5 (refresh memory index), Step 6 (close). Typically 30s – 3 min.
+- **Full mode** (`/end-day --full`): adds Step 1 (inbox triage), Step 2 (transcript review), Step 2a (mining of non-transcript sources), Step 2b (unified review gate). Use when you actually have transcripts, heavy inbox volume, or a Slack-heavy day to mine. Typically 10-15 min.
+
+**Auto-offer rule.** In quick mode, before Step 3, do a fast pre-check:
+- Count transcripts dated today in known note sources (per `/setup-sources`).
+- Count unread inbox threads where the user is in To/Cc from today.
+
+If transcripts ≥ 2 OR inbox ≥ 5, surface a one-line prompt: "Heads up — you have <N> transcripts and <M> inbox threads from today. Want the full close (`/end-day --full`)? (default: no)" — default `no` after ~5s. If user says yes, restart in `--full` mode.
+
+If transcripts and inbox are both low, **don't ask** — just run the quick chain. Don't introduce a prompt when there's nothing to prompt about.
+
+---
+
+## Step 1 — Inbox triage for tomorrow (skipped in quick mode)
+
+**Quick mode: skipped.** Inbox triage runs the next morning via `/brief` Section 2 anyway; running it again here is redundant for most users.
+
+**Full mode only:** the original Step 1 behavior follows.
 
 **Goal:** surface threads that will need a reply tomorrow so they can populate tomorrow's brief.
 
@@ -104,7 +125,7 @@ Behavior:
 
 ---
 
-## Step 2 — Transcript review (v4.3+: two streams)
+## Step 2 — Transcript review (skipped in quick mode; full mode only — v4.3+: two streams)
 
 **Goal:** surface (a) commitments the user made today that aren't already in CRM tasks or cortex memory, and (b) learnings from the day's transcripts that aren't already captured in node content.
 
@@ -139,7 +160,7 @@ The `learnings_delta` stream is NOT reviewed here. Hold the proposals; they get 
 
 ---
 
-## Step 2a — Parallel mining of non-transcript sources (v4.3+)
+## Step 2a — Parallel mining of non-transcript sources (skipped in quick mode; full mode only — v4.3+)
 
 **Goal:** mine the day's other Cowork sessions and CRM/email/calendar events for learnings that aren't yet in node content.
 
@@ -178,7 +199,7 @@ Group surviving proposals by `target_node`. Sort within each group by `confidenc
 
 ---
 
-## Step 2b — Unified review gate (v4.3+)
+## Step 2b — Unified review gate (skipped in quick mode; full mode only — v4.3+)
 
 Present the merged proposals once. Format:
 
@@ -282,7 +303,22 @@ These three answers also feed Step 5's pre-stage as section-6 content of tomorro
 
 Keep conversational. If the user says "nothing major today," that's valid — skip to Step 5.
 
-If the user provides answers, **append them to today's brief markdown snapshot** at `<config-root>/briefs/<today_local>.md` under section 7 (End-of-day prompts). This is the canonical write — it ensures the snapshot reflects what was actually captured, even if `daily-brief` isn't installed.
+If the user provides answers, **append them to today's brief markdown snapshot** at `<config-root>/briefs/<today_local>.md` under a `## Reflection` section (v4.6+ — was Section 7 prior to daily-brief v0.3.0). Idempotent: if a `## Reflection` section already exists from a prior `/end-day` run today, replace its contents rather than duplicating.
+
+Format:
+
+```markdown
+## Reflection
+
+- **Biggest thing that got done today:** <answer or "—">
+- **What blocked you:** <answer or "—">
+- **The one thing tomorrow has to move:** <answer or "—">
+- _Captured by /end-day at <HH:MM>._
+```
+
+This is the canonical write — tomorrow's `/brief` Section 6 reads from this section. If the user said "nothing major today," still write the `## Reflection` section with `—` placeholders and a "skipped" timestamp so tomorrow's brief shows the explicit non-event rather than "no reflection logged."
+
+If `<config-root>/briefs/<today_local>.md` doesn't exist (user ran `/end-day` without ever generating today's brief), create the file with a minimal `# End-of-day reflection — <today>` header followed by the `## Reflection` section. Don't try to back-fill the missing brief content.
 
 ---
 
@@ -293,8 +329,8 @@ If the user provides answers, **append them to today's brief markdown snapshot**
 If the `daily-brief` plugin is installed:
 
 1. Invoke its `/brief` command with `target_date: tomorrow_local`.
-2. Pass the inbox-triage results from Step 1 directly (so the brief doesn't re-query Gmail).
-3. Pass today's reflection answers from Step 4 to populate tomorrow's section 6 (Yesterday's reflection).
+2. If Step 1 ran (full mode only), pass the inbox-triage results so the brief doesn't re-query Gmail. In quick mode, the brief queries Gmail itself in the morning — no shared state needed.
+3. **Today's reflection is read by tomorrow's `/brief` Section 6 directly from today's markdown's `## Reflection` section** (daily-brief v0.3.0+). No explicit handoff from this step.
 4. The brief generator writes `<config-root>/briefs/<tomorrow_local>.md` and updates the Cowork artifact "Today's Brief" to tomorrow's data — or, if Cowork artifact tools aren't available (Claude Code), produces the markdown snapshot only with a clear notice.
 
 ### User gate after Step 5
@@ -334,9 +370,10 @@ Adjust the count summary based on what actually ran (don't fabricate counts for 
 
 If the user is running this in a fire-and-forget mode (e.g., via a scheduled task, or they walked away), apply these defaults:
 
-- **Step 1 gate** → "Wait" after ~10s (default)
-- **Step 2 commitments gate** → "Skip" per item after ~10s (don't auto-create CRM tasks without confirmation — destructive on the wrong side)
-- **Step 2b unified review gate** → "Skip all" after ~30s. Never auto-commit mined proposals; too easy to pollute nodes silently. The 30s window (vs. 10s elsewhere) is longer because this gate has more density and the user may actually be reviewing it.
+- **Quick-mode auto-offer prompt** (the "want the full close?" prompt at the top) → "no" after ~5s
+- **Step 1 gate** (full mode only) → "Wait" after ~10s
+- **Step 2 commitments gate** (full mode only) → "Skip" per item after ~10s (don't auto-create CRM tasks without confirmation — destructive on the wrong side)
+- **Step 2b unified review gate** (full mode only) → "Skip all" after ~30s. Never auto-commit mined proposals; too easy to pollute nodes silently. The 30s window (vs. 10s elsewhere) is longer because this gate has more density and the user may actually be reviewing it.
 - **Step 5 brief-pre-stage gate** → "Wait" after ~10s
 
 The chain should never block. If the user is engaged, gates pause for input. If not, gates pick the conservative default and move on. Skipped Step 2b proposals are logged to the dismissal log per the Step 2b spec so they don't re-surface tomorrow.
@@ -345,12 +382,14 @@ The chain should never block. If the user is engaged, gates pause for input. If 
 
 ## Behavior rules
 
+- **Quick mode is the default.** Heavy steps (1, 2, 2a, 2b) only run with `--full` or when the user accepts the auto-offer prompt.
+- **Don't introduce friction for nothing.** Auto-offer the full chain only when transcripts ≥ 2 or inbox ≥ 5. Otherwise skip the prompt.
 - **Conversational, not formal.** This is a reflection ritual.
 - **Skip what doesn't apply.** Missing plugins → skip that step silently.
 - **Don't over-capture.** Step 3's cheap-tier triage exists to prevent over-capture; respect its decisions.
-- **Honor user gates.** Never auto-convert transcript commitments to CRM tasks without explicit per-item confirmation.
+- **Honor user gates.** Never auto-convert transcript commitments to CRM tasks without explicit per-item confirmation (full mode).
 - **Pre-stage is opt-in default.** If `daily-brief` isn't installed, the chain ends after Step 4. No nag.
-- **Telemetry (optional).** If core-ops is installed, log one line at completion: `skill: end-day, steps_run: [...], commits_count, runtime_ms`.
+- **Telemetry (optional).** If core-ops is installed, log one line at completion: `skill: end-day, mode: quick|full, steps_run: [...], commits_count, runtime_ms`.
 
 ## What this command is NOT for
 
