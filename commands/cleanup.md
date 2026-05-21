@@ -168,7 +168,7 @@ Cold knowledge:
 
 CORRECTIONs are excluded from this audit (immune to decay).
 
-**On accept of `rehearse`**: tag the entry for the next `/rehearse` batch (this defers the decision rather than acting now). Logged to `<config-root>/memory/.rehearse-queue.md` so `/rehearse` picks them up.
+**On accept of `rehearse`**: tag the entry for the next `/rehearse` batch (this defers the decision rather than acting now). Logged to `<config-root>/memory/staged/queues/rehearse.md` so `/rehearse` picks them up.
 
 **On accept of `demote`**: move entry to the node's `## Demoted knowledge` section with metadata trail.
 

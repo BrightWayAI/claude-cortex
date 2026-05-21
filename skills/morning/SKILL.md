@@ -2,7 +2,7 @@
 name: morning
 description: >
   The JARVIS morning routine. Reads the most-recent overnight `/listen` draft
-  at `<config-root>/memory/.commit-drafts/`, walks the user through each
+  at `<config-root>/memory/staged/commit-drafts/`, walks the user through each
   proposed memory commit (accept / reject / edit / defer), applies accepted
   proposals to active memory nodes with v4.4 drift-detection, refreshes
   `memory/hot.md` and `memory/index.md`, and optionally chains into `/brief`.
@@ -28,7 +28,7 @@ See `commands/morning.md` for the full workflow.
 
 ## Pre-flight
 
-- A `/listen` draft must exist at `<config-root>/memory/.commit-drafts/`. If not, the command exits gracefully and offers to run `/listen` now.
+- A `/listen` draft must exist at `<config-root>/memory/staged/commit-drafts/`. If not, the command exits gracefully and offers to run `/listen` now.
 - `<config-root>/identity.md` for time zone.
 
 ## What this skill is NOT for

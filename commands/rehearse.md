@@ -38,7 +38,7 @@ Walk the memory directory:
    - If `age_days < effective_threshold_fresh` → skip (still Fresh)
    - Otherwise → add to candidate pool with metadata: `{node, type, age_days, last_recalled_days_ago, type_weight}`
 
-4. Check `<config-root>/memory/.rehearse-queue.md` (created by `/cleanup` when user defers a Dormant entry to "rehearse"). Any entries listed there get **priority** in this run — surface them first.
+4. Check `<config-root>/memory/staged/queues/rehearse.md` (created by `/cleanup` when user defers a Dormant entry to "rehearse"). Any entries listed there get **priority** in this run — surface them first.
 
 ---
 
@@ -113,7 +113,7 @@ The entry still lives in `## Demoted knowledge` (entry-level archive isn't a sep
 
 ### skip
 
-No file changes. Optionally, append the entry to `<config-root>/memory/.rehearse-skip-log.md` so the agent doesn't surface this same entry next week:
+No file changes. Optionally, append the entry to `<config-root>/memory/staged/skip-logs/rehearse.md` so the agent doesn't surface this same entry next week:
 
 ```
 <entry-ref> skipped <today> — defer for at least 30 days
@@ -145,9 +145,9 @@ Invoke the `log-writer` skill (see `skills/log-writer/SKILL.md`) with:
 
 ---
 
-## Step 5 — Update .rehearse-queue.md
+## Step 5 — Update staged/queues/rehearse.md
 
-After the batch is processed, remove any successfully-handled entries from `<config-root>/memory/.rehearse-queue.md` (entries that `/cleanup` had previously deferred). Skipped entries stay in the queue and may be re-surfaced in the next rehearsal.
+After the batch is processed, remove any successfully-handled entries from `<config-root>/memory/staged/queues/rehearse.md` (entries that `/cleanup` had previously deferred). Skipped entries stay in the queue and may be re-surfaced in the next rehearsal.
 
 ---
 

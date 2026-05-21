@@ -6,6 +6,64 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.8.1] — Staged substrates reorg + migrations pattern doc (2026-05-20)
+
+Cleanup pass 1 (per `nucleus/docs/proposals/cleanup-pass-1.md`). Pure clarity refactor — no behavioral changes for users post-migration.
+
+### Changed — unified `memory/staged/` tree
+
+Pre-v4.8.1, in-flight memory state lived in 8 different dotfile paths under `memory/`:
+- `.commit-drafts/`, `.research-drafts/`, `.heartbeat-drafts/` (drafts)
+- `.reindex-queue`, `.rehearse-queue.md` (queues)
+- `.rehearse-skip-log.md`, `.research-skip-log.md`, `.morning-reject-log.md` (skip-logs)
+
+These now consolidate under `<config-root>/memory/staged/`:
+
+```
+memory/staged/
+├── commit-drafts/
+├── research-drafts/
+├── heartbeat-drafts/
+├── queues/
+│   ├── reindex
+│   └── rehearse.md
+└── skip-logs/
+    ├── rehearse.md
+    ├── research.md
+    └── morning-reject.md
+```
+
+All 22 cortex files that previously referenced the old paths updated. CLAUDE.md storage layout updated.
+
+### Added — migration command + pattern doc
+
+- New `commands/migrate-staged-substrates.md` — one-time migration that detects pre-v4.8.1 dotfiles and moves them to the new layout. Idempotent; gated by `<config-root>/memory/.migration-staged-reorg-done` marker.
+- New `references/migrations.md` — names the marker-gated one-time migration pattern, lists active migrations (scope-migration, decay-config-init, gitignore-privacy-defaults, staged-substrates-reorg, hot-cache-first-generation), provides template for adding new ones.
+- `/end-day` gains **Pre-chain C** that invokes `/migrate-staged-substrates` if the marker is missing — ensures every upgrading user migrates within 24h.
+
+### Why this matters
+- Eight scattered dotfiles → one named tree. Easier to read, easier to gitignore (single `memory/staged/` entry replaces 8 individual exclusions).
+- Future "staged state" features (e.g., `/sweep` heartbeat drafts in cortex v4.9+) drop into `staged/heartbeat-drafts/` without inventing new dotfiles.
+- The migration pattern is now documented and named — future one-time data transforms follow a consistent shape.
+
+### Migration safety
+- `/migrate-staged-substrates` does conflict-checks; if both old and new paths exist (rare), it skips and surfaces a manual-resolve prompt rather than overwriting.
+- Old `.commit-drafts/` / `.research-drafts/` paths remain in the gitignore template as legacy exclusions (defensive — in case any leftover files exist after migration).
+- No content changes; pure path renames. Existing drafts continue to be reviewable by `/morning` and `/merge-research-draft`.
+
+### Files updated in this pass
+- 20 cortex command + skill + reference files had path references rewritten via sed
+- CLAUDE.md (storage layout + slash-command table)
+- References: archive-layout.md, hot-cache.md, log-chronicle.md, memory-index.md, gitignore-template.md
+- New: commands/migrate-staged-substrates.md, references/migrations.md
+
+### Coordinated with nucleus repo
+- `nucleus/docs/proposals/cleanup-pass-1.md` (this cleanup's parent spec).
+- `nucleus/docs/proposals/memory-as-git.md` (next-up: vault-as-git pattern).
+- `nucleus/docs/proposals/sweep-heartbeat.md` (uses new `staged/heartbeat-drafts/` path).
+- `nucleus/docs/contracts.md` (lists every cross-plugin file-format dependency with both old and new paths).
+- nucleus README "Start here" callout added.
+
 ## [4.8.0] — /start-nucleus onboarding walker + /observe pruned (2026-05-16)
 
 ### Added — `/start-nucleus` foundational onboarding walker

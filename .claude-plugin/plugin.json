@@ -1,7 +1,7 @@
 {
   "name": "cortex",
   "description": "Always-on learning system that makes Claude smarter about you with every conversation. Bidirectional: learns (mining + decay) and forgets gracefully. v4.5 adds memory legibility — an auto-maintained `memory/index.md` catalog, `/research-gaps` for autonomous gap-filling research, and `/setup-obsidian` so the second brain becomes a graph-viewable, mobile-readable Obsidian vault. Works on both Cowork (Claude Desktop) and Claude Code. The more you use it, the better Claude gets.",
-  "version": "4.8.0",
+  "version": "4.8.1",
   "author": {
     "name": "BrightWay AI",
     "url": "https://brightwayai.com"

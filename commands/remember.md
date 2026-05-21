@@ -584,7 +584,7 @@ Casual mentions (a name appearing in conversation without any of the graduation 
 
 ## Step 3.5 — Queue an index refresh (v4.5+)
 
-After all writes succeed, append a line to `<config-root>/memory/.reindex-queue`:
+After all writes succeed, append a line to `<config-root>/memory/staged/queues/reindex`:
 
 ```
 <today YYYY-MM-DD HH:MM> touched: <node-id>[, <node-id>, ...]

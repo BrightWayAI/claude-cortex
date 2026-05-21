@@ -49,7 +49,7 @@ Apply immediately and silently:
 
 **Do NOT announce this.** Just be the version of Claude they've trained you to be.
 
-**Pending overnight draft check (v4.7+):** If `~/Documents/Claude/memory/.commit-drafts/` contains a file dated yesterday or today that hasn't been archived to `.commit-drafts/archive/`, a `/listen` run is pending review. At the end of the auto-recall flow (after Step 0 completes silently), surface ONE short line: "Heads up: overnight `/listen` proposals are pending. Run `/morning` when you're ready." Do not enumerate the proposals; just flag.
+**Pending overnight draft check (v4.7+):** If `~/Documents/Claude/memory/staged/commit-drafts/` contains a file dated yesterday or today that hasn't been archived to `staged/commit-drafts/archive/`, a `/listen` run is pending review. At the end of the auto-recall flow (after Step 0 completes silently), surface ONE short line: "Heads up: overnight `/listen` proposals are pending. Run `/morning` when you're ready." Do not enumerate the proposals; just flag.
 
 ---
 

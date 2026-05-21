@@ -24,7 +24,7 @@ _Append-only chronicle of audit-worthy Nucleus operations. Cortex writes; humans
 
 ## [2026-05-16 17:46] reindex | 47 nodes catalogued (28 fresh, 12 stale, 5 dormant, 2 cold). 8 demoted entries across 6 nodes.
 
-## [2026-05-16 18:01] research-gaps | scanned 47 nodes, found 6 gaps. Researched 3 (1 high confidence, 2 medium). Draft at .research-drafts/2026-05-16-research-gaps.md.
+## [2026-05-16 18:01] research-gaps | scanned 47 nodes, found 6 gaps. Researched 3 (1 high confidence, 2 medium). Draft at staged/research-drafts/2026-05-16-research-gaps.md.
 
 ## [2026-05-16 18:30] cleanup | section H archived 1 person page (jane-doe → archive/). Section I deferred 4 dormant entries to .rehearse-queue.
 

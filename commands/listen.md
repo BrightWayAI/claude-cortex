@@ -1,5 +1,5 @@
 ---
-description: Nightly autonomous ingest. Pulls yesterday's calendar / Gmail / Slack / transcripts / Drive activity into immutable `<config-root>/archive/YYYY-MM-DD/`, runs the mining agents (transcript-reviewer, conversation-miner, activity-miner) against the archive, and stages all proposed memory commits as a single draft at `<config-root>/memory/.commit-drafts/YYYY-MM-DD.md`. Refreshes `<config-root>/memory/hot.md`. Designed for unattended scheduled execution. Pair with `/morning` to review and merge the draft.
+description: Nightly autonomous ingest. Pulls yesterday's calendar / Gmail / Slack / transcripts / Drive activity into immutable `<config-root>/archive/YYYY-MM-DD/`, runs the mining agents (transcript-reviewer, conversation-miner, activity-miner) against the archive, and stages all proposed memory commits as a single draft at `<config-root>/memory/staged/commit-drafts/YYYY-MM-DD.md`. Refreshes `<config-root>/memory/hot.md`. Designed for unattended scheduled execution. Pair with `/morning` to review and merge the draft.
 ---
 
 # /listen
@@ -21,7 +21,7 @@ Before pulling any external data, ensure `<config-root>/.gitignore` exists and c
 Logic:
 1. Check whether `<config-root>/.gitignore` exists.
 2. If it doesn't exist, write it with the full template from `references/gitignore-template.md`. Log to stdout: "Wrote `.gitignore` with privacy defaults — see `references/gitignore-template.md` for what's protected and why."
-3. If it exists, check whether `archive/` and `memory/.commit-drafts/` are listed. If either is missing, append the missing patterns under a section: `# Added by cortex /listen first-run — privacy defaults`. Don't reorder or delete user content.
+3. If it exists, check whether `archive/` and `memory/staged/commit-drafts/` are listed. If either is missing, append the missing patterns under a section: `# Added by cortex /listen first-run — privacy defaults`. Don't reorder or delete user content.
 4. Cloud-sync warning: check whether `<config-root>/` lives inside common cloud-sync paths (`~/Library/Mobile Documents/com~apple~CloudDocs/` for iCloud, `~/Dropbox/`, `~/OneDrive*/`, `~/Google Drive/`). If it does, log one line: "Heads up — `<config-root>` is inside <provider>. `.gitignore` does NOT prevent cloud sync. See `references/gitignore-template.md` cloud-sync section for alternatives (local-only archive via symlink)."
 
 This step never blocks. If file write fails, log the error and continue — privacy defaults are best-effort, not blocking.
@@ -30,7 +30,7 @@ Determine target date:
 - **No argument** → yesterday in identity time zone (most common case; default for scheduled runs at e.g. 11pm or 6am).
 - `/listen --date YYYY-MM-DD` → that date.
 - `/listen --backfill N` → run the pipeline once per day for the last N days that don't yet have archives. Each day produces its own draft.
-- `/listen --remine YYYY-MM-DD` → skip the source-pull phase; only re-run mining against an existing archive. Produces `.commit-drafts/<date>-remine-<seq>.md` (doesn't overwrite the original).
+- `/listen --remine YYYY-MM-DD` → skip the source-pull phase; only re-run mining against an existing archive. Produces `staged/commit-drafts/<date>-remine-<seq>.md` (doesn't overwrite the original).
 
 If `<config-root>/archive/<target_date>/` already exists AND mode is not `--rewrite` or `--remine`, log "Archive for <date> already exists; skipping pull. Use --remine to re-run mining or --rewrite to force re-pull." and exit with status 0. **Do not silently overwrite a prior archive — it's the immutable substrate.**
 
@@ -126,7 +126,7 @@ All three agents return structured proposal lists. Aggregate them.
 
 ## Step 4 — Stage the commit draft
 
-Write all proposals to a single file: `<config-root>/memory/.commit-drafts/<target_date>.md`.
+Write all proposals to a single file: `<config-root>/memory/staged/commit-drafts/<target_date>.md`.
 
 Structure:
 
@@ -205,7 +205,7 @@ The log-writer creates `log.md` if missing, writes the timestamped entry, and re
 Print a one-line summary to stdout (visible to scheduled-task logs):
 
 ```
-/listen <target_date> complete: <N> proposals staged in .commit-drafts/<target_date>.md. Run /morning to review.
+/listen <target_date> complete: <N> proposals staged in staged/commit-drafts/<target_date>.md. Run /morning to review.
 ```
 
 Exit with status 0 on success; non-zero only on hard failures (config-root missing, all sources failed, etc.).
@@ -217,7 +217,7 @@ Exit with status 0 on success; non-zero only on hard failures (config-root missi
 - **No interactive prompts.** `/listen` is designed for cron. Errors go to the archive's `_index.md`, not to the user.
 - **Idempotent on the archive.** Re-running for the same date without `--rewrite` is a no-op.
 - **Privacy-conservative.** Default to metadata-only for inbox / Slack. Full bodies only with explicit opt-in via user-context.
-- **Never modify active memory.** Proposals stage to `.commit-drafts/`. The user gates the merge.
+- **Never modify active memory.** Proposals stage to `staged/commit-drafts/`. The user gates the merge.
 - **Skip silently when empty.** If a date had zero source data (weekend, vacation), still write a minimal `_index.md` noting zero activity. Don't stage an empty draft — skip the draft entirely and log "no activity to mine."
 - **Honor adapter health.** If `/setup-sources` flagged an adapter as unhealthy in its last health-check, skip that adapter's pull and note in `_index.md`.
 

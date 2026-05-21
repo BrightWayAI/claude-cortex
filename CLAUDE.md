@@ -29,9 +29,17 @@ You have a persistent memory system stored as markdown files at `~/Documents/Cla
     ├── strategy/
     │   └── q2-growth.md
     ├── .decay-config.md      # Decay thresholds (v4.4+)
-    ├── .reindex-queue        # Deferred-index marker (v4.5+)
-    ├── .research-drafts/     # Web-research findings staged for user review (v4.5+)
-    ├── .commit-drafts/       # /listen overnight proposals staged for /morning merge (v4.7+)
+    ├── staged/               # All in-flight memory state (reorganized in v4.8.1)
+    │   ├── commit-drafts/    # /listen overnight proposals staged for /morning merge (v4.7+)
+    │   ├── research-drafts/  # Web-research findings staged for user review (v4.5+)
+    │   ├── heartbeat-drafts/ # /sweep heartbeat proposals (proposed v4.9+)
+    │   ├── queues/
+    │   │   ├── reindex       # Deferred-index marker (v4.5+)
+    │   │   └── rehearse.md   # Deferred-rehearse queue (v4.4+)
+    │   └── skip-logs/
+    │       ├── rehearse.md
+    │       ├── research.md
+    │       └── morning-reject.md
     └── hiring.md             # Unprefixed nodes live at root
 ```
 
@@ -228,10 +236,10 @@ If `.claude/commands/` is present, these slash commands are available:
 | `/rehearse` | Aging-knowledge triage — surfaces 3-5 stale entries and asks "still true? still useful?" (v4.4+) |
 | `/reindex` | Regenerate `<config-root>/memory/index.md` — deterministic, zero-LLM (v4.5+) |
 | `/research-gaps` | Scan memory for thin/stale/contradictory/orphaned/under-cited content; research via web with ≥2 sources; stage findings as a draft (v4.5+) |
-| `/merge-research-draft` | Walk the most recent `.research-drafts/` file finding-by-finding and merge accepted updates into active memory (v4.5+) |
+| `/merge-research-draft` | Walk the most recent `staged/research-drafts/` file finding-by-finding and merge accepted updates into active memory (v4.5+) |
 | `/setup-obsidian` | Scaffold `.obsidian/` vault config + `VAULT.md` so cortex memory becomes graph-viewable in Obsidian (v4.5+) |
 | `/start-nucleus` | Foundational onboarding walker. Chains identity, voice, sources, Obsidian, per-plugin setups, diagnostics, schedules. Idempotent. The "I just installed Nucleus, now what" command (v4.8+) |
-| `/listen` | Nightly autonomous ingest — pulls yesterday's calendar/inbox/slack/transcripts/drive into immutable `<config-root>/archive/YYYY-MM-DD/`, runs mining agents, stages `.commit-drafts/` proposals. Designed for cron (v4.7+) |
+| `/listen` | Nightly autonomous ingest — pulls yesterday's calendar/inbox/slack/transcripts/drive into immutable `<config-root>/archive/YYYY-MM-DD/`, runs mining agents, stages `staged/commit-drafts/` proposals. Designed for cron (v4.7+) |
 | `/morning` | Walk the latest `/listen` draft proposal-by-proposal (accept/reject/edit/defer), refresh hot.md + memory/index, optionally chain into `/brief` (v4.7+) |
 
 ## Per-Project Config

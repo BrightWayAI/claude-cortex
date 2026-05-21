@@ -75,7 +75,7 @@ Pure file-walk and date-filtering. No model calls.
 3. For person nodes, also parse `## Recent interactions` — entries from last 7 days.
 4. For project / client nodes, also parse `## Open threads` — currently-open threads modified in last 7 days.
 5. Walk `<config-root>/briefs/` for the last 7 days. Extract each brief's `## Reflection` section (if present).
-6. Walk `<config-root>/memory/.commit-drafts/archive/` for resolved drafts in the last 7 days. Note significant decisions / commitments captured.
+6. Walk `<config-root>/memory/staged/commit-drafts/archive/` for resolved drafts in the last 7 days. Note significant decisions / commitments captured.
 7. Render the sections above; sort each by date descending.
 8. Cap at 3000 words; truncate intelligently (drop oldest, keep most-referenced).
 9. Write `<config-root>/memory/hot.md` (overwrite).

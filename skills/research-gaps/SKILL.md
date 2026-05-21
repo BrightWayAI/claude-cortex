@@ -4,7 +4,7 @@ description: >
   Active maintenance loop for cortex memory. Scans `<config-root>/memory/` for
   thin / stale / contradictory / orphaned / under-cited / past-due / sparse
   content, researches the highest-priority gaps via the open web (≥2 sources per
-  claim), and writes findings to `.research-drafts/` for user review.
+  claim), and writes findings to `staged/research-drafts/` for user review.
 
   Auto-fires when the user says: "what's missing from my memory", "research
   gaps in my second brain", "fill in what we don't know", "audit my knowledge
@@ -39,7 +39,7 @@ See `commands/research-gaps.md` for the full workflow and `references/gap-detect
 
 ## What this skill does NOT do
 
-- Does not modify active memory. The draft is the only side effect outside `.research-skip-log.md`.
+- Does not modify active memory. The draft is the only side effect outside `staged/skip-logs/research.md`.
 - Does not handle merge. That's `/merge-research-draft`.
 - Does not run on schedule without explicit user opt-in.
 - Does not research private individuals beyond verifiable professional facts.

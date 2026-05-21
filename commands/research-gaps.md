@@ -83,7 +83,7 @@ Add this gap to the queue for the `gap-researcher` subagent.
 Note it but do nothing. Will resurface on next `/research-gaps` if still present.
 
 ### `mark-ok`
-Append a line to `<config-root>/memory/.research-skip-log.md`:
+Append a line to `<config-root>/memory/staged/skip-logs/research.md`:
 ```
 <today YYYY-MM-DD> rule:<N> node:<path> "<signal>" — user marked OK
 ```
@@ -111,14 +111,14 @@ If the subagent reports `status: aborted` or `average_confidence: low`, surface 
 
 Invoke the `log-writer` skill (see `skills/log-writer/SKILL.md`) with:
 - **op_name:** `research-gaps`
-- **summary:** `scanned <N> nodes, found <G> gaps. Researched <R> (<H> high confidence, <M> medium, <L> low). Draft at .research-drafts/<date>-research-gaps.md.`
+- **summary:** `scanned <N> nodes, found <G> gaps. Researched <R> (<H> high confidence, <M> medium, <L> low). Draft at staged/research-drafts/<date>-research-gaps.md.`
 
 ---
 
 ## Step 5 — Surface the draft path and next steps
 
 ```
-Draft written: <config-root>/memory/.research-drafts/<date>-research-gaps.md
+Draft written: <config-root>/memory/staged/research-drafts/<date>-research-gaps.md
 
 To merge: run /merge-research-draft to walk through each finding (accept/reject/defer).
 To skip merging now: the draft persists; rerun /merge-research-draft any time.
@@ -158,7 +158,7 @@ Skip if the user hasn't opted into scheduled tasks via core-ops.
 
 ## What this command does NOT do
 
-- Does not modify active memory. All findings stage to `.research-drafts/`.
+- Does not modify active memory. All findings stage to `staged/research-drafts/`.
 - Does not run `gap-researcher` without the user choosing research-now on at least one gap.
 - Does not handle merge. That's `/merge-research-draft`.
 - Does not write the draft if no gaps are found. Reports clean and exits.

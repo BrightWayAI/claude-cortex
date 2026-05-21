@@ -22,8 +22,8 @@ See `commands/rehearse.md` for the full workflow.
 
 - `<config-root>/memory/.decay-config.md` — thresholds and per-type modifiers (auto-created with defaults if missing)
 - All active node files in `<config-root>/memory/` — to build the candidate pool
-- `<config-root>/memory/.rehearse-queue.md` (if present) — entries `/cleanup` deferred to rehearsal get priority
-- `<config-root>/memory/.rehearse-skip-log.md` — entries the user skipped in recent rehearsals (suppressed for 30 days)
+- `<config-root>/memory/staged/queues/rehearse.md` (if present) — entries `/cleanup` deferred to rehearsal get priority
+- `<config-root>/memory/staged/skip-logs/rehearse.md` — entries the user skipped in recent rehearsals (suppressed for 30 days)
 
 ## Outputs
 

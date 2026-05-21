@@ -32,7 +32,7 @@ Read `<config-root>/memory/.decay-config.md`. If missing or malformed, fall back
 Per `references/memory-index.md`:
 
 1. Walk `<config-root>/memory/` recursively.
-2. Skip `index.md`, `archive/`, `.research-drafts/`, dot-prefixed directories.
+2. Skip `index.md`, `archive/`, `staged/research-drafts/`, dot-prefixed directories.
 3. Group each file by its directory: `user.md` → User profile; `client/*.md` → Clients; `person/*.md` → People (skip `person/archive/`); `company/*.md` → Companies; `topic/*.md` → Topics; `bizdev/*.md` → Bizdev; `<other-dir>/*.md` → that section; root-level `*.md` not in system allowlist → Domain notes.
 4. Per file: extract descriptor (first H1, fallback to first non-empty body line, cap 80 chars). Find max `[confirmed:YYYY-MM-DD]` date. Compute days_since_confirmed.
 5. Classify: Fresh / Stale / Dormant / Cold per the decay formula in `references/memory-index.md`. Apply `decay_profile` front-matter override if present.
@@ -82,7 +82,7 @@ Overwrite `<config-root>/memory/index.md` with the rendered content.
 
 ## Step 5 — Clean up queue marker
 
-If `<config-root>/memory/.reindex-queue` exists, delete it. The marker only exists when prior `/remember` calls deferred a regeneration.
+If `<config-root>/memory/staged/queues/reindex` exists, delete it. The marker only exists when prior `/remember` calls deferred a regeneration.
 
 ---
 

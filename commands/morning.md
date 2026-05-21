@@ -1,5 +1,5 @@
 ---
-description: Interactive morning routine. Reads the most-recent `<config-root>/memory/.commit-drafts/` file (produced overnight by `/listen`), walks the user through each proposal (accept / reject / edit / defer), applies accepted proposals to active memory nodes, refreshes hot.md and the memory index, and optionally chains into `/brief`. The JARVIS morning.
+description: Interactive morning routine. Reads the most-recent `<config-root>/memory/staged/commit-drafts/` file (produced overnight by `/listen`), walks the user through each proposal (accept / reject / edit / defer), applies accepted proposals to active memory nodes, refreshes hot.md and the memory index, and optionally chains into `/brief`. The JARVIS morning.
 ---
 
 # /morning
@@ -12,14 +12,14 @@ You are running the user's morning routine. Overnight, `/listen` ingested yester
 
 Standard config-root pattern.
 
-Locate the most-recent draft: list `<config-root>/memory/.commit-drafts/*.md` sorted by date descending (use the date in the filename, not mtime).
+Locate the most-recent draft: list `<config-root>/memory/staged/commit-drafts/*.md` sorted by date descending (use the date in the filename, not mtime).
 
 - **No draft found** → "No `/listen` draft to merge. Did `/listen` run last night? Recent runs:" → list any `archive/<date>/_index.md` from the last 3 days. Offer to run `/listen` now for yesterday. Otherwise exit.
 - **Draft exists** → continue.
 
 If the user passed `--date YYYY-MM-DD`, merge that specific draft instead of the latest.
 
-If the user passed `--discard`, move the latest draft to `.commit-drafts/archive/<date>-discarded.md` and exit without merging.
+If the user passed `--discard`, move the latest draft to `staged/commit-drafts/archive/<date>-discarded.md` and exit without merging.
 
 ---
 
@@ -83,7 +83,7 @@ For each proposal:
 - Check for conflicts via the v4.4 concept-drift detector. If the proposal conflicts with an existing entry, prompt: "This contradicts the existing entry '<...>'. Supersede the old / Keep both / Skip the new?" Default: keep both.
 
 ### `reject`
-- Append to `<config-root>/memory/.research-skip-log.md` (or a new `.morning-reject-log.md` if we want to keep these separate): `<today> proposal:<type>@<node> "<signal>" — rejected from /listen draft <date>`.
+- Append to `<config-root>/memory/staged/skip-logs/research.md` (or a new `staged/skip-logs/morning-reject.md` if we want to keep these separate): `<today> proposal:<type>@<node> "<signal>" — rejected from /listen draft <date>`.
 - Move on.
 
 ### `edit`
@@ -101,7 +101,7 @@ For each proposal:
 
 After walking:
 
-- If all proposals were accepted / rejected / archived: move the draft to `.commit-drafts/archive/<date>-merged.md`.
+- If all proposals were accepted / rejected / archived: move the draft to `staged/commit-drafts/archive/<date>-merged.md`.
 - If any proposals remain in defer state: leave the draft in place, with merged / rejected sections marked `~~struck out~~` so the next session skips them. Subsequent `/morning` runs on the same draft pick up where you left off.
 
 ---

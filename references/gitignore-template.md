@@ -9,10 +9,11 @@ The user's `<config-root>/` (typically `~/Documents/Claude/`) contains progressi
 | `briefs/YYYY-MM-DD.md` | Calendar / inbox / CRM metadata, your annotations | `/brief`, `/end-day` reflection |
 | `plugins/*.md` | Configuration + dismissal logs | various setup commands |
 | `archive/YYYY-MM-DD/` | **Raw email bodies, Slack messages, full meeting transcripts** | `/listen` (v4.7+) |
-| `memory/.commit-drafts/` | **Proposals quoting raw archive content** | `/listen` (v4.7+) |
-| `memory/.research-drafts/` | Web research output + source URLs | `/research-gaps` (v4.5+) |
+| `memory/staged/commit-drafts/` | **Proposals quoting raw archive content** | `/listen` (v4.7+) |
+| `memory/staged/research-drafts/` | Web research output + source URLs | `/research-gaps` (v4.5+) |
+| `memory/staged/heartbeat-drafts/` | (Proposed v4.9+) Proposals from `/sweep` heartbeat — quotes today's in-flight conversations and surfaces | `/sweep` (future) |
 
-The `archive/` directory and `.commit-drafts/` are the most privacy-sensitive — they contain verbatim text from external systems that previously lived only on those systems' servers.
+The `archive/` directory and `staged/commit-drafts/` are the most privacy-sensitive — they contain verbatim text from external systems that previously lived only on those systems' servers.
 
 ## Default `.gitignore` (written automatically by `/setup-identity` and `/listen`)
 
@@ -22,12 +23,14 @@ The `archive/` directory and `.commit-drafts/` are the most privacy-sensitive �
 
 # Raw substrate pulled by /listen — emails, Slack, transcripts, calendar
 archive/
+
+# All in-flight memory state (v4.8.1+: unified under memory/staged/)
+memory/staged/
+
+# Legacy dotfile paths (pre-v4.8.1 — kept for transitional safety; can remove after migration)
 memory/.commit-drafts/
-
-# Web research drafts — source URLs and findings, lower-sensitivity but still drafts
 memory/.research-drafts/
-
-# Internal markers and queue files
+memory/.heartbeat-drafts/
 memory/.reindex-queue
 memory/.rehearse-queue.md
 memory/.rehearse-skip-log.md
@@ -68,7 +71,7 @@ plugins/*.user-context.md.bak
 `.gitignore` doesn't apply to cloud-sync providers. If you sync `<config-root>/` to:
 
 - **iCloud Drive** — no selective per-folder exclusion. Everything in the synced directory uploads to Apple's servers. Apple promises end-to-end encryption only if Advanced Data Protection is enabled on your Apple ID.
-- **Dropbox** — has "Selective Sync" (Settings → Sync → Choose folders). You can exclude `archive/` and `.commit-drafts/` per machine.
+- **Dropbox** — has "Selective Sync" (Settings → Sync → Choose folders). You can exclude `archive/` and `memory/staged/` per machine.
 - **OneDrive** — has "Always keep on this device" but the per-folder cloud-exclude UX varies by version.
 - **Google Drive** — similar story; selective sync is per-machine, not server-side.
 

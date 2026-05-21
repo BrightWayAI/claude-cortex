@@ -1,5 +1,5 @@
 ---
-description: Walk through the most recent `.research-drafts/` file and merge findings into active memory one at a time. Each finding gets accept / reject / defer / edit. Accepted findings are written to the relevant node with `[confirmed:today]`. Rejected findings go to the skip-log. The merge command does not invoke `gap-researcher` — the draft must already exist (produced by `/research-gaps`).
+description: Walk through the most recent `staged/research-drafts/` file and merge findings into active memory one at a time. Each finding gets accept / reject / defer / edit. Accepted findings are written to the relevant node with `[confirmed:today]`. Rejected findings go to the skip-log. The merge command does not invoke `gap-researcher` — the draft must already exist (produced by `/research-gaps`).
 ---
 
 # /merge-research-draft
@@ -12,13 +12,13 @@ You are merging research findings into active memory. The draft has already been
 
 Standard config-root resolution.
 
-Locate the most recent draft: list `<config-root>/memory/.research-drafts/*.md` sorted by mtime descending. Pick the newest non-archived file.
+Locate the most recent draft: list `<config-root>/memory/staged/research-drafts/*.md` sorted by mtime descending. Pick the newest non-archived file.
 
 If no draft exists: "No research draft found. Run `/research-gaps` first to generate one." Stop.
 
 If the user passed an argument (e.g., `/merge-research-draft 2026-05-09`), look for that specific date and abort if not found.
 
-If `--discard` is the argument, move the draft to `.research-drafts/archive/<date>-discarded.md` and exit. No merge.
+If `--discard` is the argument, move the draft to `staged/research-drafts/archive/<date>-discarded.md` and exit. No merge.
 
 ---
 
@@ -67,7 +67,7 @@ Capture the choice:
 - Move on to the next finding.
 
 ### `reject`
-- Append to `<config-root>/memory/.research-skip-log.md`: `<today YYYY-MM-DD> rule:<N> node:<path> "<signal>" — user rejected merge`.
+- Append to `<config-root>/memory/staged/skip-logs/research.md`: `<today YYYY-MM-DD> rule:<N> node:<path> "<signal>" — user rejected merge`.
 - Move on.
 
 ### `edit`
@@ -86,14 +86,14 @@ Capture the choice:
 
 After walking (or hitting skip-remaining):
 
-- If all findings were accepted, rejected, or archived: move the draft to `.research-drafts/archive/<date>-merged.md`.
+- If all findings were accepted, rejected, or archived: move the draft to `staged/research-drafts/archive/<date>-merged.md`.
 - If any findings remain in defer/skip state: leave the draft in place with merged/rejected sections crossed out (`~~...~~`) so the user knows what's still pending. Subsequent `/merge-research-draft` runs skip crossed-out sections automatically.
 
 ---
 
 ## Step 4 — Refresh index
 
-After any node writes, run the indexer (per `skills/indexer/SKILL.md`) to refresh `memory/index.md`. Or, if many findings just merged, queue a deferred refresh by appending to `.reindex-queue` and let `/end-day` pick it up — the user can decide via "Refresh index now? (y/N)" prompt.
+After any node writes, run the indexer (per `skills/indexer/SKILL.md`) to refresh `memory/index.md`. Or, if many findings just merged, queue a deferred refresh by appending to `staged/queues/reindex` and let `/end-day` pick it up — the user can decide via "Refresh index now? (y/N)" prompt.
 
 ---
 

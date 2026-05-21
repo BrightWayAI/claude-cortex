@@ -106,7 +106,7 @@ Compression and pruning happen in `/listen`'s tail (Step 7 below).
 - You changed `<config-root>/memory/` schema and want new proposals against the same raw substrate.
 - A previous run failed mid-mine.
 
-Re-mining writes a new `.commit-drafts/<date>-remine-<seq>.md` file instead of overwriting the original draft.
+Re-mining writes a new `staged/commit-drafts/<date>-remine-<seq>.md` file instead of overwriting the original draft.
 
 ## What does NOT live in the archive
 

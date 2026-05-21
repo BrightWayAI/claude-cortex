@@ -85,6 +85,21 @@ If Pre-chain B errors partway through (e.g., a node file is unreadable), log the
 
 ---
 
+## Pre-chain C — Staged-substrates migration (v4.8.1+)
+
+One-time migration of pre-v4.8.1 staged dotfile paths into the unified `memory/staged/` tree. Gated by `<config-root>/memory/.migration-staged-reorg-done` marker.
+
+Logic:
+1. Check whether `<config-root>/memory/.migration-staged-reorg-done` exists.
+2. If exists → skip silently. Continue to Modes.
+3. If absent → invoke `/migrate-staged-substrates`. The command is idempotent; on completion it writes the marker and any future `/end-day` skips this Pre-chain.
+
+The migration is non-blocking. If it partially fails, log the error and continue to Modes — `/end-day`'s primary work is unaffected by staged-path layout.
+
+See `references/migrations.md` for the pattern and `commands/migrate-staged-substrates.md` for the migration spec.
+
+---
+
 ## Modes (v4.6+) — quick close (default) vs `--full`
 
 `/end-day` runs in **quick mode by default** as of cortex v4.6.0. Real-user feedback: the previous 8-step chain felt like overhead on days when there were no transcripts, no inbox volume, and nothing to triage. The quick chain is the actionable spine:
@@ -350,7 +365,7 @@ Regenerate `<config-root>/memory/index.md` so the next day's `/recall`, non-cort
 
 Invoke the `indexer` skill (see `skills/indexer/SKILL.md` and `commands/reindex.md`). Deterministic and zero-LLM — runs in seconds, no user input required.
 
-If `<config-root>/memory/.reindex-queue` exists (from prior `/remember` calls), the indexer notices it and deletes it after running.
+If `<config-root>/memory/staged/queues/reindex` exists (from prior `/remember` calls), the indexer notices it and deletes it after running.
 
 No user gate. This step always runs. If the indexer fails, log the error and continue to Step 5.6 — don't block the close on a maintenance task.
 

@@ -74,8 +74,10 @@ Each line: wikilink, descriptor, decay state, last confirmation date. Demoted/ar
 1. **Walk** `<config-root>/memory/` recursively. Skip:
    - `index.md` itself (the output)
    - `archive/` subdirectories (summarized in footer instead)
-   - `.research-drafts/` and any other dot-prefixed dirs
-   - All `.md` files in the root that match a "system" allowlist (DASHBOARD, .decay-config, .rehearse-queue, .rehearse-skip-log, .reindex-queue, .research-skip-log) — these go in the "System" section
+   - `staged/` entirely (drafts and queues handled separately; never indexed as nodes)
+   - All dot-prefixed dirs (legacy from pre-v4.8.1; migration moves them under `staged/`)
+   - `hot.md` and `log.md` (operational, not knowledge)
+   - All `.md` files in the root that match a "system" allowlist (DASHBOARD, .decay-config) — these go in the "System" section
    - Files with no extension or non-`.md` extensions
 
 2. **Classify each file by directory:**
@@ -126,7 +128,7 @@ For files with no `[confirmed:...]` tags at all (e.g., raw scratch notes), class
 
 - **`/end-day`** Step 6 (after Phase 4 auto-commit and Phase 5 reflective prompts). Keeps index fresh daily.
 - **`/cleanup`** final step (after section H and I). Reflects any demotions/archives the user just confirmed.
-- **`/remember`** (silent path): write a marker file `<config-root>/memory/.reindex-queue` with `touched: <node-id>` line per write. Do NOT regenerate synchronously — that would chunk every `/remember` call. The next `/end-day` notices the marker and runs the indexer.
+- **`/remember`** (silent path): write a marker file `<config-root>/memory/staged/queues/reindex` with `touched: <node-id>` line per write. Do NOT regenerate synchronously — that would chunk every `/remember` call. The next `/end-day` notices the marker and runs the indexer.
 - **`/reindex`** (explicit command): always regenerates immediately. Fast (no model calls).
 
 ### Out of scope

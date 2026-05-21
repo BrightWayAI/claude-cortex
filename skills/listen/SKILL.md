@@ -4,7 +4,7 @@ description: >
   Nightly autonomous ingest pipeline. Pulls yesterday's calendar / Gmail /
   Slack / transcripts / Drive activity into `<config-root>/archive/YYYY-MM-DD/`
   (immutable substrate), runs the mining agents against the archive, stages all
-  proposed memory commits to `.commit-drafts/YYYY-MM-DD.md`, and refreshes
+  proposed memory commits to `staged/commit-drafts/YYYY-MM-DD.md`, and refreshes
   `memory/hot.md`. Designed for unattended scheduled execution — no user gates.
 
   Auto-fires when the user says: "ingest yesterday", "run nightly ingest",
