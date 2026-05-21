@@ -377,7 +377,9 @@ Surfaced by `/cleanup`'s orphan-detection guardrail. Nodes with no incoming/outg
 [node] CORRECTION (date): [entry]
 
 ## People
-[node] PEOPLE: Name (role) — context. Also in: [other nodes]
+[node] PEOPLE: [[person/<slug>]] (role) — context. Also in: [[<other-node>]], [[<other-node>]]
+
+(v4.10+ wikilink rule: ALWAYS emit `[[person/<slug>]]` if a person page exists; if not, emit the bare name + flag for graduation tracking via `memory/.person-mention-counts.json`. Same applies to client / company / topic / workstream references in this entry.)
 
 ## Changelog
 [node] LOG YYYY-MM-DD — title: content
@@ -567,8 +569,10 @@ Cost: one Haiku call per new knowledge entry that's being written to a node with
 ### D. People Index (append or update)
 
 ```
-[node-id] PEOPLE: [Name] ([role]) — [context]. Also in: [other-node-ids]
+[node-id] PEOPLE: [[person/<slug>]] ([role]) — [context]. Also in: [[<other-node-id>]], [[<other-node-id>]]
 ```
+
+**Wikilink rule (v4.10+):** Always emit `[[person/<slug>]]` if the person page exists at `<config-root>/memory/person/<slug>.md`. If no page exists yet, emit the bare name (e.g., `Kim Smith`) and update `<config-root>/memory/.person-mention-counts.json` — when a person hits ≥3 mentions across ≥2 nodes, the next `/end-day` Step 3 cheap-tier triage proposes graduation to a person page. Same wikilink rule applies to client / company / topic / workstream / domain references within this entry.
 
 #### D.1 Person-page graduation (v4.2+)
 

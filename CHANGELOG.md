@@ -6,6 +6,65 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.10.0] — Wikilink density: schema discipline + /relink-memory backfill (2026-05-20)
+
+Real-user diagnostic: a memory scan against a user's `<config-root>/memory/` showed 28 wikilinks across 30 node files (~1 per file). Obsidian graph view was mostly disconnected. Root cause: cortex schemas used bare-bracket `[Name]` placeholders, not wikilink `[[name]]` syntax; mining agents emitted plain-text entity references; person-page graduation never fired in practice.
+
+This release fixes all four parts. See `nucleus/docs/proposals/wikilink-density.md` for the full diagnosis.
+
+### Added — canonical wikilink rule in CLAUDE.md
+
+New section in cortex CLAUDE.md formalizes the wikilink convention:
+- Every entity reference in memory uses `[[<type>/<slug>]]` syntax (e.g., `[[person/sarah-chen]]`, `[[client/acme]]`, `[[workstream/q3-outbound]]`).
+- If a node file exists for the entity → emit the wikilink. If not → emit bare name + increment `memory/.person-mention-counts.json` for graduation tracking.
+- Applies across PEOPLE entries, knowledge entries, changelogs, open threads, DECISION `Affected:` fields, workstream `Linked entities:`, DASHBOARD, index.md.
+- Bare-bracket notation in cortex docs (`[Name]`, `[role]`, `[context]`) is **template placeholder syntax**, not output syntax. Don't confuse template brackets with wikilink brackets — they're visually similar but semantically opposite.
+
+### Updated — schema documents now use wikilinks
+
+- `commands/remember.md` Step 2 PEOPLE template + Step 3 People Index template both updated to `[[person/<slug>]] ([role]) — [context]. Also in: [[<other-node-id>]]`.
+- Person-page schema's `## Linked entities` section template updated to wikilink form.
+- Wikilink rule explicitly cross-referenced in mining-agent specs (transcript-reviewer, conversation-miner, activity-miner, memory-librarian inherit via cortex CLAUDE.md context).
+
+### Added — `/end-day` Step 3.7: passive person-page graduation
+
+After Step 3 commits land, scan `<config-root>/memory/.person-mention-counts.json` for names with ≥ 3 mentions across ≥ 2 nodes that don't have a person page yet. Surface a one-line graduation prompt (capped at 3 per `/end-day` to prevent fatigue). On accept: synthesize a person page from all source nodes + relink the source nodes to use `[[person/<slug>]]`. On "never": suppress this name from future prompts.
+
+### Added — `/relink-memory` retroactive command
+
+New `commands/relink-memory.md` + `skills/relink-memory/SKILL.md`. The load-bearing fix for existing memory that predates v4.10.
+
+What it does:
+1. Builds an entity registry by walking `memory/` (every existing node file → its target wikilink + display-name variants from `# Title` lines, slug expansion, aliases).
+2. Scans every node file for plain-text mentions of known entities NOT already inside `[[...]]`. Counts and contextualizes each.
+3. Identifies person-name strings without person pages that meet the graduation threshold (≥ 3 mentions across ≥ 2 nodes OR ≥ 5 total).
+4. Surfaces a single proposal with conversion + graduation counts.
+5. User picks: accept-all / links-only / select (per-entity gate) / graduate-only / cancel.
+6. On accept: edits file contents (plain-text → wikilink), synthesizes person pages from source contexts, refreshes index.md and hot.md.
+
+Idempotent per the v4.8.1 migration pattern. Gated by `memory/.migration-wikilink-relink-done` marker. `--rerun` forces re-scan.
+
+Conflict handling: name collisions (two persons → same slug) get the CLAUDE.md disambiguation rule. Partial matches require word-boundary + ≥ 3-character match. Case-insensitive proper-noun match preserves original casing in wikilink display.
+
+Token cost: ~$0.10-0.50 per run depending on graduation count.
+
+### Added — migrations.md entry
+
+`references/migrations.md` now lists `wikilink-relink (v4.10+)` as an active migration with command, marker, and rerun behavior documented.
+
+### Added — router intent rows (in nucleus-router v0.2.1)
+
+Router routes "relink my memory", "fix my wikilinks", "my graph is disconnected", "back-fill the wikilinks", "graduate the people in my memory" → `/relink-memory`.
+
+### Why this matters
+
+Before v4.10, memory worked but the graph view didn't. With the wikilink rule canonical + mining emitting wikilinks + `/end-day` graduating people automatically + `/relink-memory` back-filling existing memory, the Obsidian graph view becomes a real navigable network of your operating world. Expected outcome on a 30-node memory: edges go from ~28 to ~150-400 after one `/relink-memory --accept-all` run.
+
+### Downstream distribution
+
+- **Schema + mining + graduation changes:** ship as cortex code; every user updating to v4.10+ gets correct behavior automatically.
+- **Retroactive `/relink-memory` command:** ships as code, but the user has to RUN it once against their own existing memory (each install's `<config-root>/memory/` is different). New users with empty memory don't need to run it (auto-detects empty state).
+
 ## [4.9.0] — Workstream nodes + DECISION knowledge type (2026-05-20)
 
 Part of the Chief-of-Staff evolution (see `nucleus/docs/proposals/chief-of-staff-evolution.md`). Two new cortex primitives close real navigability gaps in the second brain.

@@ -302,6 +302,27 @@ Confirm briefly to the user (not verbose):
 
 If the classifier returned `commit: false` AND no proposals were accepted, say: "Quiet day — nothing material to commit. Logged the audit line." and continue.
 
+### Step 3.7 — Passive person-page graduation (v4.10+)
+
+After the commits from Step 3 land, run a cheap-tier pass over `<config-root>/memory/.person-mention-counts.json` (created/updated by `/remember` and mining agents when they emit a person's name without a person page).
+
+For each name where:
+- Total mentions across all nodes ≥ 3, AND
+- Number of distinct nodes mentioning the name ≥ 2, AND
+- No `<config-root>/memory/person/<slug>.md` exists yet
+
+Surface a one-line graduation prompt:
+
+> "I've seen `<Name>` mentioned <N> times across <M> nodes. Graduate to a person page? (y / not yet / never — suppress)"
+
+- **y** → run a one-shot synthesis pass: read all node files mentioning `<Name>`, compose a person page (Identity / Relationship / Open threads / Recent interactions / Notes / Linked entities), write to `memory/person/<slug>.md`, then ALSO update all those source nodes to use `[[person/<slug>]]` instead of the bare name (per the wikilink rule in CLAUDE.md).
+- **not yet** → leave mention count growing; will re-surface next day if threshold still crossed.
+- **never** → suppress this name in `memory/.person-mention-counts.json` (set `suppressed: true` for the entry); never propose again.
+
+Cap: 3 graduation prompts per `/end-day` run (otherwise the close turns into a graduation marathon). The remaining candidates re-surface tomorrow.
+
+If `memory/.person-mention-counts.json` doesn't exist or is empty (no candidates), skip silently.
+
 ---
 
 ## Step 4 — Reflective prompts

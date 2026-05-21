@@ -101,10 +101,32 @@ Mention-count alone is too noisy. Usage signals real interest.
 - [Free-form context]
 
 ## Linked entities
-- Projects: [client/...], [bizdev/...]
+- Projects: [[client/<slug>]], [[bizdev/<slug>]]
+- Topics: [[topic/<slug>]]
+- Workstreams: [[workstream/<slug>]] (v4.9+)
+- Other people: [[person/<slug>]]
 ```
 
+**Wikilink rule (v4.10+) — the canonical convention.** Every entity reference in memory uses **double-bracket wikilink syntax**, not bare-bracket placeholders. When writing any entry that references another entity (person, client, company, topic, workstream, domain):
+
+1. **If a node file exists** for the entity at `memory/<type>/<slug>.md` → emit `[[<type>/<slug>]]` (e.g., `[[person/sarah-chen]]`, `[[client/acme]]`, `[[workstream/q3-outbound]]`).
+2. **If no node file exists yet** → emit the bare name (e.g., `Sarah Chen`) AND increment `memory/.person-mention-counts.json` for that name. When mention count crosses graduation threshold (≥ 3 mentions across ≥ 2 nodes), `/end-day` Step 3 surfaces a graduation prompt: "I've seen Sarah Chen mentioned 5 times across 3 nodes. Graduate to a person page? (y/n/later)".
+
+This rule applies to:
+- PEOPLE entries on project nodes
+- Knowledge entries (INSIGHT / MODEL / GOTCHA / LESSON / RECIPE / CORRECTION / DECISION) that reference other entities
+- Changelog entries — `[YYYY-MM-DD] Talked with [[person/<slug>]] about [[topic/<slug>]]`
+- Open threads referencing people or clients
+- DECISION `Affected:` fields
+- Workstream `Linked entities:` section
+- DASHBOARD.md active node rows (use `[[<node-id>]]` for the Node column)
+- index.md catalog entries (already wikilink-formatted by indexer)
+
+Bare-bracket notation in cortex docs (`[Name]`, `[role]`, `[context]`) is **template placeholder syntax**, not output syntax. Real entries use either real text in those positions or `[[wikilink]]` for entity references. Don't confuse template brackets with wikilink brackets — they're visually similar but semantically opposite.
+
 **Name-collision rule** — if two people would slug to the same name (e.g., two Sarah Chens), append a company hint to the slug: `sarah-chen-acme.md`, `sarah-chen-globex.md`. When a new page is about to be created and a same-slug page exists, the creating plugin must prompt the user to disambiguate before writing.
+
+**Retroactive fix for existing memory** — if your memory was created before v4.10 (most plain-text mentions, no `[[wikilinks]]`), run `/relink-memory` once. It walks all node files, finds plain-text mentions of known entities, proposes wikilink conversion, and proposes graduation for heavy-mention persons. Idempotent. User-gated.
 
 **Cross-plugin writes** — multiple plugins write to person pages, always additively (append to Recent interactions, update Last meaningful contact, never overwrite Notes or Identity without explicit user confirmation). See each plugin's CHANGELOG for which sections it touches.
 

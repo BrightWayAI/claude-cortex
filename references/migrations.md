@@ -51,6 +51,16 @@ Each migration has:
 - **First introduced:** cortex v4.7.2
 - **Status:** stable; idempotent.
 
+### `wikilink-relink` (v4.10+)
+
+- **What:** Retroactive wikilink pass over `<config-root>/memory/`. Scans existing node files for plain-text entity mentions, proposes wikilink conversion, and graduates heavily-mentioned persons into `memory/person/<slug>.md` pages.
+- **Marker:** `<config-root>/memory/.migration-wikilink-relink-done`
+- **Command:** `/relink-memory` (or `/relink-memory --rerun` to force re-scan after marker exists).
+- **First introduced:** cortex v4.10.0
+- **Status:** **new in v4.10.0.** Run once after upgrading; future memory writes use wikilinks natively per the canonical rule in cortex CLAUDE.md.
+- **Failure mode:** if the user cancels mid-walk, marker is NOT written. Partial changes (the per-conversion writes that already happened) are preserved; user can re-run to finish.
+- **Rerun:** `/relink-memory --rerun` is supported. Useful when new entities have been added since the last run, or for testing.
+
 ### `staged-substrates-reorg` (v4.8.1+)
 
 - **What:** Moves dotfile-style staged state (`.commit-drafts/`, `.research-drafts/`, `.rehearse-queue.md`, etc.) into a unified `<config-root>/memory/staged/` directory tree.
