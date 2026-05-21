@@ -307,7 +307,9 @@ If the directory cannot be accessed, explain that memory cannot be persisted wit
    - Add any new knowledge entries to Recent Knowledge (keep last 7 days only)
    - Update the "Last updated" timestamp
 
-#### Dashboard File Format
+#### Dashboard File Format (v4.10.1+: wikilink-emitting)
+
+DASHBOARD must use `[[wikilinks]]` for every node reference so the Obsidian graph view treats it as the central hub — every active node connects to DASHBOARD via a real edge.
 
 If `DASHBOARD.md` doesn't exist, create it with this template:
 
@@ -318,34 +320,38 @@ If `DASHBOARD.md` doesn't exist, create it with this template:
 ## Active Nodes
 | Node | Summary | Last Updated |
 |------|---------|-------------|
-| [node-id] | [1-line living summary] | YYYY-MM-DD |
+| [[node-id]] | [1-line living summary] | YYYY-MM-DD |
 
 ## Active People (v4.2+)
 Top 10 graduated person pages sorted by Last updated desc.
 
-| Person | Temperature | Last contact | Open threads | Page |
-|--------|-------------|--------------|--------------|------|
-| Sarah Chen | Active | 2026-05-10 | 2 | [person/sarah-chen](person/sarah-chen.md) |
+| Person | Temperature | Last contact | Open threads |
+|--------|-------------|--------------|--------------|
+| [[person/sarah-chen]] | Active | 2026-05-10 | 2 |
 
 ## P0 Actions
-- [P0] [node-id]: [action]
+- [P0] [[node-id]]: [action]
 
 ## Waiting On
-- [WAITING:who] [node-id]: [what]
+- [WAITING:who] [[node-id]]: [what]
 
 ## Recent Knowledge (last 7 days)
-- [node-id] [TYPE] (date): [entry]
+- [[node-id]] [TYPE] (date): [entry]
 
 ## Stale Threads
-- [node-id]: [thread] — open since [date]
+- [[node-id]]: [thread] — open since [date]
 
 ## Dormant Nodes
-- [node-id]: Last active [date]
+- [[node-id]]: Last active [date]
 
 ## Isolated Notes (v4.2+)
 Surfaced by `/cleanup`'s orphan-detection guardrail. Nodes with no incoming/outgoing links and last updated >30 days ago.
-- [node-id]: Last updated [date] — suggest [archive / merge / keep]
+- [[node-id]]: Last updated [date] — suggest [archive / merge / keep]
 ```
+
+**v4.10.1 wikilink rule for DASHBOARD writes:** Every `[node-id]` in the template above gets emitted as `[[node-id]]` in the actual file. This converts every node reference into a real graph edge from DASHBOARD outward. Combined with the canonical wikilink rule in CLAUDE.md, DASHBOARD becomes the central hub instead of an isolated island.
+
+**Upgrade path for existing DASHBOARD files:** Pre-v4.10.1 DASHBOARDs typically use `### node-id` section-header style for active nodes (not wikilinks). Running `/relink-memory --rerun` in cortex v4.10.1+ detects this and regenerates DASHBOARD using the wikilink-emitting template. See `commands/relink-memory.md` Step 2.5.
 
 #### Node File Format
 

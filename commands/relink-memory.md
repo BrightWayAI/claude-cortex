@@ -52,6 +52,30 @@ Be careful with very short slugs (e.g., a 2-letter company name "AI") — they'd
 
 ---
 
+## Step 2.5 — DASHBOARD wikilink regeneration (v4.10.1+)
+
+Special-case `<config-root>/memory/DASHBOARD.md`. Pre-v4.10.1 DASHBOARDs typically use `### node-id` section-header style for active nodes with NO wikilinks. This makes DASHBOARD a graph-isolated island despite being the conceptual central hub.
+
+Detection: if DASHBOARD.md has fewer than 5 wikilinks AND has ≥ 3 `### `-style section headers in its Active Nodes section, regenerate.
+
+Regeneration procedure:
+1. Read existing DASHBOARD.md.
+2. Parse the "Active Nodes" section (headers + their summary content).
+3. For each node ID found as a section header, determine its actual file path under `memory/` (e.g., `client:new-leaders` → `memory/client/new-leaders.md`; `brightway-profile` → `memory/brightway-profile.md`).
+4. Rewrite DASHBOARD using the wikilink-emitting template from `commands/remember.md` "Dashboard File Format" section:
+   - Convert `### brightway-profile` → `### [[brightway-profile]]`
+   - Convert any plain `[node-id]` token to `[[node-id]]`
+   - Preserve section content (summaries, P0 lists, etc.); only the references get wikilinked
+5. Verify the rewritten DASHBOARD has the wikilinks; check that every section header that previously was a node-id is now wikilinked.
+
+Surface to user:
+
+> "DASHBOARD.md regenerated with wikilinks: <N> node references converted. DASHBOARD is now the graph view's central hub."
+
+If DASHBOARD already has wikilinks (≥ 5), skip regeneration.
+
+---
+
 ## Step 3 — Scan for plain-text mentions
 
 For each node file in `memory/` (except the entity's own file — we don't self-link):
@@ -61,7 +85,14 @@ For each node file in `memory/` (except the entity's own file — we don't self-
    - Find plain-text occurrences NOT already inside a wikilink (regex: match the display variant only when NOT preceded by `[[`).
    - Count occurrences.
    - Determine context (which section: Knowledge / People / Changelog / Open threads / etc.).
-3. Build a per-file conversion plan: `[(line_number, old_text, new_wikilink, section), ...]`
+3. **First-name expansion (v4.10.1+).** After matching full-name occurrences of a person within a file, also scan for bare first-name occurrences in the same file — these often refer to the same person after the first introduction. Rules:
+   - Apply only AFTER a full-name match has been found in the file.
+   - The first name must be unambiguous in this file (no other person mentioned in the file shares the same first name).
+   - The bare first name must appear in a contextually consistent passage (same paragraph, or within a section that already references the full name).
+   - Apply word-boundary regex to avoid substring matches ("Eric" should not match inside "America").
+   - Skip very short first names (≤ 2 letters).
+   - Example: file mentions "Erica Hruby" once, then "Erica" three more times → all four occurrences get wikilinked to `[[person/erica-hruby]]`.
+4. Build a per-file conversion plan: `[(line_number, old_text, new_wikilink, section), ...]`
 
 Also: track unmatched person-shaped mentions (capitalized "First Last" patterns) that DON'T resolve to any existing person page. These are graduation candidates.
 
@@ -153,11 +184,31 @@ For each name being graduated:
    - Recent interactions (from changelog mentions, dates)
    - Open threads referencing them
    - Notes / context from mentions in knowledge entries
-3. Compose a person page following the schema (Identity / Relationship / Recent interactions / Open threads / Notes / Linked entities).
-4. Write to `<config-root>/memory/person/<slug>.md`.
-5. Update `<config-root>/memory/.person-mention-counts.json` — reset the count for this person to 0 (now that they have a page, future mentions are wikilinked directly).
+3. **Person-to-person cross-linking (v4.10.1+).** While scanning source nodes, also collect OTHER persons mentioned in the same contexts (paragraphs, sections, or open threads). For each other person, check whether their person page exists:
+   - If yes → add to the new page's `## Linked entities` under `Other people: [[person/<slug>]]`.
+   - If no → skip (don't pre-graduate cascading).
+   - Limit: 10 cross-linked people per page (more dilutes the signal).
+   - Examples of co-occurrence that qualify: appearing in the same PEOPLE block, mentioned in the same Recent Interactions entry, in the same Open Threads item, in the same Changelog line.
+4. Compose a person page following the schema (Identity / Relationship / Recent interactions / Open threads / Notes / Linked entities). The Linked entities section now includes:
+   - **Employer / affiliation:** `[[brightway-profile]]` or `[[client/<slug>]]` or `[[company/<slug>]]` as applicable
+   - **Primary engagements:** `[[client/<slug>]]`, `[[bizdev/<slug>]]`, `[[workstream/<slug>]]`
+   - **Other people (v4.10.1+):** cross-linked colleagues from Step 7.3
+   - **Topics they discuss:** `[[topic/<slug>]]` if there are clear topic threads in their interactions
+5. Write to `<config-root>/memory/person/<slug>.md`.
+6. Update `<config-root>/memory/.person-mention-counts.json` — reset the count for this person to 0 (now that they have a page, future mentions are wikilinked directly).
+7. **Reciprocal back-linking (v4.10.1+).** For each `Other people` entry added in Step 7.3, also append the new person to THAT person's page's `Other people` list. Avoids one-way edges — if Erica links to Mary Kate, Mary Kate also links back to Erica. Idempotent: don't add if already present.
 
 If the synthesis can't extract enough context (e.g., the name only appears in a list with no surrounding detail), the page is created with sparse content + a note: "Sparse page — populate via /recall person:<slug> or by editing directly."
+
+### Cross-linking pass for existing person pages (v4.10.1+ on --rerun)
+
+If `/relink-memory --rerun` is invoked, ALSO run the cross-linking pass over existing person pages (not just newly-graduated ones). For each existing person page:
+- Scan source nodes that mention this person.
+- Identify other persons mentioned in the same contexts.
+- Add missing `Other people: [[person/<slug>]]` entries to `## Linked entities`.
+- Reciprocate the link on the other person's page.
+
+This back-fills the network fabric on pages that were graduated before v4.10.1 (where person-to-person edges weren't created).
 
 ---
 

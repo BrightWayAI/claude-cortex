@@ -6,6 +6,42 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.10.1] — Wikilink density: DASHBOARD hub + first-name expansion + person cross-links (2026-05-20)
+
+Patch to v4.10.0. Real-user dogfooding showed three remaining issues after the initial wikilink fix:
+
+1. **DASHBOARD.md had zero outbound wikilinks** even though it's the conceptual central hub. Pre-v4.10.1 dashboards used `### node-id` section headers (markdown), not `[[node-id]]` wikilinks. In Obsidian's graph view, DASHBOARD appeared as an isolated island while every active node radiated from somewhere else.
+
+2. **First-name-only references missed by relink.** Files mentioning "Erica Hruby" once and "Erica" three more times had only the full-name match converted. Subsequent bare-first-name occurrences stayed as plain text.
+
+3. **Person pages didn't cross-link to other persons.** Graduated pages linked to clients and brightway-profile but not to colleagues mentioned in the same source contexts. Result: graph looked like spoke-clusters around each client, not a network fabric between people.
+
+### Fixed — DASHBOARD wikilink emission
+
+- `commands/remember.md` Dashboard File Format template updated. Every `[node-id]` reference in the active-nodes table, P0 list, Waiting On, Recent Knowledge, Stale Threads, Dormant Nodes, Isolated Notes, and Active People rows now uses `[[wikilinks]]`. Section headers stay as `###` markdown but the references inside use wikilinks.
+- `commands/relink-memory.md` adds new Step 2.5 — detects pre-v4.10.1-style DASHBOARDs (< 5 wikilinks, ≥ 3 `###` node-id section headers in Active Nodes) and regenerates them with wikilinks. Idempotent.
+
+### Fixed — first-name expansion in relink heuristic
+
+- `commands/relink-memory.md` Step 3 updated. After matching a full-name occurrence ("Erica Hruby") in a file, scan the same file for bare first-name occurrences ("Erica") and wikilink them. Constraints: first name must be unambiguous in this file (no two persons share it), word-boundary regex required, minimum 3-character match, contextually consistent.
+
+### Fixed — person-to-person cross-linking
+
+- `commands/relink-memory.md` Step 7 updated. During person-page synthesis, scan source nodes for OTHER persons mentioned in the same contexts (PEOPLE blocks, Recent Interactions, Open Threads, Changelog lines). For each other person with an existing page, add to `## Linked entities` under `Other people: [[person/<slug>]]`. Limit 10 cross-links per page.
+- Reciprocal back-linking: when adding "Mary Kate" to Erica's Linked Entities, also add "Erica" to Mary Kate's Linked Entities. Avoids one-way edges. Idempotent.
+- New cross-linking pass on `/relink-memory --rerun` — back-fills person-to-person edges on existing person pages that were graduated before v4.10.1.
+
+### How to apply
+
+Users on v4.10.0 should run `/relink-memory --rerun` after upgrading to v4.10.1. The rerun:
+1. Detects + regenerates pre-v4.10.1 DASHBOARD with wikilinks.
+2. Re-scans memory with first-name expansion enabled.
+3. Cross-links existing person pages.
+
+Expected outcome on a 30-node memory with ~12 person pages: DASHBOARD becomes the central hub with ~10-20 outbound edges. First-name references convert (~20-50 additional wikilinks). Person pages add ~3-8 cross-links each (~50-100 additional edges).
+
+Combined with v4.10.0, total graph edges should be 5-10× the pre-v4.10 baseline.
+
 ## [4.10.0] — Wikilink density: schema discipline + /relink-memory backfill (2026-05-20)
 
 Real-user diagnostic: a memory scan against a user's `<config-root>/memory/` showed 28 wikilinks across 30 node files (~1 per file). Obsidian graph view was mostly disconnected. Root cause: cortex schemas used bare-bracket `[Name]` placeholders, not wikilink `[[name]]` syntax; mining agents emitted plain-text entity references; person-page graduation never fired in practice.
