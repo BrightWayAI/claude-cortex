@@ -93,25 +93,36 @@ Also bypass Step 0 if the conversation contains an explicit `[ENTITY:person]` ta
 
 ---
 
-## Step 1 — Detect the project node
+## Step 1 — Detect the target node (v4.11+: consults taxonomy)
 
-Scan the full conversation and identify which project(s) this session belongs to.
+Scan the full conversation and identify which node(s) this content belongs to.
 
-Check Claude's existing memory for any established project nodes first. If a matching node exists, use it. If the session covers something genuinely new, create a new node using kebab-case.
+**First: consult `references/node-taxonomy.md` for placement rules.** The taxonomy is prescriptive — every content shape maps to one obvious node type. Apply its decision rules:
 
-**Node naming conventions:**
-- Client work: prefix with `client:` (`client:acme-corp`, `client:northstar`)
-- Business development: `bizdev` or `bizdev:[target]` (`bizdev:stripe-partnership`)
-- Internal ops: use a descriptive slug (`company-ops`, `brand`, `hiring`, `finance`)
-- Products/services: use the product name (`crm-dashboard`, `onboarding-program`)
-- Strategy/planning: `strategy:[topic]` (`strategy:q2-growth`, `strategy:pricing`)
-- Learning/study: `learning:[topic]` (e.g. `learning:sales-ops`, `learning:ai-tools`)
-- Domain knowledge: `domain:[area]` (e.g. `domain:tax-law`, `domain:healthcare-compliance`)
-- Research/exploration: `research:[topic]` (`research:competitor-landscape`)
-- Infrastructure/tooling: `infra` or `infra:[system]`
-- Personal: `personal` or `personal:[topic]`
+1. Is this about a specific person you have an ongoing relationship with? → `person/<slug>` (graduate via the v4.2 graduation rules if not yet a page)
+2. Is this about a specific paying engagement? → `client/<slug>`
+3. Is this about a prospect / opportunity not yet under contract? → `bizdev/<slug>`
+4. Is this an ongoing initiative spanning multiple entities? → `workstream/<slug>` (v4.9+)
+5. Is this about a company as an entity (not as engagement)? → `company/<slug>`
+6. Is this a subject-area body of knowledge? → `topic/<slug>`
+7. Is this infrastructure / setup / plugin-config? → `infra/<slug>`
+8. Is this a persistent area of YOUR work (ops, finances, profile)? → root domain `<name>.md`
+
+Use the FIRST match. If multiple fit, prefer the more specific (`client/` over `topic/`; `person/` over `bizdev/`).
+
+If nothing fits cleanly, default to `topic/<slug>`. **Don't create ad-hoc top-level directories** — the taxonomy covers every legitimate shape.
+
+**Existing node check:** Before creating a new node, search existing memory for a matching node at the proposed path. If exists, route the content there. If not, propose creation to the user (or auto-create if autonomy = `auto`).
+
+**Slug rules:** kebab-case; firstname-lastname for persons (with company-hint disambiguation for collisions); company name for clients; descriptive of the initiative for workstreams; prospect name or contact name for bizdev.
 
 If the session spans multiple nodes, you'll commit to each one separately in Step 3.
+
+---
+
+### Legacy naming conventions (deprecated as of v4.11+)
+
+Older versions of cortex used colon-prefixed names: `client:acme-corp`, `bizdev:stripe-partnership`, `strategy:q2-growth`. These still work (the file system is path-based; `client:acme` → `client/acme.md`) but new content should follow the taxonomy directly. The colon-prefix style was a transitional convention; the prescriptive taxonomy is the canonical reference going forward.
 
 ---
 
@@ -610,6 +621,42 @@ Casual mentions (a name appearing in conversation without any of the graduation 
 ```
 [other-node-id] SIGNAL from [source-node-id] (YYYY-MM-DD): [the implication]
 ```
+
+---
+
+## Step 3.4 — Orphan warning for new nodes (v4.11+)
+
+If Step 3 created a NEW node file (didn't write to an existing one), check the new node's outbound wikilink count:
+
+1. Count `[[` occurrences in the new file's content.
+2. Scan the content for named-entity mentions (capitalized "First Last" patterns, capitalized company names, recognized topic keywords).
+3. If outbound wikilinks < 2 AND named entities are mentioned in content but NOT wikilinked, surface a one-shot prompt:
+
+```
+Heads up: <node-path> is a new node with <N> outbound wikilinks but mentions:
+  - <entity 1>
+  - <entity 2>
+  - <entity 3>
+
+These look like they should be wikilinks. Convert?
+  (y)es — convert plain-text mentions to wikilinks where matching nodes exist
+  (n)o — keep as plain text for now (you can run /relink-memory later)
+  (s)kip-always — don't ask for new nodes again this session
+```
+
+**Autonomy mode handling:**
+- `auto` → skip the prompt; convert silently using `/relink-memory`-style heuristic
+- `suggest` (default) → surface the prompt
+- `confirm` → surface the prompt with extra emphasis
+
+This step does NOT run when updating existing nodes (only on first-write of a new node). The goal is to prevent orphans at birth, not to nag on every memory write.
+
+**Skip cases:**
+- The new node is in `staged/` (drafts; not finalized)
+- The user passed `--no-orphan-check` on the `/remember` invocation
+- The content is genuinely solo (no named entities mentioned) — just a thought or scratch note
+
+This is the v4.11 forward-looking discipline that prevents new memory from drifting into the same disconnected pattern that `/relink-memory` had to back-fill in v4.10.
 
 ---
 

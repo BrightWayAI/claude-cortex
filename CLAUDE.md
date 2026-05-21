@@ -128,6 +128,8 @@ Bare-bracket notation in cortex docs (`[Name]`, `[role]`, `[context]`) is **temp
 
 **Retroactive fix for existing memory** — if your memory was created before v4.10 (most plain-text mentions, no `[[wikilinks]]`), run `/relink-memory` once. It walks all node files, finds plain-text mentions of known entities, proposes wikilink conversion, and proposes graduation for heavy-mention persons. Idempotent. User-gated.
 
+**Node taxonomy (v4.11+)** — see `references/node-taxonomy.md` for prescriptive rules on what node type to use when. The taxonomy covers 8 types: user / client / person / company / topic / workstream / bizdev / domain-root. `/remember` Step 1 consults the taxonomy when routing content; `/remember` Step 3.4 surfaces an orphan warning if a new node has < 2 outbound wikilinks despite mentioning named entities; `/cleanup` Section K detects structurally-isolated nodes (zero in + zero out) and offers relink / archive / merge / keep. Together these prevent the "random nodes" drift pattern that requires retroactive cleanup.
+
 **Cross-plugin writes** — multiple plugins write to person pages, always additively (append to Recent interactions, update Last meaningful contact, never overwrite Notes or Identity without explicit user confirmation). See each plugin's CHANGELOG for which sections it touches.
 
 ### Decay model (v4.4+)

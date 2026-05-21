@@ -6,6 +6,53 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.11.0] — Structural discipline: taxonomy + write-time orphan check + cleanup section K (2026-05-20)
+
+Closes the loop on the user's question — "will the structure be improved for future users so they don't end up with random nodes?" v4.10.x was retroactive (relink existing memory). v4.11.0 is **proactive** — prevents new memory from drifting back into the disconnected pattern.
+
+### Added — prescriptive node taxonomy
+
+- New `references/node-taxonomy.md` — explicit rules for what node type to use when. Covers 8 types: user / client / person / company / topic / workstream / bizdev / domain-root. Plus reserved subdirs `infra/` and `archive/`.
+- Decision rules: 8 questions in priority order ("Is this about a specific person? a paying engagement? a prospect? an initiative? a company? a subject area? infrastructure? a persistent area of YOUR work?") — first match wins.
+- Anti-patterns documented: don't conflate prospect with client; don't dump knowledge into a mega-node; don't create ad-hoc top-level directories; don't create nodes without wikilink connections.
+- Naming conventions: kebab-case; firstname-lastname for persons with company-hint disambiguation; descriptive slugs for workstreams.
+
+### Added — `/remember` Step 1 consults the taxonomy
+
+- Step 1 ("Detect the target node") rewritten to apply the taxonomy's decision rules before creating a new node. Old colon-prefix conventions (`client:acme`, `bizdev:stripe`) marked deprecated; new content follows the prescriptive taxonomy directly.
+- Default fallback when nothing matches cleanly: `topic/<slug>`. No more ad-hoc top-level directories.
+
+### Added — `/remember` Step 3.4 orphan warning for new nodes
+
+- After Step 3 creates a NEW node file, check the outbound wikilink count.
+- If outbound < 2 AND content mentions named entities (capitalized "First Last" patterns, capitalized companies, recognized topics) NOT wikilinked, surface a one-shot prompt: "Heads up: <node> has <N> wikilinks but mentions <entity 1>, <entity 2>, <entity 3>. Convert?" — yes / no / skip-always-this-session.
+- Autonomy-aware: `auto` mode converts silently using the `/relink-memory` heuristic; `suggest` (default) surfaces the prompt; `confirm` adds emphasis.
+- Skips: already-existing node updates (only fires on first-write of new nodes); `staged/` content (drafts); explicit `--no-orphan-check` flag; truly solo content (no named entities).
+
+### Added — `/cleanup` Section K — structurally-isolated nodes
+
+- Scans memory for nodes with **zero outbound AND zero inbound wikilinks** (excludes system files like DASHBOARD, CLAUDE.md, index.md, hot.md, log.md, user.md).
+- Per-isolated-node prompt: relink (try to convert plain-text mentions) / archive (move to `memory/archive/`) / merge (into another node) / keep (legitimate solo note; suppress 90 days) / skip.
+- Cap 10 per `/cleanup` run to prevent fatigue.
+- Different from existing Section G (orphan-detection by dashboard-presence and recency) — Section K checks **graph connectivity** specifically.
+
+### Why this matters
+
+v4.10.0 fixed wikilink emission rules. v4.10.1 fixed DASHBOARD, first-name expansion, and person cross-linking. But all of those were *retroactive* — they fix accumulated mess in existing memory.
+
+v4.11.0 is *proactive*: the taxonomy prevents ad-hoc node placement, the orphan warning prevents disconnected node creation, and Section K periodically audits structural health. Together they ensure new users don't drift into the same disconnected mess that required `/relink-memory` to clean up.
+
+This matters across Nucleus, not just the graph view:
+- **memory-librarian quality** depends on consistent node structure
+- **mining accuracy** depends on canonical paths the agents can route to
+- **daily-brief context loading** depends on `[[person/]]` and `[[client/]]` patterns
+- **cross-plugin reads** (lead-engine, weekly-outreach, client-status) all assume the taxonomy
+
+### How users apply it
+
+- **New users:** automatically. Fresh installs start with the taxonomy; new content follows it from the first `/remember`.
+- **Existing users:** run `/relink-memory --rerun` to apply v4.10.1's retroactive fixes (DASHBOARD regen, first-name expansion, person cross-links), then `/cleanup` to surface any remaining isolated nodes via Section K. After that, structural discipline holds going forward.
+
 ## [4.10.1] — Wikilink density: DASHBOARD hub + first-name expansion + person cross-links (2026-05-20)
 
 Patch to v4.10.0. Real-user dogfooding showed three remaining issues after the initial wikilink fix:

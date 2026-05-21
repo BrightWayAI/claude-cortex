@@ -174,6 +174,53 @@ CORRECTIONs are excluded from this audit (immune to decay).
 
 **On accept of `archive`**: there's no entry-level archive directory; this is equivalent to `demote` plus a note that the user chose archive. (Entry stays readable, just out of active rotation.)
 
+### K. Structurally-isolated nodes (v4.11+)
+
+Find nodes that are graph-orphans: zero outbound `[[wikilinks]]` AND zero inbound wikilinks (no other node references them).
+
+Procedure:
+
+1. For each node file in `memory/` (excluding `archive/`, `staged/`, and system files `DASHBOARD.md` / `CLAUDE.md` / `index.md` / `hot.md` / `log.md` / `user.md`):
+   - Count outbound `[[` occurrences in the file's content.
+   - Count inbound: grep for the file's slug across all other node files; count `[[<slug>]]` or `[[<type>/<slug>]]` references.
+2. Flag any node with outbound = 0 AND inbound = 0 as **isolated**.
+3. For each isolated node, surface for review:
+
+```
+ISOLATED NODE: <node-path>
+  Last updated: <date>
+  Content length: <N> lines
+  Type (per taxonomy): <inferred type>
+
+  Possible reasons:
+  - Created via plain-text /note with no entity references
+  - Orphaned from a removed parent node
+  - Solo scratch note that doesn't need connections
+  - Should be relinked or merged into a richer node
+
+  (r)elink — run /relink-memory scoped to this node; try to convert plain-text mentions
+  (a)rchive — move to memory/archive/
+  (m)erge — merge into an existing node (prompts for target)
+  (k)eep — leave isolated (legitimate solo note); suppress for 90 days
+  (s)kip — defer
+```
+
+4. **On accept `relink`:** invoke `/relink-memory --scope <node-path>` to attempt wikilink conversion within just this file. If still isolated after relink (no entities matched any existing nodes), prompt for `archive` or `keep`.
+
+5. **On accept `archive`:** move the file to `memory/archive/<original-path>`. Update DASHBOARD if it referenced this node.
+
+6. **On accept `merge`:** prompt for target node. Move the content into the target's appropriate sections (knowledge entries go to Knowledge; recent activity goes to Changelog; etc.). Delete the original file.
+
+7. **On accept `keep`:** append to `<config-root>/memory/staged/skip-logs/cleanup-isolated.md` with reason field; suppress for 90 days.
+
+8. **Cap:** 10 isolated nodes per `/cleanup` run (avoid fatigue). Re-surface remaining at the next run.
+
+Different from existing section G (Orphan / isolated notes) which checks dashboard-presence and recency. Section K checks **graph connectivity** specifically — is this node part of the knowledge network at all?
+
+System files (DASHBOARD, CLAUDE.md, etc.) are always excluded — they're structural, not knowledge nodes.
+
+---
+
 ### J. DECISION revisit-trigger scan (v4.9+)
 
 Scan all active DECISION entries across nodes. For each:
