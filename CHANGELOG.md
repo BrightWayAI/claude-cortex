@@ -6,6 +6,58 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.9.0] — Workstream nodes + DECISION knowledge type (2026-05-20)
+
+Part of the Chief-of-Staff evolution (see `nucleus/docs/proposals/chief-of-staff-evolution.md`). Two new cortex primitives close real navigability gaps in the second brain.
+
+### Added — `workstream/` node type
+
+A workstream is an **ongoing initiative pipeline** that spans multiple projects, people, and topics — distinct from projects (specific engagements), topics (subject areas), and domains (persistent areas of work).
+
+Examples: "Q3 outbound campaign," "BrightWay 2026 product strategy," "ops platform evaluation."
+
+- New `references/workstream-schema.md` — formal schema with sections for current state, pinned context, recent activity, open loops, linked entities, and workstream-scoped knowledge.
+- New `commands/start-workstream.md` + `skills/start-workstream/SKILL.md` — interview-driven workstream creation. Triggers: "start a workstream X", "I'm beginning work on X", "track X as a workstream".
+- Workstreams default to `decay_profile: slow` (1.5× modifier on freshness thresholds) — they stay fresh longer than topic nodes.
+- `memory-librarian` agent gains a new query path: workstream-shape queries ("what's happening with X initiative") route to `memory/workstream/<slug>.md` first.
+- `indexer` skill + `references/memory-index.md` updated — new "Workstreams" section in `memory/index.md`, grouped by `status` front-matter (active first, paused after, completed at bottom).
+- `hot.md` regeneration walks workstream nodes and surfaces active ones (last_active within 7d) in the "What I worked on" section.
+- Storage layout in `CLAUDE.md` updated to show `memory/workstream/<slug>.md`.
+
+### Added — `DECISION` knowledge entry type
+
+Decisions become first-class memory entries alongside INSIGHT / MODEL / GOTCHA / LESSON / RECIPE / CORRECTION.
+
+Why: decisions are **forward-looking commitments**, not retrospective lessons. They're worth surfacing when context changes (cheaper to re-evaluate a decision than rediscover it).
+
+- New DECISION type with required fields: what, when, why, affected entities, **Revisit when** trigger, status (active / superseded / revisit-now).
+- `/remember` Step 2 extraction updated — recognizes decision cues ("we decided", "I'm going with", "settled on", "going forward we'll", "the call is", "made the call to"). Prompts for the Revisit-when field when captured.
+- DECISIONs decay slowly (1.5× modifier, same as RECIPE and workstream nodes). They supersede via concept-drift detection — a later DECISION on the same topic moves the earlier one to Demoted knowledge with `↳ superseded by: ...`.
+- New `/cleanup` section J — DECISION revisit-trigger scan. Haiku-tier classifier checks whether each DECISION's `Revisit when` trigger appears to have fired in recent activity; surfaces flagged DECISIONs for user re-evaluation. Cap 10 per `/cleanup` run to prevent fatigue.
+- `memory-librarian` ranks DECISIONs higher for strategy queries ("why are we using X", "what was our approach to Y").
+- `hot.md` "Recent decisions" section is now properly typed — pulls DECISION entries from last 7 days, plus any with `Status: revisit-now` regardless of age. Never truncated even at word cap.
+- `references/decay-model.md` updated — DECISION joins GOTCHA and RECIPE in the slow-decay tier.
+
+### Schema documentation
+
+- `references/workstream-schema.md` — workstream node format
+- `commands/remember.md` Step 2 — DECISION extraction template + example
+- `references/decay-model.md` — DECISION decay rules
+- `CLAUDE.md` knowledge-taxonomy table — DECISION added with description
+
+### Migration
+
+- No migration required. Existing nodes continue to work; new workstream nodes are opt-in via `/start-workstream`. DECISION entries can be added to any node going forward; existing knowledge stays untyped.
+- `/end-day` Pre-chain C from v4.8.1 (staged-substrates migration) is unaffected.
+
+### Why this matters
+
+The user identified two real navigability gaps in the second brain:
+1. **Operators run ongoing initiatives** that don't fit project/topic/domain. Workstreams capture them with the right shape (current state, pinned context, open loops, linked entities).
+2. **Decisions weren't first-class** — they got buried as changelog lines or retrospective lessons. With the DECISION type, every choice has a place to live with traceable reasoning + a re-evaluation trigger.
+
+Together with the router evolution (nucleus-router v0.2.0), this is the Chief-of-Staff layer becoming real.
+
 ## [4.8.1] — Staged substrates reorg + migrations pattern doc (2026-05-20)
 
 Cleanup pass 1 (per `nucleus/docs/proposals/cleanup-pass-1.md`). Pure clarity refactor — no behavioral changes for users post-migration.

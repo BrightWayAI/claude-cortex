@@ -37,6 +37,10 @@ _Total nodes: N (X client, Y person, Z company, ...)._
 - [[topic/<slug>]] — <descriptor>. _<state>._
 ...
 
+## Workstreams (v4.9+)
+- [[workstream/<slug>]] — <descriptor>. _<status>: <state>. Last active <date>._
+...
+
 ## Domain notes
 - [[<name>]] — <descriptor>. _<state>._
 ...
@@ -86,6 +90,7 @@ Each line: wikilink, descriptor, decay state, last confirmation date. Demoted/ar
    - `memory/person/*.md` → People (excluding `person/archive/`)
    - `memory/company/*.md` → Companies
    - `memory/topic/*.md` → Topics
+   - `memory/workstream/*.md` → Workstreams (v4.9+; group by `status` front-matter — active first, then paused, completed at bottom)
    - `memory/bizdev/*.md` → Bizdev
    - `memory/<other-dir>/*.md` → group under the dir name as section heading
    - `memory/*.md` (root-level, not in system allowlist) → Domain notes

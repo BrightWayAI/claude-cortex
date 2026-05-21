@@ -37,7 +37,7 @@ _Rolling window: last 7 days (configurable)._
 - YYYY-MM-DD — <last 7 days of /end-day Reflection answers, condensed>
 
 ## Recent decisions
-- YYYY-MM-DD — <decisions captured to changelogs across active nodes>
+- YYYY-MM-DD — <DECISION entries from the last 7 days, surfaced from `### Decisions` sections across active nodes (v4.9+). Include the entry text, the `Revisit when` trigger (if any), and the linked entities.>
 ```
 
 Capped at ~3000 words total. If the 7-day window produces more, the cache trims to the most-recent / most-referenced and notes the truncation.
@@ -74,11 +74,13 @@ Pure file-walk and date-filtering. No model calls.
 2. For each node, parse the file's `## Changelog` section. Extract entries from the last 7 days.
 3. For person nodes, also parse `## Recent interactions` — entries from last 7 days.
 4. For project / client nodes, also parse `## Open threads` — currently-open threads modified in last 7 days.
-5. Walk `<config-root>/briefs/` for the last 7 days. Extract each brief's `## Reflection` section (if present).
-6. Walk `<config-root>/memory/staged/commit-drafts/archive/` for resolved drafts in the last 7 days. Note significant decisions / commitments captured.
-7. Render the sections above; sort each by date descending.
-8. Cap at 3000 words; truncate intelligently (drop oldest, keep most-referenced).
-9. Write `<config-root>/memory/hot.md` (overwrite).
+5. For workstream nodes (v4.9+), parse `## Recent activity` and `## Open loops` — surface active workstreams in the "What I worked on" section.
+6. For all node types, scan `### Decisions` sections. Extract DECISION entries with `[confirmed:...]` in the last 7 days, plus any with `Status: revisit-now` regardless of age. Surface in the "Recent decisions" section. (v4.9+)
+7. Walk `<config-root>/briefs/` for the last 7 days. Extract each brief's `## Reflection` section (if present).
+8. Walk `<config-root>/memory/staged/commit-drafts/archive/` for resolved drafts in the last 7 days. Note significant decisions / commitments captured.
+9. Render the sections above; sort each by date descending.
+10. Cap at 3000 words; truncate intelligently (drop oldest, keep most-referenced; never drop a DECISION with Status: revisit-now).
+11. Write `<config-root>/memory/hot.md` (overwrite).
 
 ## What hot.md is NOT
 

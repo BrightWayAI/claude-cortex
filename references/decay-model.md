@@ -48,6 +48,7 @@ type_modifiers:
   MODEL: 1.0
   GOTCHA: 1.5      # Gotchas stay relevant longer
   RECIPE: 1.5      # Reusable techniques don't go stale fast
+  DECISION: 1.5    # Decisions stay relevant longer (v4.9+); supersede via concept-drift / explicit revisit-trigger, not age
   CORRECTION: 0    # Never decays (0 means immune)
 
 # Person pages — days since last meaningful contact
@@ -109,7 +110,7 @@ When `/recall` renders any knowledge entry (project view, person view, topic vie
 
 ## How `/remember` uses this model — concept-drift detection
 
-When `/remember` writes a new INSIGHT, MODEL, GOTCHA, or LESSON to a node:
+When `/remember` writes a new INSIGHT, MODEL, GOTCHA, LESSON, or DECISION to a node:
 
 1. After classification (Step 0 cheap-tier triage) decides the affected node, but BEFORE writing the new entry, scan the node's existing entries of the same type.
 2. Send (new entry, existing entries of same type, last 60 days) to a Haiku-tier classifier:

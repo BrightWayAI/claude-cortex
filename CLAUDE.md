@@ -26,6 +26,8 @@ You have a persistent memory system stored as markdown files at `~/Documents/Cla
     │   └── sarah-chen.md
     ├── client/               # Node files organized by prefix
     │   └── acme-corp.md
+    ├── workstream/           # Ongoing initiative pipelines (v4.9+) — spans projects/people/topics
+    │   └── q3-outbound.md
     ├── strategy/
     │   └── q2-growth.md
     ├── .decay-config.md      # Decay thresholds (v4.4+)
@@ -182,6 +184,7 @@ Knowledge entry types — first-class, high-value content:
 | GOTCHA     | Trap, hidden requirement, or non-obvious behavior   |
 | RECIPE     | Reusable technique, playbook, or process            |
 | CORRECTION | Updated or reversed belief                          |
+| DECISION   | A choice made (forward-looking commitment, not retro). Required fields: what, when, why, affected entities, revisit-when trigger, status. Decays slowly (1.5× modifier). See `references/decay-model.md`. (v4.9+) |
 
 User observation types (stored in `user.md`):
 
@@ -215,6 +218,8 @@ When you detect these patterns, run the corresponding command automatically. **C
 | "what's missing", "research gaps in my memory", "what should we learn more about" | Run `/research-gaps` — autonomous gap-finder + web research (v4.5+) |
 | "set up Obsidian", "make this work on mobile", "enable graph view" | Run `/setup-obsidian` — scaffold Obsidian vault config (v4.5+) |
 | "start nucleus", "let's begin", "onboard me", "set me up", "first time setup", "configure everything" | Run `/start-nucleus` — foundational onboarding walker (v4.8+) |
+| "start a workstream X", "I'm beginning work on X", "track X as a workstream", "begin tracking initiative X" | Run `/start-workstream` — new ongoing-initiative node (v4.9+) |
+| "we decided X", "I'm going with X", "settled on X", "going forward we'll X", "the call is X" | Capture as DECISION entry via `/remember` (v4.9+) |
 | "good morning", "start my day", "what happened overnight", "morning routine" | Run `/morning` — walk yesterday's `/listen` proposals (v4.7+) |
 | "ingest yesterday", "mine yesterday's calendar", "process overnight" | Run `/listen` — nightly autonomous ingest (v4.7+) |
 
@@ -239,6 +244,7 @@ If `.claude/commands/` is present, these slash commands are available:
 | `/merge-research-draft` | Walk the most recent `staged/research-drafts/` file finding-by-finding and merge accepted updates into active memory (v4.5+) |
 | `/setup-obsidian` | Scaffold `.obsidian/` vault config + `VAULT.md` so cortex memory becomes graph-viewable in Obsidian (v4.5+) |
 | `/start-nucleus` | Foundational onboarding walker. Chains identity, voice, sources, Obsidian, per-plugin setups, diagnostics, schedules. Idempotent. The "I just installed Nucleus, now what" command (v4.8+) |
+| `/start-workstream [slug]` | Create a new workstream node — ongoing initiative pipeline that spans projects/people/topics. Walks a short interview (current state, pinned context, linked entities). See `references/workstream-schema.md` (v4.9+) |
 | `/listen` | Nightly autonomous ingest — pulls yesterday's calendar/inbox/slack/transcripts/drive into immutable `<config-root>/archive/YYYY-MM-DD/`, runs mining agents, stages `staged/commit-drafts/` proposals. Designed for cron (v4.7+) |
 | `/morning` | Walk the latest `/listen` draft proposal-by-proposal (accept/reject/edit/defer), refresh hot.md + memory/index, optionally chain into `/brief` (v4.7+) |
 

@@ -209,6 +209,27 @@ CORRECTED BELIEFS:
 - Previous understanding that was updated or reversed
 - Example: "Previously assumed they were price-sensitive — actually they have budget, they just need ROI framing to get internal approval."
 
+DECISIONS (v4.9+):
+- A choice made — forward-looking commitment, not a retrospective lesson
+- Cues: "we decided," "I'm going with," "settled on," "going forward we'll," "the call is," "made the call to"
+- Required fields when captured:
+  - **What was decided:** the choice
+  - **When:** YYYY-MM-DD
+  - **Why:** reasoning at the time
+  - **Affected:** wikilinked entities affected by the decision
+  - **Revisit when:** trigger condition for re-evaluation ("if vendor raises prices," "annually," "if we hire a 3rd person") — or "n/a" if no specific trigger
+  - **Status:** active (default), superseded, revisit-now
+- Format inline:
+  - `DECISION [confirmed:YYYY-MM-DD] <one-line decision>`
+  - `  - What was decided: ...`
+  - `  - When: YYYY-MM-DD`
+  - `  - Why: ...`
+  - `  - Affected: [[entity]], [[entity]]`
+  - `  - Revisit when: ...`
+  - `  - Status: active`
+- DECISIONs decay slowly (1.5× modifier) — they stay relevant longer than INSIGHTs. They supersede via concept-drift detection (a later DECISION on the same topic moves the earlier one to Demoted knowledge with `↳ superseded by: ...`).
+- Example: "DECISION [confirmed:2026-05-15] Going with Pipedrive over HubSpot for the firm's CRM. **Why:** Pipedrive's pricing scales better at our size; HubSpot's marketing automation is more than we need. **Affected:** [[client/acme]], [[bizdev]]. **Revisit when:** if we hit 5+ active sales pipelines, re-evaluate. **Status:** active."
+
 CONTEXT & BACKGROUND:
 - Domain knowledge needed to understand this project or topic
 - Terminology, acronyms, or jargon defined

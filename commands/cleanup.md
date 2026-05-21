@@ -174,6 +174,38 @@ CORRECTIONs are excluded from this audit (immune to decay).
 
 **On accept of `archive`**: there's no entry-level archive directory; this is equivalent to `demote` plus a note that the user chose archive. (Entry stays readable, just out of active rotation.)
 
+### J. DECISION revisit-trigger scan (v4.9+)
+
+Scan all active DECISION entries across nodes. For each:
+
+1. Read the entry's `Revisit when:` field. If "n/a" or empty → skip.
+2. Determine whether the trigger condition appears to have fired. Cheap-tier (Haiku) classifier:
+   - Read the trigger text + last 30 days of activity in the same node + recent log.md entries
+   - Output: `{triggered: true|false, reason: '...'}`
+3. If `triggered: true`, surface for re-evaluation:
+
+```
+DECISION potentially needs revisit: [[<node>]] · "<decision>"
+  Triggered by: <reason — what activity matches the revisit-when trigger>
+  Original reasoning: <why>
+  Original date: <YYYY-MM-DD>
+
+  (a)ccept — mark Status: revisit-now (surfaces in next /recall on this node)
+  (n)o-change — note the trigger was false-positive; suppress for 90 days
+  (u)pdate-now — re-confirm or supersede the DECISION inline
+  (s)kip
+```
+
+4. **On accept (revisit-now):** edit the DECISION's `Status:` field to `revisit-now`. Add a note to the entry: "Trigger fired YYYY-MM-DD: <reason>." Surfaces with extra prominence in `/recall` until user updates.
+
+5. **On no-change:** log to `<config-root>/memory/staged/skip-logs/decision-revisit.md` with reason; suppress this (decision, trigger) pair for 90 days.
+
+6. **On update-now:** chain into `/remember` with the original DECISION pre-loaded; user can supersede with a new DECISION or re-confirm with an updated `Revisit when` trigger.
+
+7. **On skip:** no action; this DECISION will be re-checked at next `/cleanup`.
+
+Cap: 10 DECISIONs per `/cleanup` run. Run too many at once and the user fatigues. Prioritize by trigger-confidence (Haiku's `reason` strength) and recency of trigger activity.
+
 ---
 
 ## Step 3 — Propose actions (autonomy-aware in v4.7.2+)
