@@ -6,6 +6,85 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.12.0] — Memory-as-git + dogfooding-driven hygiene (2026-05-28)
+
+Addresses five observations surfaced during the inaugural `/network-rebalance` walk on 2026-05-28 plus the workstream/nucleus-improvements observations from 2026-05-21. Together these close the largest cross-artifact drift gaps in the cortex substrate.
+
+### Added — memory-as-git (substrate-level versioning)
+
+Per `nucleus/docs/proposals/memory-as-git.md`. `<config-root>/memory/` becomes a git repository. Each `/end-day` commits the day's memory changes as one reviewable unit; `/morning` surfaces overnight diff as a review surface.
+
+- **New `references/memory-gitignore-template.md`** — defines the memory-level `.gitignore` that excludes `staged/`, `hot.md`, `index.md`, `log.md`, `.state.json`, and deprecated pre-v4.8.1 dotfiles. Keeps the diff focused on knowledge changes.
+- **`/setup-identity` Step 3.6** — first-run init prompt. Default: local-only, no remote. Writes memory/.gitignore from template, runs git init + initial commit. Optional remote prompt for off-machine backup (private GitHub / self-hosted).
+- **`/end-day` Step 5.8** — auto-commits memory after Step 5.7 log. Empty commits are no-ops. Commit message includes day's source summary (which commands touched memory today). Optional push if remote configured.
+- **`/morning` Step 0.5** — surfaces `git diff HEAD~1..HEAD` as the review surface BEFORE walking the `/listen` draft. Three render modes: full diff / file-level skim / skip.
+- **`cortex.user-context.md` schema additions**: `memory_as_git.enabled`, `memory_as_git.remote`, `memory_as_git.push_on_close`, `memory_as_git.morning_diff`.
+- **Migration**: existing installs gain init on next `/end-day` (if `memory_as_git.enabled` is true) or via `/setup-identity` re-run. Pre-v4.12 memory that already had git history (rare) is preserved.
+
+Three privacy levels: local-only (default), private GitHub, self-hosted. None of them upload to BrightWay servers — memory stays the user's data.
+
+### Added — `/sync-linked-entities` command + skill
+
+New cortex command that walks a source node's `## Linked Entities` section and surfaces drift candidates in linked nodes. Addresses the cross-artifact drift gap: when a person's status changes, the bizdev/client/workstream nodes referencing them need updates but had no built-in mechanism to propagate.
+
+- **`commands/sync-linked-entities.md`** — read-only against linked nodes; surfaces 5 drift-check categories (status contradiction, stale summary, orphaned open threads, frontmatter intent/tier mismatch, provenance freshness). User accepts/rejects per candidate.
+- **`skills/sync-linked-entities/SKILL.md`** — natural-language entrypoint ("check the linked nodes," "any drift after that change").
+- Skip-log respected; 30-day suppression for `(s)kip` candidates.
+- Cap 25 candidates per invocation; sorted by severity.
+
+### Added — DASHBOARD line provenance (`/remember` Step 3 + `/cleanup` Section L)
+
+Every line written or modified in DASHBOARD now carries `<!-- by:<command> @ <YYYY-MM-DD> -->` provenance. Drift detection becomes routine.
+
+- **`/remember` Step 3.6** — provenance comment appended on every DASHBOARD line write/update.
+- **`/cleanup` Section L (NEW)** — DASHBOARD staleness scan via provenance. Per-line thresholds (auto-mining 7d / user-driven 30d / manual 60d). Surfaces stale lines, missing provenance, and orphaned references (lines pointing at archived/renamed nodes).
+- HTML-comment syntax renders invisibly in Markdown previews and Obsidian — humans see clean lines.
+
+### Changed — `/end-day` Step 5 artifact consistency (workstream/nucleus-improvements observation)
+
+Pre-staging tomorrow's brief now ALWAYS calls `mcp__cowork__update_artifact` with id `todays-brief`. Never creates a new artifact and never produces a markdown-only fallback when Cowork is available. The brief is always the same persistent surface.
+
+- **Canonical 6-section artifact format** documented inline in Step 5 (sticky header, timeline strip, meetings card, priority tasks w/ checkboxes + progress bar, bizdev outreach queue, yesterday's reflection).
+- localStorage key `brief-YYYY-MM-DD` rotates with the date.
+- Reference implementation lives in daily-brief v0.4.0 (separate plugin release).
+- Markdown snapshot at `<config-root>/briefs/<date>.md` is still the canonical text record.
+
+### Changed — `/setup-voice` Step 3.5 + `/setup-identity` Step 3.7: graph completion (workstream/nucleus-improvements observation)
+
+Both commands now upsert wikilinks to `<config-root>/memory/user.md` as a final step. Closes the orphan-graph problem: voice.md and identity.md were canonical root-level files referenced by every drafting plugin but had no inbound graph edges.
+
+- `/setup-voice` appends `[[voice]] — writing voice descriptors...` to a `## Canonical Files` section in user.md (creates section if missing).
+- `/setup-identity` appends `[[identity]] — user profile...` symmetrically.
+- Idempotent (skips if wikilink already present).
+- Best-effort write — if user.md doesn't exist (cortex memory not bootstrapped yet), skips silently and waits for `/remember`'s first run.
+
+### Storage layout additions
+
+`<config-root>/memory/.git/` — git metadata for memory-as-git. Excluded from cortex's general node-walking; tools that operate on memory should ignore .git/ explicitly.
+
+`<config-root>/memory/.gitignore` — memory-level gitignore from `references/memory-gitignore-template.md`.
+
+### Acceptance criteria
+
+- [ ] `references/memory-gitignore-template.md` exists with the canonical template.
+- [ ] `/setup-identity` Step 3.6 (init), Step 3.7 (wikilink upsert) added.
+- [ ] `/setup-voice` Step 3.5 (wikilink upsert) added.
+- [ ] `/end-day` Step 5 calls update_artifact; Step 5.8 (memory commit) added.
+- [ ] `/morning` Step 0.5 (diff review) added.
+- [ ] `/remember` Step 3 emits provenance comments.
+- [ ] `/cleanup` Section L (DASHBOARD staleness) added.
+- [ ] `commands/sync-linked-entities.md` + `skills/sync-linked-entities/SKILL.md` exist.
+- [ ] `plugin.json` bumped to 4.12.0.
+- [ ] All shipped to BrightWayAI/claude-cortex main.
+
+### Not in this release
+
+- **Multi-command undo** for individual `/remember` runs — day-granularity is the right tradeoff; per-command commit would flood the log.
+- **Real-time multi-device sync** — git pull/push gives manual cross-machine, not CRDTs. Out of scope.
+- **`/cleanup` Section L for non-DASHBOARD files** — provenance scan currently DASHBOARD-only; extending to person pages / client nodes would require provenance written there too. Defer to v4.13 if needed.
+
+---
+
 ## [4.11.0] — Structural discipline: taxonomy + write-time orphan check + cleanup section K (2026-05-20)
 
 Closes the loop on the user's question — "will the structure be improved for future users so they don't end up with random nodes?" v4.10.x was retroactive (relink existing memory). v4.11.0 is **proactive** — prevents new memory from drifting back into the disconnected pattern.

@@ -143,6 +143,75 @@ No user gate. Best-effort — if the write fails, log internally and continue.
 
 ---
 
+## Step 3.6 — Initialize memory-as-git (v4.12.0+)
+
+After the identity file + parent .gitignore are written, offer to initialize `<config-root>/memory/` as a git repository. Versioned memory becomes the substrate for daily diff review (`/morning` Step 0.5) and rollback safety (`git revert HEAD` undoes a day).
+
+Logic:
+1. Check whether `<config-root>/memory/` exists. If not, skip (cortex memory hasn't been bootstrapped yet — first `/end-day` will create it; init can happen then).
+2. Check whether `<config-root>/memory/.git/` exists. If yes → "Memory-as-git already initialized; skipping init."
+3. If memory exists but no git → prompt:
+   > "Initialize memory-as-git? This makes `<config-root>/memory/` a local git repo so:
+   >   - Each `/end-day` commits the day's memory changes as one reviewable unit
+   >   - `/morning` surfaces what changed overnight as a git diff
+   >   - You can `git revert HEAD` to roll back a day if something landed wrong
+   >   - Optional: push to a private GitHub or self-hosted git for off-machine backup
+   >
+   > Default: yes, local-only (your memory stays on this machine). Recommended unless you have a reason to skip. (y / n / skip-for-now)"
+
+4. On `y` or default-yes (autonomy: auto):
+   ```
+   cd <config-root>/memory
+   git init -b main
+   git config user.name "<identity.name from identity.md>"
+   git config user.email "<identity.email from identity.md or fallback to local@brightwayai>"
+   Write <config-root>/memory/.gitignore from references/memory-gitignore-template.md
+   git add .
+   git commit -m "Initial memory snapshot (cortex v4.12.0 /setup-identity init)"
+   ```
+   Surface: "Memory-as-git initialized. Local repo at `<config-root>/memory/.git/`. Daily commits via `/end-day` Step 5.8; diff review via `/morning` Step 0.5."
+
+5. On `n` or `skip-for-now`:
+   Surface: "Skipped. Re-run `/setup-identity` later, or set `memory_as_git.enabled: true` in `<config-root>/plugins/cortex.user-context.md` and run `/end-day` to init."
+
+6. **Optional remote configuration** (only if user said `y` AND autonomy is not `auto`):
+   > "Configure a remote for off-machine backup? (private GitHub recommended for moderate privacy; self-hosted gitea/forgejo/gitlab for higher control; press Enter to skip and stay local-only)"
+
+   If user provides a URL:
+   - Write `memory_as_git.remote: <url>` to `<config-root>/plugins/cortex.user-context.md`
+   - Write `memory_as_git.push_on_close: true` to same
+   - Surface: "Remote configured. `/end-day` Step 5.8 will push after each commit."
+   - DO NOT run an initial push here — let the user manually `git remote add origin <url> && git push -u origin main` after verifying the remote URL.
+
+**Idempotent:** safe to re-run. Existing `.git/` is preserved.
+
+---
+
+## Step 3.7 — Wire identity into user.md graph (v4.12.0+)
+
+After identity.md is written, ensure `<config-root>/memory/user.md` has a wikilink to `[[identity]]` in its Canonical Files section. Without this link, identity.md is an orphan in the Obsidian graph view.
+
+Logic:
+1. Check whether `<config-root>/memory/user.md` exists. If not, skip — cortex's first `/remember` will create it with proper canonical-file references.
+2. Read `<config-root>/memory/user.md`.
+3. Check whether `[[identity]]` is already present anywhere in the file. If yes, skip (idempotent).
+4. Look for a `## Canonical Files` section header in user.md.
+   - **If found**: append `- [[identity]] — user profile (name, company, tools, working hours)` as a bullet under it.
+   - **If not found**: insert a new section right before the first existing `##` heading:
+     ```
+     ## Canonical Files
+     - [[identity]] — user profile (name, company, tools, working hours)
+     ```
+5. Write user.md back.
+
+Symmetric note: `/setup-voice` Step 3.7 does the same for `[[voice]]`. Both are idempotent. The end state: `user.md` Canonical Files section links to every root-level canonical file so Obsidian's graph view shows the connections.
+
+**Why this matters:** voice.md and identity.md are the most-referenced canonical files in the vault but they live at `<config-root>/` root, NOT inside `memory/`. `/relink-memory` scans only `memory/` so it can never auto-fix this. The setup commands are the only place where the link can be reliably written.
+
+No user gate. Best-effort — if user.md doesn't exist or the write fails, log and continue.
+
+---
+
 ## Step 4 — Confirm and offer next step
 
 Summarize what was captured (one short paragraph). Then offer:

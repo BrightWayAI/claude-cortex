@@ -360,14 +360,16 @@ If `<config-root>/briefs/<today_local>.md` doesn't exist (user ran `/end-day` wi
 
 ## Step 5 — Pre-stage tomorrow's brief
 
-**Goal:** when tomorrow morning hits, the brief is already waiting.
+**Goal:** when tomorrow morning hits, the brief is already waiting AS THE SAME ARTIFACT FORMAT `/brief` produces — not a degraded markdown-only fallback.
 
 If the `daily-brief` plugin is installed:
 
 1. Invoke its `/brief` command with `target_date: tomorrow_local`.
 2. If Step 1 ran (full mode only), pass the inbox-triage results so the brief doesn't re-query Gmail. In quick mode, the brief queries Gmail itself in the morning — no shared state needed.
 3. **Today's reflection is read by tomorrow's `/brief` Section 6 directly from today's markdown's `## Reflection` section** (daily-brief v0.3.0+). No explicit handoff from this step.
-4. The brief generator writes `<config-root>/briefs/<tomorrow_local>.md` and updates the Cowork artifact "Today's Brief" to tomorrow's data — or, if Cowork artifact tools aren't available (Claude Code), produces the markdown snapshot only with a clear notice.
+4. **Artifact consistency rule (v4.12.0+):** the brief generator MUST call `mcp__cowork__update_artifact` with id `todays-brief` to refresh the persistent Cowork artifact. **Never** create a new artifact and never produce only a markdown-only fallback when Cowork is available — the artifact id must remain stable so the user always opens the same persistent surface. If no `todays-brief` artifact exists yet, create it once with that id; update it on every subsequent `/end-day` and `/brief` run. The markdown snapshot at `<config-root>/briefs/<tomorrow_local>.md` is still written as the canonical text record, but the Cowork artifact is the working surface and must also be updated.
+5. **Canonical artifact format (established 2026-05-21, formalized in v4.12.0):** the `todays-brief` artifact should always include these sections in order — (1) sticky header with date badge and generated-by note, (2) day-at-a-glance timeline strip, (3) meetings card with per-meeting context blocks, (4) priority tasks card with **interactive checkboxes** + progress bar (P0s only; no deferred/P1 tasks cluttering the surface), (5) bizdev outreach queue with tiered sections (today / next week / early next month / backlog), (6) yesterday's reflection. localStorage key should be `brief-YYYY-MM-DD` and rotate with the date. Reference implementation: daily-brief v0.4.0+ ships this format as the canonical template; this Step 5 routes to that.
+6. If Cowork artifact tools aren't available (Claude Code), produce the markdown snapshot only with a clear notice — but explicitly flag the degraded surface so the user knows to open the Cowork app for the full working brief.
 
 ### User gate after Step 5
 
@@ -411,6 +413,40 @@ Invoke the `log-writer` skill (see `skills/log-writer/SKILL.md`) with:
 - **summary:** `<quick|full> mode. <N> commitments captured, <M> reflection answers, <K> memory entries committed. tomorrow brief pre-staged.`
 
 Adjust the metric counts based on what actually ran (don't include reflection-count if Step 4 was skipped; omit "tomorrow brief pre-staged" if daily-brief isn't installed).
+
+---
+
+## Step 5.8 — Memory-as-git commit (v4.12.0+)
+
+If memory-as-git is enabled, auto-commit today's memory changes. This makes the day a reviewable unit and gives `/morning` a diff to surface.
+
+Check whether `<config-root>/memory/.git/` exists.
+- **If not** → skip (memory-as-git not enabled; nothing to do). Optionally surface a one-line: "Memory-as-git not initialized. Run `/setup-identity` to enable, or set `memory_as_git.enabled: true` in `<config-root>/plugins/cortex.user-context.md`."
+- **If exists** → proceed.
+
+```
+cd <config-root>/memory
+# Ensure memory/.gitignore exists; rewrite from references/memory-gitignore-template.md if missing.
+git add .
+git diff --cached --stat   ← capture the day's diff summary for the commit message
+If staged changes is empty → log "no memory changes today" and exit Step 5.8.
+Otherwise compose commit message:
+  <today_local> day close — <N> nodes touched, <K> entries added, <D> demoted, <A> archived
+  Sources today: <commit-source-summary>
+where commit-source-summary lists what touched memory today by reading
+memory/log.md entries for today and counting occurrences. Example:
+  "1 /listen merge via /morning · 3 /remember runs · 1 /research-gaps merge · /cleanup Section H archive"
+
+git commit -m "<message>"
+```
+
+**Optional push:**
+- If `cortex.user-context.md` has `memory_as_git.remote: <url>` AND `memory_as_git.push_on_close: true`, run `git push origin main` after commit.
+- Default: no remote configured; commits are local-only.
+
+**Failure mode:** if commit fails (rare — usually merge conflict from external edits or git config error), log the error and continue to Step 6. Don't block the close on a maintenance task. Surface to user: "Memory-as-git commit failed — investigate `<config-root>/memory/.git` state."
+
+**Idempotent:** empty commits are a no-op. Safe to run multiple times per day if the closing ritual runs twice.
 
 ---
 

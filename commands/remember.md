@@ -317,6 +317,12 @@ If the directory cannot be accessed, explain that memory cannot be persisted wit
    - Update Waiting On if applicable
    - Add any new knowledge entries to Recent Knowledge (keep last 7 days only)
    - Update the "Last updated" timestamp
+6. **Line provenance (v4.12.0+):** every line written or modified in DASHBOARD must carry an HTML comment immediately after with `<!-- by:<command> @ <YYYY-MM-DD> -->`. This makes drift detection trivial for `/cleanup` (which surfaces stale lines whose owning command hasn't refreshed them in N days).
+   - Example: `- [P0] [[bizdev:trinity-education-group]]: studio.co intro angle — see if it fits <!-- by:/listen @ 2026-05-28 -->`
+   - Format: `<!-- by:<command-with-slash> @ <ISO-date> -->`
+   - The comment is HTML-comment syntax so it renders invisibly in Markdown previews and Obsidian — humans see clean lines.
+   - When a line is refreshed by the same command on a later run, update the date. When a different command refreshes it, replace the by-value too.
+   - For lines that came from manual edits (no command), use `<!-- by:manual @ <date> -->` if you know the date; otherwise omit (the absence of provenance is itself a signal `/cleanup` Section K — see below — will surface).
 
 #### Dashboard File Format (v4.10.1+: wikilink-emitting)
 

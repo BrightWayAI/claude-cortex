@@ -23,6 +23,53 @@ If the user passed `--discard`, move the latest draft to `staged/commit-drafts/a
 
 ---
 
+## Step 0.5 — Memory diff review (v4.12.0+)
+
+If memory-as-git is enabled, surface what changed in memory overnight BEFORE walking the listen draft. The diff is your safety net — it catches anything that crept into memory unintentionally (auto-commits, /listen merges from a prior /morning, off-hours /remember runs).
+
+Check whether `<config-root>/memory/.git/` exists.
+- **If not** → skip silently (memory-as-git not enabled).
+- **If exists** → proceed.
+
+```
+cd <config-root>/memory
+Read the date of HEAD~1 commit (git log -1 --format=%cd --date=short HEAD~1).
+
+If HEAD~1 date == today_local (no overnight commit happened, e.g., /end-day ran twice today):
+  Surface: "No memory commit since today's last close. Skipping diff review."
+  Continue to Step 1.
+Else:
+  Compute git diff HEAD~1..HEAD --stat:
+    - Files changed (count by directory: client/, person/, topic/, workstream/, bizdev/, team/, etc.)
+    - Insertions / deletions per file
+
+  Surface a summary block:
+    "Memory changed since yesterday's commit:
+       - <N> client nodes updated (<slug list, max 5>)
+       - <M> person pages added (<slug list>)
+       - <K> topic nodes modified
+       - <total> insertions, <total> deletions across <files> files
+
+     Open the diff? (y / skim / skip)"
+
+  On `y`:
+    Display git diff HEAD~1..HEAD paginated (50 lines at a time, with q-to-skip).
+  On `skim`:
+    Display file-level summary only (already shown above) plus the first 5 lines of each changed file's diff hunk.
+  On `skip`:
+    Continue to Step 1 without rendering.
+```
+
+The diff IS the review surface. The user can spot bad commits before they compound into wrong context for the day's sessions. If something looks wrong, `git revert HEAD` rolls back the last day's commit.
+
+**Why this runs before Step 1 (the listen draft walk):** the diff captures what HAS landed (post-commit); the listen draft captures what's STAGED (pre-commit). User reviews HEAD first to know what they're already living with, then reviews proposals to decide what else to add.
+
+**Failure mode:** if git diff fails (rare — usually no HEAD~1 yet, first day of memory-as-git), surface "Memory-as-git is fresh — no prior commit to diff against. First diff will appear tomorrow." Continue.
+
+If `cortex.user-context.md` has `memory_as_git.morning_diff: false`, skip this step (some users prefer to check diffs out-of-band via Obsidian's Git plugin).
+
+---
+
 ## Step 1 — Show the overnight summary
 
 ```

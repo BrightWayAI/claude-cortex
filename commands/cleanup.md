@@ -255,6 +255,56 @@ Cap: 10 DECISIONs per `/cleanup` run. Run too many at once and the user fatigues
 
 ---
 
+### L. DASHBOARD line staleness via provenance (v4.12.0+)
+
+Scan `<config-root>/memory/DASHBOARD.md` for stale lines using the provenance markers written by `/remember` Step 3 (and ideally by every command that writes DASHBOARD entries). Each line should carry `<!-- by:<command> @ <YYYY-MM-DD> -->`. Stale signals:
+
+1. **Owning-command hasn't refreshed in N days.** Default thresholds:
+   - Lines from auto-mining commands (`/listen`, `/morning`, `/end-day`, `/sweep`): stale at 7 days
+   - Lines from user-driven commands (`/remember`, `/note`, `/learn`): stale at 30 days
+   - Lines marked `manual`: stale at 60 days (manual = the user wrote it; expect slower refresh)
+   - Override per-line via inline comment `<!-- by:<cmd> @ <date> · stale-after:<days> -->`
+
+2. **Missing provenance.** Any DASHBOARD line without a `<!-- by: -->` comment is itself a drift signal — it predates v4.12.0 or was written by a command not yet updated to emit provenance.
+
+3. **Orphaned references.** Lines that reference a node id that no longer exists (e.g., DASHBOARD says `[[bizdev:foo-corp]]` but the file was archived or renamed). Cross-check against `memory/index.md`.
+
+Surface:
+
+```
+DASHBOARD has <N> potentially stale lines:
+
+  STALE (owning command hasn't refreshed in N+ days):
+  - "studio.co intro angle..." <!-- by:/listen @ 2026-05-12 --> · 16 days old
+  - "Draft Sylvia outreach" <!-- by:/remember @ 2026-04-22 --> · 36 days old
+
+  MISSING PROVENANCE (pre-v4.12 or unattributed):
+  - "WAITING:Caitlyn — Logo permission" (no by-tag)
+
+  ORPHANED REFERENCES:
+  - "[[bizdev/foo-corp]]: ..." — node no longer exists
+
+For each line:
+  (k)eep — update provenance to `manual @ <today>` to suppress staleness for 60 days
+  (u)pdate-now — invoke owning command (or /remember if manual) to refresh
+  (d)elete — remove the line entirely
+  (s)kip — re-check next /cleanup
+```
+
+Cap: 15 stale lines per `/cleanup` run. Prioritize by age (oldest first) then by line type (P0/WAITING items rise above informational entries).
+
+**On `k` (keep):** rewrite the line's provenance to `<!-- by:manual @ <today> -->`. Effectively re-confirms it for 60 days.
+
+**On `u` (update-now):** if owning command is a chained command (`/listen`, `/morning`, `/end-day`), surface "this updates on next scheduled run — keep waiting? (y/n)" since manually firing those is heavyweight. If owning command is light (`/remember`, `/note`), offer to invoke inline.
+
+**On `d` (delete):** remove the line. Log to `staged/skip-logs/dashboard-prune.md` with the deleted text + date.
+
+**On `s` (skip):** no action.
+
+This section closes the dogfooding gap surfaced 2026-05-28: DASHBOARD accumulates stale lines because nothing actively detects them. Provenance + this scan turns staleness from invisible drift into a routine `/cleanup` review.
+
+---
+
 ## Step 3 — Propose actions (autonomy-aware in v4.7.2+)
 
 **Consult autonomy mode** per `references/autonomy.md`. Default for `/cleanup`: `suggest`.
