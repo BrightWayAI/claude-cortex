@@ -6,6 +6,50 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.12.3] — Followup: deferred items from v4.12.2 (2026-05-28)
+
+Completes the deferred-list from v4.12.2 CHANGELOG. Coordinated with daily-brief v0.4.2 + relationships v0.2.3.
+
+### Added — `/cleanup` Section L.0 first-run baseline-stamp
+
+DASHBOARD provenance retrofit was going to be a multi-run grind for existing users (15 "missing provenance" lines per /cleanup run × N runs to clear backlog). v4.12.3 adds an L.0 prompt at first /cleanup run after v4.12.3 install: offers `(b)aseline-stamp` to mark all existing lines as `<!-- by:manual @ <today> -->` (defers them for 60 days), `(w)alk` per normal Section L behavior, or `(s)kip` for this run. Marker at `staged/skip-logs/dashboard-baseline-acknowledged` prevents re-prompt.
+
+Same pattern applied to **Section K** (graph-isolation) — first-run defer-90-days option for legacy isolated nodes. Marker at `staged/skip-logs/section-k-baseline-acknowledged`.
+
+### Added — `/cleanup` skip-log enum constraints
+
+Section L now uses a constrained enum for `reason-code` in `dashboard-prune.md`: `not-stale | intentional-archive | pending-review | unclear`. Same fix pattern applied to `staged/skip-logs/sync-linked.md` (was free-form `reason`). Closes the PII-leakage class of bug surfaced for the schema-validation override log.
+
+### Changed — `/sync-linked-entities` mtime check refinement
+
+v4.12.0 used a 60-second mtime gate that false-positive'd for Obsidian users (auto-save every 2-3s). v4.12.3 splits behavior by invocation source:
+- **User-invoked** (explicit slug arg OR natural-language skill trigger) → skip the mtime gate entirely; trust the user is done editing.
+- **Auto-fired** (chained from `/network-rebalance`, `/end-day`, or scheduled task) → tightened to 10-second mtime gate with a warn-and-continue prompt rather than hard-exit.
+- **Linked nodes** read as-is (stale risk accepted; documented).
+
+### Changed — Stale-references sweep (continuation from v4.12.2)
+
+Five more files now use current plugin names instead of retired weekly-outreach + bizdev-outreach:
+- `commands/end-week.md` — description + Step 5 (Monday outreach pre-stage) + behavior rule about HOLDING PATTERN
+- `commands/start-nucleus.md` — Step 0 status check + Step 2 voice description + Step 5 plugin table + Step 5 menu example + Step 7 schedule description + Step 8 closing summary
+
+(`commands/setup-voice.md` already handled in v4.12.2 followup commit `c962d0f`.)
+
+### Acceptance
+
+- [ ] `/cleanup` Section L.0 baseline-stamp + Section K baseline-stamp prompts spec'd.
+- [ ] Skip-log enum constraints on dashboard-prune.md + sync-linked.md.
+- [ ] `/sync-linked-entities` source-based mtime check refinement.
+- [ ] No live-plugin references to weekly-outreach / bizdev-outreach in setup-identity, setup-voice, start-nucleus, end-week. Only migration-context references remain.
+- [ ] `plugin.json` bumped to 4.12.3.
+
+### Findings still deferred (not in v4.12.3)
+
+- Migration step in `/setup-relationships` for legacy user-context files — moved to relationships v0.2.3 (separate plugin release).
+- Automated test fixtures for plugin specs — meta-recommendation, separate effort.
+
+---
+
 ## [4.12.2] — Coordinated patch: security, race-conditions, backward-compat (2026-05-28)
 
 Same-day coordinated release fixing 13 CRITICAL + 16 WARNING + 7 INFO findings surfaced by two independent post-ship review passes. Coordinated with daily-brief v0.4.1 + relationships v0.2.2 (shared state contracts).

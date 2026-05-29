@@ -188,6 +188,9 @@ Invoke `log-writer` skill with:
 
 - **Source node has no `## Linked Entities` section** → surface "No linked entities found in source. This command works against the explicit Linked Entities section. Use `/cleanup` Section K (Structurally-isolated nodes) for broader connectivity analysis." Exit.
 - **Linked entity wikilink doesn't resolve to an existing file** → flag as `## Broken Links` section at the end of the report. Offer (a)rchive-wikilink-mention / (s)kip.
-- **Source modified within the last 60 seconds** → likely mid-edit. Surface "Source was just modified — give it a moment to settle, then re-run." Exit.
+- **Source modified mid-run detection (v4.12.3+):** the previous v4.12.0 implementation used a 60-second mtime gate, which false-positive'd for Obsidian users (auto-save every 2-3s makes mtime perpetually fresh). New logic distinguishes invocation source:
+  - **User-invoked** (explicit `/sync-linked-entities <slug>` OR natural-language skill trigger in current turn) → trust the user; skip the mtime gate entirely. The user is invoking AFTER their edit; assume they're done.
+  - **Auto-fired** (chained from `/network-rebalance`, `/end-day`, or a scheduled task) → still apply the mtime gate, but tightened to "modified within the last 10 seconds" (rather than 60) AND only emit a warning rather than exiting: "Source was modified <X>s ago — drift detection runs against possibly-stale-by-seconds content. Continue or wait? (c/w)"
+  - In either path, **linked nodes** are read as-is (stale risk accepted; document under "Constraints" — linked-node staleness is fine because /sync-linked-entities surfaces drift candidates, not auto-edits).
 - **Memory-as-git not enabled and no other recent-modification signal** → in arg-mode A, proceed. In smart-default mode B, surface "Need a source node arg (or enable memory-as-git for auto-detection)."
 - **All findings are `s`/skip** → no writes; just the log entry. Surface "0 changes applied. Re-run after addressing or use `/cleanup` Section L for DASHBOARD-side drift."

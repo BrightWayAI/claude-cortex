@@ -1,5 +1,5 @@
 ---
-description: Close out the work week. Runs the transcript-reviewer to surface uncaptured commitments, runs cortex's /cleanup to maintain memory health, runs /review for synthesized weekly digest, prompts for weekly reflection, and optionally pre-stages Monday's outreach via weekly-outreach. The Friday afternoon ritual that makes Mondays sharper.
+description: Close out the work week. Runs the transcript-reviewer to surface uncaptured commitments, runs cortex's /cleanup to maintain memory health, runs /review for synthesized weekly digest, prompts for weekly reflection, and optionally pre-stages Monday's relationships brief. The Friday afternoon ritual that makes Mondays sharper.
 ---
 
 # /end-week
@@ -79,14 +79,16 @@ Keep this conversational. The point is reflection, not capture-everything comple
 
 ---
 
-## Step 5 — Pre-stage Monday outreach (optional)
+## Step 5 — Pre-stage Monday relationships brief (optional)
 
-If `weekly-outreach` is installed, offer:
+If `relationships` is installed (v0.2.0+), offer:
 
-> "Want me to run `/weekly-outreach` now while you're in the headspace? It'll pull next week's external meetings, build the prioritized outreach queue (delegating to pipeline-analyst + contact-researcher if installed), draft messages, and propose CRM tasks + calendar placeholders. You can review and approve before anything's written."
+> "Want me to run `/relationships` now while you're in the headspace? It'll pull next week's external meetings, build the prioritized 3-bucket brief (new business / relationship building / network expansion), draft messages, and propose actions you can review Monday morning. Drafts only — never sends."
 
-If yes → invoke `/weekly-outreach`. The user can iterate on the plan before committing.
+If yes → invoke `/relationships`. The user can iterate before committing.
 If no → skip; user can run Monday morning.
+
+**Legacy fallback:** if `weekly-outreach` is still installed (retired plugin, kept for migration), offer to run `/weekly-outreach` instead. New users should be on `relationships`.
 
 ---
 
@@ -125,7 +127,7 @@ Confirm completion:
 
 - **Pace it.** ~15 minutes total. If the user is in a hurry, ask which steps to skip rather than skipping silently.
 - **Don't pile on.** If transcript-reviewer surfaces 20 uncaptured commitments, that's a lot. Surface them but make it easy to triage (numbers, "all," "skip").
-- **Honor decisions made earlier.** If the user said "pause Acme outreach" earlier in the week (e.g., via bizdev-outreach's HOLDING PATTERN), don't surface that contact again in pre-stage outreach.
+- **Honor decisions made earlier.** If the user said "pause Acme outreach" earlier in the week (e.g., via `/touchpoint` snooze or `relationships` HOLDING PATTERN), don't surface that contact again in pre-stage outreach.
 - **Idempotent.** Running `/end-week` twice (e.g., Thursday and Friday) shouldn't double-commit. Memory updates are append-only or update-in-place.
 
 ## When this skill is NOT the right fit
@@ -142,7 +144,7 @@ The combo of `/end-day` daily and `/end-week` Friday is the **rhythm** that make
 
 - **Memory stays fresh** (cleanup runs weekly; commits run daily) → cortex auto-recall is sharper
 - **Commitments don't slip** (transcript-reviewer catches what was said but not tracked)
-- **Mondays are pre-thought** (weekly-outreach + plan-tomorrow can be staged Friday)
+- **Mondays are pre-thought** (`/relationships` + `/plan-tomorrow` can be staged Friday)
 - **Weeks stay self-aware** (review surfaces patterns)
 
 Without these closing rituals, plugins still work but you carry more in your head. With them, the system carries it for you.

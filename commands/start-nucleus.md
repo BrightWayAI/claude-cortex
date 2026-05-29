@@ -39,7 +39,7 @@ Nucleus onboarding — status:
   Per-plugin:
     [✓] daily-brief configured
     [✗] lead-engine installed but not configured
-    [✗] weekly-outreach installed but not configured
+    [✗] relationships installed but not configured
     [—] news-curator not installed
     ...
 
@@ -74,7 +74,7 @@ If `identity.md` exists: skip to Step 2 silently.
 
 If `voice.md` is missing:
 
-> "Next, your voice. I'll have you paste 2 sample emails or messages you've written — I'll extract your tone, vocabulary, sentence rhythm, and banned phrases. All drafting plugins (lead-engine, bizdev-outreach, weekly-outreach, news-curator, client-status, referral-engine) read from here. ~5 minutes."
+> "Next, your voice. I'll have you paste 2 sample emails or messages you've written — I'll extract your tone, vocabulary, sentence rhythm, and banned phrases. All drafting plugins (lead-engine, relationships, news-curator, client-status, referral-engine, writing-style) read from here. ~5 minutes."
 >
 > "Skip if you don't plan to draft anything in your voice. Run `/setup-voice` now? (y / skip)"
 
@@ -118,8 +118,7 @@ For each installed plugin that has a setup command but no `<config-root>/plugins
 |---|---|---|
 | daily-brief | `/setup-brief` + `/setup-plan` | Section toggles, sort defaults, working hours, calendar conventions |
 | lead-engine | `/lead-setup` | Company, ICP, signal preferences, value-adds |
-| bizdev-outreach | `/setup` (in that plugin) | Positioning, products, target market |
-| weekly-outreach | `/setup-outreach` | ICP, CRM custom properties, cadence tiers |
+| relationships | `/setup-relationships` | ICP, tier definitions, voices, time-budget, integrations (auto-imports from peer plugins) |
 | referral-engine | `/setup-referrals` | Connector taxonomy, quiet threshold, ask cadence |
 | news-curator | `/setup-news` | Topic, audience, sources, post format |
 | client-status | `/setup-status` | Cadence, status template, per-client overrides |
@@ -134,10 +133,10 @@ Surface them as a single grouped menu:
 ```
 Plugin setups needed:
 
-  [1] /setup-brief + /setup-plan   (daily-brief — ~5 min)
-  [2] /lead-setup                   (lead-engine — ~10 min)
-  [3] /setup-outreach               (weekly-outreach — ~7 min)
-  [4] /setup-referrals              (referral-engine — ~5 min)
+  [1] /setup-brief + /setup-plan    (daily-brief — ~5 min)
+  [2] /lead-setup                    (lead-engine — ~10 min)
+  [3] /setup-relationships           (relationships — ~3 min for full Nucleus stack; auto-imports from peers)
+  [4] /setup-referrals               (referral-engine — ~5 min)
   ...
 
 Pick: all / numbered list (e.g., "1,3,4") / skip-all / one-at-a-time
@@ -167,7 +166,7 @@ If core-ops isn't installed, skip this step with a one-line note: "(Skipping /di
 
 If core-ops is installed AND its schedule library has not yet been registered:
 
-> "Last thing — Nucleus has a standing-schedules library for daily/weekly/monthly automation (nightly /listen, daily /end-day at 5pm, Monday /weekly-outreach prep, Friday /end-week, monthly /generate-invoices, etc.). Want to register them with Cowork's scheduled-tasks system? You can always opt out of individual ones in `core-ops/references/schedules.md`."
+> "Last thing — Nucleus has a standing-schedules library for daily/weekly/monthly automation (nightly /listen, daily /end-day at 5pm, daily /relationships morning brief, Friday /end-week, monthly /generate-invoices, etc.). Want to register them with Cowork's scheduled-tasks system? You can always opt out of individual ones in `core-ops/references/schedules.md`."
 >
 > "Run `/register-schedules`? (y / skip)"
 
@@ -189,7 +188,7 @@ Foundation:
 Per-plugin (configured today):
   ✓ daily-brief
   ✓ lead-engine
-  ✓ weekly-outreach
+  ✓ relationships
 
 Schedules:
   ✓ Registered with Cowork (nightly /listen, daily /end-day, ...)
