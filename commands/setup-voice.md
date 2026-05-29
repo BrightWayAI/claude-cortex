@@ -1,5 +1,5 @@
 ---
-description: Capture your writing voice once (descriptors, banned phrases, sentence-length preference, hook patterns, sign-off style) in one canonical voice.md. All drafting plugins (bizdev-outreach, weekly-outreach, lead-engine, news-curator, post-assembler, client-status, referral-engine) read from this file so your voice stays consistent and you only update it in one place. Honors `~/Documents/.claude-plugin-config-root` if set; otherwise writes to `~/Documents/Claude/voice.md` by default. Re-run anytime to refine.
+description: Capture your writing voice once (descriptors, banned phrases, sentence-length preference, hook patterns, sign-off style) in one canonical voice.md. All drafting plugins (relationships, lead-engine, news-curator, post-assembler, client-status, referral-engine, writing-style) read from this file so your voice stays consistent and you only update it in one place. Honors `~/Documents/.claude-plugin-config-root` if set; otherwise writes to `~/Documents/Claude/voice.md` by default. Re-run anytime to refine.
 ---
 
 # /setup-voice
