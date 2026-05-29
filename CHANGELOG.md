@@ -6,6 +6,40 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.12.1] — Fix memory/.gitignore inline-comment bug (2026-05-28)
+
+**Same-day patch to v4.12.0.**
+
+### Bug
+
+`references/memory-gitignore-template.md` v4.12.0 emitted patterns with inline `#` comments:
+
+```
+log.md                     # operations chronicle...
+hot.md                     # 7-day rolling cache...
+index.md                   # auto-maintained catalog...
+```
+
+`.gitignore` does NOT support inline comments. Each line is either a comment (starts with `#`) or a pattern — never both. Git parsed those lines as literal filenames, matching no actual file. `hot.md`, `index.md`, `log.md`, `.state.json`, and the person-mention counters were silently NOT excluded.
+
+Result for any user who ran `/setup-identity` Step 3.6 on v4.12.0: memory git repo committed those high-churn cache files on every `/end-day`, drowning the daily diff review in cache churn — defeating the whole point of memory-as-git.
+
+### Fix
+
+- **`references/memory-gitignore-template.md`** rewritten: every comment on its own line above the pattern.
+- **`/setup-identity` Step 4a (new)** — defensive validation that detects the inline-comment bug via regex (`^[^#]\S+\s+#`), rewrites the .gitignore from the corrected template, and runs `git rm --cached` on the affected cache files. Runs even when `.git/` already exists. Idempotent.
+- **`/end-day` Step 5.8** — embedded the same validation as a belt-and-suspenders check. Catches users who ran `/setup-identity` on v4.12.0 and never re-run it; daily commit ritual self-heals.
+
+### Affected users
+
+Anyone who installed cortex v4.12.0 AND ran `/setup-identity` between v4.12.0 and v4.12.1. Same-day patch — realistically a small population.
+
+Self-healing on v4.12.1 install: either re-run `/setup-identity` (explicit; repair message surfaces) OR wait for next `/end-day` (silent repair before commit).
+
+Credit: bug reported by the user during same-session post-ship verification.
+
+---
+
 ## [4.12.0] — Memory-as-git + dogfooding-driven hygiene (2026-05-28)
 
 Addresses five observations surfaced during the inaugural `/network-rebalance` walk on 2026-05-28 plus the workstream/nucleus-improvements observations from 2026-05-21. Together these close the largest cross-artifact drift gaps in the cortex substrate.
