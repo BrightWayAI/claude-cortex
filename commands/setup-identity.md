@@ -149,8 +149,11 @@ After the identity file + parent .gitignore are written, offer to initialize `<c
 
 Logic:
 1. Check whether `<config-root>/memory/` exists. If not, skip (cortex memory hasn't been bootstrapped yet — first `/end-day` will create it; init can happen then).
-2. Check whether `<config-root>/memory/.git/` exists. If yes → "Memory-as-git already initialized; skipping init."
-3. If memory exists but no git → prompt:
+2. **Symlink check (v4.12.2+):** if `memory/` is a symlink (`test -L <config-root>/memory`), surface a warning before proceeding:
+   > "⚠ `<config-root>/memory/` is a symlink pointing to `<resolved-path>`. memory-as-git's `.git/` directory will live at the symlink target. If that target lives in iCloud / Dropbox / OneDrive / Google Drive, the cloud-sync provider will sync `.git/` itself, which can corrupt across machines. Proceed only if you understand the implications. (y to continue / n to skip init)"
+   Default no in `confirm` mode; ask in `suggest` mode; proceed in `auto` mode with a logged note.
+3. Check whether `<config-root>/memory/.git/` exists. If yes → "Memory-as-git already initialized; skipping init." Then jump to Step 4a to validate the .gitignore even though we're not re-init'ing.
+4. If memory exists but no git → prompt:
    > "Initialize memory-as-git? This makes `<config-root>/memory/` a local git repo so:
    >   - Each `/end-day` commits the day's memory changes as one reviewable unit
    >   - `/morning` surfaces what changed overnight as a git diff
@@ -159,58 +162,101 @@ Logic:
    >
    > Default: yes, local-only (your memory stays on this machine). Recommended unless you have a reason to skip. (y / n / skip-for-now)"
 
-4. On `y` or default-yes (autonomy: auto):
+5. On `y` or default-yes (autonomy: auto):
    ```
    cd <config-root>/memory
 
-   # If .git/ already exists, skip git init but still validate .gitignore (4a below).
+   # If .git/ already exists, skip git init but still validate .gitignore (Step 4a below).
 
    git init -b main
    git config user.name "<identity.name from identity.md>"
-   git config user.email "<identity.email from identity.md or fallback to local@brightwayai>"
+   git config user.email "nucleus-memory@localhost"
    ```
+
+   **Email-default rationale (v4.12.2):** `nucleus-memory@localhost` is the default git-commit-author email. It carries no PII, no tenancy info, no domain leakage. It IS valid (`localhost` is a reserved TLD-equivalent for local use per RFC 6761).
+
+   The user's real email from `identity.md` is NOT used by default — every git commit author header would otherwise leak that email into any pushed remote. If the user explicitly wants their real email on commits (e.g., for off-machine collaboration with attribution), they can override via:
+   ```
+   memory_as_git:
+     commit_author_email: alice@example.com   # opt-in only; in cortex.user-context.md
+   ```
+   `/end-day` Step 5.8 reads this; falls back to the localhost default if unset.
+
    Then proceed to Step 4a.
 
-4a. **Write or validate `memory/.gitignore` (v4.12.1+ bug-aware logic):**
+Step 4a. **Write or validate `memory/.gitignore` (v4.12.2 fingerprint-precise logic):**
 
-   The v4.12.0 template emitted inline comments which `.gitignore` parses as literal filenames. This bug-fix logic detects and repairs.
+   The v4.12.0 template emitted inline comments which `.gitignore` parses as literal filenames. v4.12.1 introduced a regex-based detector that was too broad — it false-positived on legitimate user-added inline comments. v4.12.2 uses a fingerprint-precise match.
 
    ```
    target_path = <config-root>/memory/.gitignore
-   reference_template = read content from `cortex/references/memory-gitignore-template.md` Template section
+   ref_local_only = local-only variant from `references/memory-gitignore-template.md`
+   ref_remote_safe = remote-safe variant from same
+   user_context_path = <config-root>/plugins/cortex.user-context.md
+
+   # Decide which variant to write
+   remote_set = user_context_path contains a `memory_as_git.remote:` line with non-empty value
+   chosen_variant = ref_remote_safe if remote_set else ref_local_only
 
    If target_path does NOT exist:
-     Write reference_template to target_path. (Fresh install — no bug to fix.)
+     Write chosen_variant to target_path. (Fresh install — no bug to fix.)
 
    If target_path exists:
      Read its content.
-     Detect inline-comment bug: scan each non-empty line; if any line matches the pattern `^[^#]\S+\s+#` (a non-# starting character followed by whitespace and #), the bug is present.
-     If bug present:
-       Rewrite target_path from reference_template.
+
+     Detect v4.12.0 fingerprint (precise, not heuristic):
+       The v4.12.0 bug emitted exactly these 3 inline-comment lines:
+         - line containing "log.md" AND "operations chronicle"
+         - line containing "hot.md" AND "7-day rolling cache"
+         - line containing "index.md" AND "auto-maintained catalog"
+       Only treat as buggy if ALL THREE are present on a single non-comment line each.
+
+     If v4.12.0 fingerprint matches:
+       Rewrite target_path from chosen_variant.
        Run: git rm --cached hot.md index.md log.md .state.json .person-mention-counts.json .person-recall-counter.json 2>/dev/null
        (silently ignore errors for files not currently tracked)
-       Surface to user: "Detected v4.12.0 .gitignore bug (inline comments). Rewrote memory/.gitignore from corrected template and un-tracked cache files. Subsequent commits will exclude them properly."
+       In autonomy mode `suggest` or `confirm`, surface a confirmation BEFORE the rm:
+         "Detected v4.12.0 .gitignore bug. About to un-track: hot.md, index.md, log.md, .state.json, .person-mention-counts.json, .person-recall-counter.json. These files won't be deleted — just removed from git's index. Proceed? (y/n)"
+       In `auto`, log and proceed without prompt.
+     Elif chosen_variant differs from current content (e.g., promoting local→remote):
+       Surface: "Promoting to remote-safe gitignore (you configured `memory_as_git.remote`). Will exclude PII-dense files: triage-log.md, dismissed-proposals.log. Proceed? (y/n)"
+       On y: Rewrite target_path from ref_remote_safe; run git rm --cached on the newly-excluded files.
      Else:
-       Leave target_path alone (idempotent — user may have customized).
+       Leave target_path alone (idempotent — user may have customized; we don't touch).
    ```
 
-5. **Initial commit (only if `.git/` was freshly created in step 4):**
+Step 4b. **Remote-already-pushed remediation check (v4.12.2+)**
+
+   If `git config remote.origin.url` returns a value AND `git log --oneline origin/main 2>/dev/null` returns lines AND the local repo has shown the v4.12.0 fingerprint at any point (presence of `<config-root>/memory/staged/skip-logs/remote-remediation-acknowledged` would indicate already-handled — skip if so):
+
+   Surface (one-time):
+   > "Pre-v4.12.2 commits with high-churn cache files and possibly PII-dense files exist on your remote at `<remote-url>`. Local repair has un-tracked them going forward, but already-pushed history retains them. To purge remote history:
+   >
+   >   `git filter-repo --invert-paths --path hot.md --path index.md --path log.md --path .state.json --path triage-log.md --path dismissed-proposals.log`
+   >   `git push origin main --force`
+   >
+   > This rewrites history. Only do it if you're the sole user of the remote. See https://github.com/newren/git-filter-repo for installation. After remediation, mark acknowledged."
+
+   On user choosing `acknowledge` or `skip`, create the marker `<config-root>/memory/staged/skip-logs/remote-remediation-acknowledged`. Subsequent runs skip this step.
+
+Step 5. **Initial commit (only if `.git/` was freshly created in Step 5):**
    ```
    git add .
-   git commit -m "Initial memory snapshot (cortex v4.12.1 /setup-identity init)"
+   git commit -m "Initial memory snapshot (cortex v4.12.2 /setup-identity init)"
    ```
    Surface: "Memory-as-git initialized. Local repo at `<config-root>/memory/.git/`. Daily commits via `/end-day` Step 5.8; diff review via `/morning` Step 0.5."
 
-5a. On `n` or `skip-for-now`:
+Step 5a. On `n` or `skip-for-now`:
    Surface: "Skipped. Re-run `/setup-identity` later, or set `memory_as_git.enabled: true` in `<config-root>/plugins/cortex.user-context.md` and run `/end-day` to init."
 
-6. **Optional remote configuration** (only if user said `y` AND autonomy is not `auto`):
+Step 6. **Optional remote configuration** (only if user said `y` AND autonomy is not `auto`):
    > "Configure a remote for off-machine backup? (private GitHub recommended for moderate privacy; self-hosted gitea/forgejo/gitlab for higher control; press Enter to skip and stay local-only)"
 
    If user provides a URL:
    - Write `memory_as_git.remote: <url>` to `<config-root>/plugins/cortex.user-context.md`
    - Write `memory_as_git.push_on_close: true` to same
-   - Surface: "Remote configured. `/end-day` Step 5.8 will push after each commit."
+   - **Re-run Step 4a** (so the gitignore promotes to remote-safe variant before any push).
+   - Surface: "Remote configured. `/end-day` Step 5.8 will push after each commit. Gitignore promoted to remote-safe variant — triage-log.md, dismissed-proposals.log, and similar PII-dense files are now excluded from commits."
    - DO NOT run an initial push here — let the user manually `git remote add origin <url> && git push -u origin main` after verifying the remote URL.
 
 **Idempotent:** safe to re-run. Existing `.git/` is preserved.
@@ -234,7 +280,7 @@ Logic:
      ```
 5. Write user.md back.
 
-Symmetric note: `/setup-voice` Step 3.7 does the same for `[[voice]]`. Both are idempotent. The end state: `user.md` Canonical Files section links to every root-level canonical file so Obsidian's graph view shows the connections.
+Symmetric note: `/setup-voice` Step 3.5 does the same for `[[voice]]`. Both are idempotent. The end state: `user.md` Canonical Files section links to every root-level canonical file so Obsidian's graph view shows the connections.
 
 **Why this matters:** voice.md and identity.md are the most-referenced canonical files in the vault but they live at `<config-root>/` root, NOT inside `memory/`. `/relink-memory` scans only `memory/` so it can never auto-fix this. The setup commands are the only place where the link can be reliably written.
 
@@ -246,7 +292,7 @@ No user gate. Best-effort — if user.md doesn't exist or the write fails, log a
 
 Summarize what was captured (one short paragraph). Then offer:
 
-> "Identity saved to `<identity-path>`. Other plugins (lead-engine, weekly-outreach, plan-tomorrow, etc.) will read this automatically — you won't be asked these questions again. To configure a specific plugin's domain settings (CRM properties, ICP, voice, offerings catalog, etc.), run that plugin's setup command — those interviews skip identity questions and only ask plugin-specific things."
+> "Identity saved to `<identity-path>`. Other plugins (lead-engine, relationships, daily-brief, etc.) will read this automatically — you won't be asked these questions again. To configure a specific plugin's domain settings (CRM properties, ICP, voice, offerings catalog, etc.), run that plugin's setup command — those interviews skip identity questions and only ask plugin-specific things."
 
 ---
 

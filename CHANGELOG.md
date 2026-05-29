@@ -6,6 +6,63 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.12.2] — Coordinated patch: security, race-conditions, backward-compat (2026-05-28)
+
+Same-day coordinated release fixing 13 CRITICAL + 16 WARNING + 7 INFO findings surfaced by two independent post-ship review passes. Coordinated with daily-brief v0.4.1 + relationships v0.2.2 (shared state contracts).
+
+### Security/privacy
+
+- **`git config user.email` default changed** to `nucleus-memory@localhost` (was `local@brightwayai` — brand-leaking AND not RFC-valid). Real user email opt-in only via `memory_as_git.commit_author_email` in cortex.user-context.md.
+- **Memory `.gitignore` split into two variants** (`references/memory-gitignore-template.md`): **local-only** (default, tracks triage-log + dismissed-proposals locally for grep) and **remote-safe** (auto-selected when `memory_as_git.remote` set; excludes PII-dense files). Both variants verified against `git check-ignore`.
+- **Parent `.gitignore` template extended** to exclude `relationships/events.jsonl`, `snoozes.json`, `inbox/`, `today.json`. Prevents accidental config-root-level git tracking from exfiltrating relationship action history.
+- **`/morning` Step 0.5 PII advisory** before diff render — "Diff includes raw memory content; sharing this session will expose names/summaries."
+
+### Race-conditions / failure modes
+
+- **Memory write-lock pattern (new):** `/end-day` Step 5.8.0, `/listen` Step 0.8, `/morning` Step 0.5.0, `/remember` Step 3.0, `/cleanup` Step 4 all acquire `<config-root>/memory/.write-lock` (10-min stale TTL) before mutations. Coordinates concurrent commands. `.write-lock` is gitignored.
+- **Listen-in-progress marker (new):** `/listen` writes `<config-root>/memory/staged/queues/listen-in-progress` at Step 0.7; `/morning` Step 0.5.0 Check 3 detects it and pauses diff review until /listen completes.
+- **`/end-day` Step 5.8 post-commit verification:** `git status --porcelain` check after commit warns on dirty state (catches hook failures / interrupted runs).
+- **`/end-day` Step 5.8 pre-commit recovery:** detects non-empty index from a prior failed run; prompts user to commit-or-skip before adding today's changes.
+- **`/morning` Step 0.5 dirty-tree recovery:** if `git status --porcelain` shows dirty, surfaces a (c)ommit-now / (i)nspect / (s)kip prompt.
+- **`/morning` Step 0.5 HEAD~1 precheck:** `git rev-parse --verify HEAD~1` gates the diff. First-day-of-memory-git users see "Memory-as-git is fresh — first diff appears after next /end-day" instead of a git error.
+
+### Backward-compat
+
+- **`.gitignore` bug-detect changed to fingerprint-precise** (v4.12.1's regex was too broad — false-positived on legitimate user-added inline comments). v4.12.2 detects only the exact v4.12.0 buggy template: requires all three specific inline-comment lines (`log.md + operations chronicle`, `hot.md + 7-day rolling cache`, `index.md + auto-maintained catalog`).
+- **Pre-v4.12 install path:** `/end-day` Step 5.8.1 detects when `memory_as_git.remote` is set after init and promotes the gitignore from local-only to remote-safe variant (running `git rm --cached` on triage-log + dismissed-proposals).
+- **v4.12.0 → remote-pushed remediation:** `/setup-identity` Step 4b detects when user has pre-v4.12.2 commits with cache files on a remote; surfaces `git filter-repo` remediation instructions one-time, marks acknowledged.
+- **Symlink check on memory/:** Step 3.6 step 2 warns before init if `<config-root>/memory/` is a symlink (iCloud sync of .git/ corrupts across machines).
+
+### Other (Step 4 read implementation, contracts cleanup)
+
+- **`/end-day` Step 4.0 NEW — reads brief artifact state:** calls `mcp__cowork__read_widget_context(artifact_id="todays-brief")` to load `tasks_checked` + `annotations` from daily-brief v0.4.1's canonical JSON-blob localStorage shape. Pre-fills reflection prompts with task titles + candidate blockers + candidate priorities. **Sanitizes content** (paraphrases, never quotes verbatim) to keep sensitive client material out of the committed memory trail.
+- **Sub-step numbering refactor:** `/end-day` Step 5.8 split into 5.8.0 (write-lock), 5.8.1 (.gitignore validation), 5.8.2 (pre-commit recovery), 5.8.3 (compose+commit), 5.8.4 (post-commit verify), 5.8.5 (lock release).
+- **Stale references swept:** removed `weekly-outreach` + `plan-tomorrow` mentions from `/setup-identity` Step 4 (user-facing close-out line) + `/setup-voice` description.
+- **Cross-doc step number alignment:** `/setup-identity` Step 3.7 references "/setup-voice Step 3.5" correctly (was "Step 3.7").
+
+### Acceptance
+
+- [ ] `references/memory-gitignore-template.md` has two variants; both verified against `git check-ignore` (local-only tracks triage-log + dismissed-proposals; remote-safe excludes them).
+- [ ] `references/gitignore-template.md` excludes `relationships/events.jsonl`, `snoozes.json`, `inbox/`, `today.json`.
+- [ ] `/end-day` Step 4.0 reads `todays-brief` widget context.
+- [ ] `/end-day` Step 5.8 sub-steps (lock / validate / recover / commit / verify / release) all spec'd.
+- [ ] `/morning` Step 0.5 pre-flight checks (HEAD~1 / dirty / listen-in-progress) + PII advisory.
+- [ ] `/setup-identity` Step 3.6 step 4a fingerprint-precise detection; step 4b remote-pushed remediation; step 6 promotes gitignore to remote-safe on remote config.
+- [ ] `/setup-voice` description references current plugins only.
+- [ ] `/listen` Step 0.7 marker + Step 0.8 write-lock; Step 8 releases both.
+- [ ] `/remember` Step 3.0 write-lock + Step 3.6 release.
+- [ ] `plugin.json` bumped to 4.12.2.
+- [ ] Pushed to BrightWayAI/claude-cortex main.
+
+### Findings still deferred
+
+- `/cleanup` Section L baseline-stamp prompt + Section K defer-90 option (handles DASHBOARD provenance retrofit flood + Section K legacy-page flood) — pending v4.13.
+- `/sync-linked-entities` mtime check refinement (replace 60s gate with auto-fired-vs-user-invoked distinction) — pending v4.13.
+- Migration step in `/setup-relationships` for legacy weekly-outreach/bizdev-outreach user-context files — pending relationships v0.3.
+- Stale-references sweep across remaining files (end-week, start-nucleus, plan-tomorrow, process-brief table, setup-brief, setup-plan) — pending follow-up.
+
+---
+
 ## [4.12.1] — Fix memory/.gitignore inline-comment bug (2026-05-28)
 
 **Same-day patch to v4.12.0.**

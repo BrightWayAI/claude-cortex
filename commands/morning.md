@@ -23,7 +23,7 @@ If the user passed `--discard`, move the latest draft to `staged/commit-drafts/a
 
 ---
 
-## Step 0.5 — Memory diff review (v4.12.0+)
+## Step 0.5 — Memory diff review (v4.12.0+; race-aware in v4.12.2+)
 
 If memory-as-git is enabled, surface what changed in memory overnight BEFORE walking the listen draft. The diff is your safety net — it catches anything that crept into memory unintentionally (auto-commits, /listen merges from a prior /morning, off-hours /remember runs).
 
@@ -31,24 +31,64 @@ Check whether `<config-root>/memory/.git/` exists.
 - **If not** → skip silently (memory-as-git not enabled).
 - **If exists** → proceed.
 
+### Step 0.5.0 — Pre-flight checks (v4.12.2+)
+
+Before computing the diff, three safety checks:
+
 ```
 cd <config-root>/memory
-Read the date of HEAD~1 commit (git log -1 --format=%cd --date=short HEAD~1).
 
-If HEAD~1 date == today_local (no overnight commit happened, e.g., /end-day ran twice today):
+# Check 1: HEAD~1 must exist (handles first-day-of-memory-as-git case cleanly)
+if ! git rev-parse --verify HEAD~1 2>/dev/null:
+  Surface: "Memory-as-git is fresh — no prior commit to diff against. First diff will appear after the next /end-day."
+  Continue to Step 1.
+
+# Check 2: working tree must be clean (handles failed /end-day Step 5.8 case)
+dirty_count = git status --porcelain | wc -l
+if dirty_count > 0:
+  Surface: "⚠ Uncommitted memory changes from yesterday — looks like /end-day Step 5.8 may have failed. Files dirty:
+    <show first 10 lines of `git status --porcelain`>
+  Options:
+    (c)ommit-now: stage + commit with message 'Recovery from prior /end-day'
+    (i)nspect: show full status + diff, then re-prompt
+    (s)kip: continue to Step 1 without diff review (the dirty state remains)"
+  On `c`: git add . && git commit -m "Recovery commit from prior /end-day Step 5.8 failure (committed by /morning Step 0.5)"
+  On `i`: render `git status` + `git diff` paginated, then re-prompt
+  On `s`: continue to Step 1; the diff review for today's HEAD~1..HEAD will reflect the most-recent successful commit (which may be from 2+ days ago).
+
+# Check 3: /listen must not be mid-write (race avoidance)
+if exists <config-root>/memory/staged/queues/listen-in-progress:
+  Read its content (format: "<iso8601-started>|<expected-completion>")
+  if now < expected_completion + 2min grace:
+    Surface: "Overnight /listen is still running (started <X> min ago). Memory diff may be mid-update. Wait 2 min and re-run /morning, or skip diff review now and review later?"
+    On wait: exit /morning entirely with "Re-run when /listen finishes."
+    On skip: continue without diff, with note "Skipped diff review — /listen mid-write."
+  else:
+    Treat as stale marker; remove and proceed.
+```
+
+### Step 0.5.1 — Compute and render the diff
+
+```
+HEAD_prev_date = git log -1 --format=%cd --date=short HEAD~1
+
+If HEAD_prev_date == today_local (no overnight commit happened, e.g., /end-day ran twice today):
   Surface: "No memory commit since today's last close. Skipping diff review."
   Continue to Step 1.
+
 Else:
   Compute git diff HEAD~1..HEAD --stat:
     - Files changed (count by directory: client/, person/, topic/, workstream/, bizdev/, team/, etc.)
     - Insertions / deletions per file
 
   Surface a summary block:
-    "Memory changed since yesterday's commit:
+    "Memory changed since yesterday's commit (<HEAD_prev_date>):
        - <N> client nodes updated (<slug list, max 5>)
        - <M> person pages added (<slug list>)
        - <K> topic nodes modified
        - <total> insertions, <total> deletions across <files> files
+
+     ⚠ Diff content includes raw memory text (person names, conversation snippets, decision rationales). If you're screen-sharing or screen-recording this session, the diff will expose that content.
 
      Open the diff? (y / skim / skip)"
 
@@ -63,8 +103,6 @@ Else:
 The diff IS the review surface. The user can spot bad commits before they compound into wrong context for the day's sessions. If something looks wrong, `git revert HEAD` rolls back the last day's commit.
 
 **Why this runs before Step 1 (the listen draft walk):** the diff captures what HAS landed (post-commit); the listen draft captures what's STAGED (pre-commit). User reviews HEAD first to know what they're already living with, then reviews proposals to decide what else to add.
-
-**Failure mode:** if git diff fails (rare — usually no HEAD~1 yet, first day of memory-as-git), surface "Memory-as-git is fresh — no prior commit to diff against. First diff will appear tomorrow." Continue.
 
 If `cortex.user-context.md` has `memory_as_git.morning_diff: false`, skip this step (some users prefer to check diffs out-of-band via Obsidian's Git plugin).
 

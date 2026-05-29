@@ -329,11 +329,38 @@ If `memory/.person-mention-counts.json` doesn't exist or is empty (no candidates
 
 **Goal:** capture the human-readable version of what mattered today, separate from the structured commits in Step 3.
 
-Ask the user, conversationally, one at a time:
+### Step 4.0 — Pre-fill from brief artifact (v4.12.2+)
 
-1. **"Biggest thing that got done today?"** — captured as a LESSON or INSIGHT depending on shape, written to the relevant project node.
-2. **"What blocked you, if anything?"** — captured as a GOTCHA if structural, or as a BLOCKER on the project's open threads.
-3. **"What's the one thing tomorrow has to move?"** — captured as a `[P0]` next-action on the relevant project node, dated tomorrow.
+Before asking the user the reflection questions cold, READ the `todays-brief` artifact's current state via `mcp__cowork__read_widget_context(artifact_id="todays-brief")`. The returned widget context contains the localStorage state under key `brief-<today_local>`:
+
+```json
+{
+  "tasks_checked": {"task-12345": true, "task-67890": false, ...},
+  "annotations": {"inbox-thread-id": "draft reply: ...", "task-12345": "moved to tomorrow", ...},
+  "outreach_tier_collapsed": {...},
+  "last_interaction_at": "2026-05-28T14:32:00-04:00"
+}
+```
+
+(Per `daily-brief v0.4.0+` canonical localStorage contract. Shape lives in `daily-brief/commands/brief.md` Step 3.)
+
+Use the read result to pre-fill the reflection prompts:
+
+- From `tasks_checked` entries where value is `true`, look up the task titles (cross-reference the `today.json` snapshot at `<config-root>/relationships/today.json` if available, OR the most recent CRM task list cached at `<config-root>/briefs/<today_local>.md` Section 3) to surface them as "Things that got done."
+- From `annotations` entries containing keywords like "blocked", "stuck", "waiting", surface as candidate blockers.
+- From `annotations` entries containing "tomorrow", "P0", "must", surface as candidate next-day priorities.
+
+**Sanitize, don't quote verbatim.** The annotation content may contain raw business context ("Sarah is unhappy with proposal terms" → render as "Issue with proposal discussion"). The reflection captures the user's read of the day; it should NOT include verbatim sensitive client content. See nucleus contracts.md "Data-flow trace for annotations" for the privacy reasoning.
+
+If Cowork artifact tools aren't available (Claude Code), skip Step 4.0 and ask the three questions cold per Step 4.1 below.
+
+### Step 4.1 — Ask the reflection questions
+
+Ask the user, conversationally, one at a time (pre-filled candidates from Step 4.0 shown as suggestions, not assumptions):
+
+1. **"Biggest thing that got done today?"** — pre-fill with the most-substantial checked-off task if any. User can accept, edit, or override. Captured as a LESSON or INSIGHT depending on shape, written to the relevant project node.
+2. **"What blocked you, if anything?"** — pre-fill with candidate blockers from annotations. Captured as a GOTCHA if structural, or as a BLOCKER on the project's open threads.
+3. **"What's the one thing tomorrow has to move?"** — pre-fill with candidate priorities from annotations. Captured as a `[P0]` next-action on the relevant project node, dated tomorrow.
 
 These three answers also feed Step 5's pre-stage as section-6 content of tomorrow's brief (yesterday's reflection, from tomorrow's perspective).
 
@@ -416,7 +443,7 @@ Adjust the metric counts based on what actually ran (don't include reflection-co
 
 ---
 
-## Step 5.8 — Memory-as-git commit (v4.12.0+)
+## Step 5.8 — Memory-as-git commit (v4.12.0+; race-aware in v4.12.2+)
 
 If memory-as-git is enabled, auto-commit today's memory changes. This makes the day a reviewable unit and gives `/morning` a diff to surface.
 
@@ -424,24 +451,82 @@ Check whether `<config-root>/memory/.git/` exists.
 - **If not** → skip (memory-as-git not enabled; nothing to do). Optionally surface a one-line: "Memory-as-git not initialized. Run `/setup-identity` to enable, or set `memory_as_git.enabled: true` in `<config-root>/plugins/cortex.user-context.md`."
 - **If exists** → proceed.
 
+### Step 5.8.0 — Memory write-lock acquisition (v4.12.2+)
+
+Before any git operation, acquire the memory write-lock at `<config-root>/memory/.write-lock`.
+
+```
+LOCK_PATH = <config-root>/memory/.write-lock
+
+If LOCK_PATH exists:
+  Read its content (format: "<command>|<iso8601-acquired-at>|<pid-or-session-id>")
+  age_seconds = now - acquired_at
+  If age_seconds > 600 (10 min):
+    Treat as stale; remove and proceed (likely a crashed run).
+  Else:
+    Surface to user: "Memory write-lock held by <command> since <acquired-at> (<age>s ago). Another command is mid-write — skipping memory commit; retry next /end-day, or remove <LOCK_PATH> manually if you're certain no command is running."
+    Exit Step 5.8 with a status note. Continue to Step 6 (close).
+Else:
+  Write "end-day|<iso8601-now>|<session-id-or-pid>" to LOCK_PATH.
+
+# (The lock is released at end of Step 5.8 — or on any failure path — by deleting LOCK_PATH.)
+```
+
+The same lock is acquired by `/listen` Step 4 (commit-drafts → memory writes), `/morning` Step 2 (per-proposal merges), `/remember` Step 3 (node writes), `/cleanup` Step 4 (executions), and `/research-gaps`/`merge-research-draft` writes. Each grabs the lock before any node-file mutation.
+
+The lock is `memory/.write-lock` — covered by both gitignore variants (local-only and remote-safe).
+
+### Step 5.8.1 — Defensive .gitignore validation (v4.12.2+ fingerprint-precise)
+
 ```
 cd <config-root>/memory
 
-# Defensive .gitignore validation (v4.12.1+ — catches the v4.12.0 inline-comment bug):
-#   1. If memory/.gitignore does not exist → write from references/memory-gitignore-template.md Template section.
-#   2. If it exists, scan each non-empty line for the inline-comment bug pattern:
-#        `^[^#]\S+\s+#`  (non-# starting character + whitespace + #)
-#      If detected:
-#        a. Rewrite memory/.gitignore from references/memory-gitignore-template.md.
-#        b. Run: git rm --cached hot.md index.md log.md .state.json .person-mention-counts.json .person-recall-counter.json 2>/dev/null
-#        c. Log to user once: "Repaired v4.12.0 .gitignore bug; un-tracked high-churn cache files."
-#   3. Otherwise leave it alone (user may have customized).
-# Reference: see references/memory-gitignore-template.md "Migration from v4.12.0 installs" section.
+remote_set = (cortex.user-context.md contains memory_as_git.remote: with non-empty value)
+chosen_variant = remote-safe if remote_set else local-only
 
+# Detect v4.12.0 fingerprint precisely (per references/memory-gitignore-template.md Step 4a logic):
+#   v4.12.0 had ALL THREE inline-comment lines:
+#     - "log.md" + "operations chronicle" on one line
+#     - "hot.md" + "7-day rolling cache" on one line
+#     - "index.md" + "auto-maintained catalog" on one line
+# Only treat as buggy if ALL THREE present.
+
+if memory/.gitignore does not exist:
+  Write chosen_variant to memory/.gitignore.
+elif v4.12.0 fingerprint detected:
+  Rewrite memory/.gitignore from chosen_variant.
+  git rm --cached hot.md index.md log.md .state.json .person-mention-counts.json .person-recall-counter.json 2>/dev/null
+  Log once: "Repaired v4.12.0 .gitignore bug; un-tracked high-churn cache files."
+elif remote_set AND memory/.gitignore matches local-only fingerprint (contains log.md but not triage-log.md):
+  Rewrite memory/.gitignore from remote-safe variant.
+  git rm --cached triage-log.md dismissed-proposals.log 2>/dev/null
+  Log once: "Promoted to remote-safe gitignore; un-tracked PII-dense files."
+else:
+  Leave it alone (user may have customized).
+```
+
+### Step 5.8.2 — Pre-commit index safety check (v4.12.2+)
+
+```
+# Check whether the index already has uncommitted changes from a prior failed Step 5.8 attempt.
+prior_index = git diff --cached --stat | wc -l
+
+if prior_index > 0:
+  Surface: "Uncommitted changes from a prior /end-day attempt are staged. Commit those alone now, then continue with today's changes? (y/n/show)"
+  On y: git commit -m "Recovery commit from prior failed /end-day"
+  On show: render `git diff --cached`, then re-prompt.
+  On n: skip Step 5.8 entirely with note; user can investigate manually.
+
+# Now proceed with today's add.
 git add .
 git diff --cached --stat
+```
 
-If staged changes is empty → log "no memory changes today" and exit Step 5.8.
+### Step 5.8.3 — Compose + commit
+
+```
+If staged changes is empty → log "no memory changes today", release lock, and exit Step 5.8.
+
 Otherwise compose commit message:
   <today_local> day close — <N> nodes touched, <K> entries added, <D> demoted, <A> archived
   Sources today: <commit-source-summary>
@@ -450,6 +535,21 @@ memory/log.md entries for today and counting occurrences. Example:
   "1 /listen merge via /morning · 3 /remember runs · 1 /research-gaps merge · /cleanup Section H archive"
 
 git commit -m "<message>"
+```
+
+### Step 5.8.4 — Post-commit verification (v4.12.2+)
+
+```
+post_status = git status --porcelain | wc -l
+if post_status > 0:
+  Surface: "⚠ Memory commit succeeded but working tree is still dirty: <files>. This may indicate a race (another command mutated memory mid-commit) or a hook side-effect. Inspect: cd <config-root>/memory && git status."
+  Log the dirty state to memory/log.md.
+```
+
+### Step 5.8.5 — Release the write-lock
+
+```
+Always (on success or failure path): rm <config-root>/memory/.write-lock
 ```
 
 **Optional push:**

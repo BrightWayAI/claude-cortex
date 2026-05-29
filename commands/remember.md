@@ -305,6 +305,24 @@ Memory is stored in `~/Documents/Claude/memory/`.
 
 If the directory cannot be accessed, explain that memory cannot be persisted without this folder and stop.
 
+### Step 3.0 — Acquire memory write-lock (v4.12.2+)
+
+If memory-as-git is enabled (`<config-root>/memory/.git/` exists), acquire the write-lock to coordinate with `/end-day` Step 5.8, `/listen`, `/morning`, `/cleanup`, and other memory-mutating commands.
+
+```
+LOCK_PATH = <config-root>/memory/.write-lock
+If LOCK_PATH exists AND age < 10 min:
+  Surface: "Memory write-lock held by <command-from-content> — wait or override?"
+  In `auto` autonomy: wait 5s and retry once; on second contention, log + skip the write.
+  In `suggest`: ask user.
+Else (no lock, or stale lock > 10 min):
+  Write "remember|<iso8601-now>|<session-id>" to LOCK_PATH.
+
+# Release the lock at the END of Step 3 (after node + DASHBOARD writes complete), even on partial failure.
+```
+
+If memory-as-git is NOT enabled, skip the lock entirely (no coordination needed when there's no git layer).
+
 1. Determine the file path from the node ID:
    - If node has a prefix (e.g., `client:acme-corp`): `memory/{prefix}/{slug}.md`
    - If no prefix (e.g., `hiring`): `memory/{node-id}.md`
@@ -679,6 +697,16 @@ Create the file if it doesn't exist. Idempotent — multiple `/remember` calls j
 This step does NOT regenerate `<config-root>/memory/index.md`. That happens at the next `/end-day` Step 5.5, the next `/cleanup` Step 4.5, or an explicit `/reindex`. Synchronously regenerating on every `/remember` would chunk fast capture sessions.
 
 If the reindex-queue file ever exceeds 200 lines, the next consumer of it (indexer) ignores the contents and just runs a full regeneration — the queue is a *hint*, not a critical record.
+
+## Step 3.6 — Release memory write-lock (v4.12.2+)
+
+If acquired in Step 3.0, release it now:
+
+```
+rm <config-root>/memory/.write-lock 2>/dev/null
+```
+
+Silent on no-op. Must run on success AND failure paths (use trap / try-finally semantics).
 
 Silent mode (auto-commit) writes the queue line too. The next session's `/recall` auto-fire will trigger the next index refresh chain.
 

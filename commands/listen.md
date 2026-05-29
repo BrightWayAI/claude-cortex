@@ -36,6 +36,41 @@ If `<config-root>/archive/<target_date>/` already exists AND mode is not `--rewr
 
 ---
 
+## Step 0.7 — Write listen-in-progress marker (v4.12.2+)
+
+Before any memory mutation, write `<config-root>/memory/staged/queues/listen-in-progress` with content `<iso8601-started>|<iso8601-expected-completion>` (expected completion = now + 30 min as a conservative default; can be adjusted based on archive size).
+
+```
+mkdir -p <config-root>/memory/staged/queues/
+echo "$(date -Iseconds)|$(date -Iseconds -d '+30 min')" > <config-root>/memory/staged/queues/listen-in-progress
+```
+
+The marker is read by `/morning` Step 0.5.0 Check 3 to detect a still-running /listen and pause the diff review until completion.
+
+The marker is deleted at the end of Step 7.5 (Log to chronicle), on success or failure.
+
+If the marker already exists when /listen starts:
+- Read its content; check if expected_completion is in the past + 2 min grace → treat as stale, overwrite.
+- Otherwise surface: "Another /listen is already running (started <X> min ago, expected complete <Y> min from now). Exit and let it finish? (y to exit / f to force-overwrite)"
+
+## Step 0.8 — Acquire memory write-lock (v4.12.2+)
+
+Same pattern as `/end-day` Step 5.8.0. Acquire `<config-root>/memory/.write-lock`:
+
+```
+LOCK_PATH = <config-root>/memory/.write-lock
+If LOCK_PATH exists:
+  age_seconds = now - <acquired-at from file content>
+  If age_seconds > 600:
+    Treat as stale; remove and proceed.
+  Else:
+    Surface: "Memory write-lock held by <command> — /listen will wait 60s and retry once." Sleep, retry. After two retries, abort with "Memory busy — try /listen again later." Note: /listen runs unattended (cron), so on abort, log to memory/log.md and exit cleanly.
+Else:
+  Write "listen|<iso8601-now>|<session-id-or-pid>" to LOCK_PATH.
+
+# Lock released at end of Step 7.5 — or any failure path — by deleting LOCK_PATH.
+```
+
 ## Step 1 — Pull yesterday's substrate (skipped in --remine)
 
 For each enabled note source per `<config-root>/plugins/cortex.user-context.md` and `/setup-sources`:
@@ -207,6 +242,17 @@ Print a one-line summary to stdout (visible to scheduled-task logs):
 ```
 /listen <target_date> complete: <N> proposals staged in staged/commit-drafts/<target_date>.md. Run /morning to review.
 ```
+
+## Step 8 — Release locks (v4.12.2+)
+
+Always (success or failure path):
+
+```
+rm <config-root>/memory/staged/queues/listen-in-progress 2>/dev/null
+rm <config-root>/memory/.write-lock 2>/dev/null
+```
+
+Both removals are silent on no-op. Use `trap` semantics in shell or `try/finally` in code — the locks MUST be released even if Step 1-7 errored. Otherwise subsequent `/listen` or `/morning` runs will see stale locks.
 
 Exit with status 0 on success; non-zero only on hard failures (config-root missing, all sources failed, etc.).
 
