@@ -426,9 +426,21 @@ Check whether `<config-root>/memory/.git/` exists.
 
 ```
 cd <config-root>/memory
-# Ensure memory/.gitignore exists; rewrite from references/memory-gitignore-template.md if missing.
+
+# Defensive .gitignore validation (v4.12.1+ — catches the v4.12.0 inline-comment bug):
+#   1. If memory/.gitignore does not exist → write from references/memory-gitignore-template.md Template section.
+#   2. If it exists, scan each non-empty line for the inline-comment bug pattern:
+#        `^[^#]\S+\s+#`  (non-# starting character + whitespace + #)
+#      If detected:
+#        a. Rewrite memory/.gitignore from references/memory-gitignore-template.md.
+#        b. Run: git rm --cached hot.md index.md log.md .state.json .person-mention-counts.json .person-recall-counter.json 2>/dev/null
+#        c. Log to user once: "Repaired v4.12.0 .gitignore bug; un-tracked high-churn cache files."
+#   3. Otherwise leave it alone (user may have customized).
+# Reference: see references/memory-gitignore-template.md "Migration from v4.12.0 installs" section.
+
 git add .
-git diff --cached --stat   ← capture the day's diff summary for the commit message
+git diff --cached --stat
+
 If staged changes is empty → log "no memory changes today" and exit Step 5.8.
 Otherwise compose commit message:
   <today_local> day close — <N> nodes touched, <K> entries added, <D> demoted, <A> archived

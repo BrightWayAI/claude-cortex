@@ -162,16 +162,46 @@ Logic:
 4. On `y` or default-yes (autonomy: auto):
    ```
    cd <config-root>/memory
+
+   # If .git/ already exists, skip git init but still validate .gitignore (4a below).
+
    git init -b main
    git config user.name "<identity.name from identity.md>"
    git config user.email "<identity.email from identity.md or fallback to local@brightwayai>"
-   Write <config-root>/memory/.gitignore from references/memory-gitignore-template.md
+   ```
+   Then proceed to Step 4a.
+
+4a. **Write or validate `memory/.gitignore` (v4.12.1+ bug-aware logic):**
+
+   The v4.12.0 template emitted inline comments which `.gitignore` parses as literal filenames. This bug-fix logic detects and repairs.
+
+   ```
+   target_path = <config-root>/memory/.gitignore
+   reference_template = read content from `cortex/references/memory-gitignore-template.md` Template section
+
+   If target_path does NOT exist:
+     Write reference_template to target_path. (Fresh install — no bug to fix.)
+
+   If target_path exists:
+     Read its content.
+     Detect inline-comment bug: scan each non-empty line; if any line matches the pattern `^[^#]\S+\s+#` (a non-# starting character followed by whitespace and #), the bug is present.
+     If bug present:
+       Rewrite target_path from reference_template.
+       Run: git rm --cached hot.md index.md log.md .state.json .person-mention-counts.json .person-recall-counter.json 2>/dev/null
+       (silently ignore errors for files not currently tracked)
+       Surface to user: "Detected v4.12.0 .gitignore bug (inline comments). Rewrote memory/.gitignore from corrected template and un-tracked cache files. Subsequent commits will exclude them properly."
+     Else:
+       Leave target_path alone (idempotent — user may have customized).
+   ```
+
+5. **Initial commit (only if `.git/` was freshly created in step 4):**
+   ```
    git add .
-   git commit -m "Initial memory snapshot (cortex v4.12.0 /setup-identity init)"
+   git commit -m "Initial memory snapshot (cortex v4.12.1 /setup-identity init)"
    ```
    Surface: "Memory-as-git initialized. Local repo at `<config-root>/memory/.git/`. Daily commits via `/end-day` Step 5.8; diff review via `/morning` Step 0.5."
 
-5. On `n` or `skip-for-now`:
+5a. On `n` or `skip-for-now`:
    Surface: "Skipped. Re-run `/setup-identity` later, or set `memory_as_git.enabled: true` in `<config-root>/plugins/cortex.user-context.md` and run `/end-day` to init."
 
 6. **Optional remote configuration** (only if user said `y` AND autonomy is not `auto`):
