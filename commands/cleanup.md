@@ -255,6 +255,35 @@ Cap: 10 DECISIONs per `/cleanup` run. Run too many at once and the user fatigues
 
 ---
 
+### L.0 — First-run baseline-stamp (v4.12.3+)
+
+Before running Section L (or K) on a system that pre-dates v4.12.0, check for a baseline marker:
+
+```
+marker = <config-root>/memory/staged/skip-logs/dashboard-baseline-acknowledged
+```
+
+If marker does NOT exist (first /cleanup run after v4.12.3 install), surface BEFORE Section L:
+
+> "DASHBOARD has <N> lines without provenance comments (predates the v4.12.0 provenance addition). Section L would flag all of them as 'missing provenance' candidates and surface 15 per run — multi-run migration grind for existing users.
+>
+> Three options:
+>   (b)aseline-stamp ALL existing lines as `<!-- by:manual @ <today> -->` to defer them for 60 days. Section L will then surface only lines that actually need attention going forward. Recommended.
+>   (w)alk individually as Section L normally does — 15 lines per /cleanup run, ~<N/15> runs to clear backlog.
+>   (s)kip Section L entirely for this run; baseline decision deferred.
+>
+> Choose: b / w / s"
+
+On `b`: walk DASHBOARD.md, append `<!-- by:manual @ <today_local> -->` to every non-empty line that lacks a provenance comment. Write the marker file. Proceed to Section L (will surface only the rare line that has expired provenance from an explicit owning command).
+
+On `w`: skip the baseline; proceed to Section L which walks lines as documented below.
+
+On `s`: skip Section L entirely; re-prompt next run.
+
+**Same pattern for Section K** (graph-isolation, v4.11+). First /cleanup run after v4.12.3 install on legacy memory will surface hundreds of structurally-isolated nodes. Marker: `<config-root>/memory/staged/skip-logs/section-k-baseline-acknowledged`. Same three-option prompt: `(b)aseline-defer` writes per-slug entries to `staged/skip-logs/sectionK-defer.md` with `resurface-after: <today + 90d>`; `(w)alk` per normal Section K behavior; `(s)kip` for this run.
+
+---
+
 ### L. DASHBOARD line staleness via provenance (v4.12.0+)
 
 Scan `<config-root>/memory/DASHBOARD.md` for stale lines using the provenance markers written by `/remember` Step 3 (and ideally by every command that writes DASHBOARD entries). Each line should carry `<!-- by:<command> @ <YYYY-MM-DD> -->`. Stale signals:
@@ -299,7 +328,18 @@ Cap: 15 stale lines per `/cleanup` run. Prioritize by age (oldest first) then by
 
 **On `d` (delete):** remove the line. Log to `staged/skip-logs/dashboard-prune.md` with the deleted text + date.
 
-**On `s` (skip):** no action.
+**On `s` (skip):** no action; log to `<config-root>/memory/staged/skip-logs/dashboard-prune.md` with `(line-content, skip-date, reason-code)` where `reason-code` is a **constrained enum (v4.12.3+)**:
+
+- `not-stale` — user judges the line still relevant despite the age
+- `intentional-archive` — keeping for historical visibility
+- `pending-review` — defer to next run
+- `unclear` — generic skip
+
+**Free-form text is NOT accepted in this log** — same privacy reasoning as the `schema-validation.md` enum constraint shipped in relationships v0.2.2: free-form rationale captures PII ("Sarah is going through a divorce, kept the line as historical context") which then sits in a screenshot-able log. If the user wants to capture nuanced reasoning, put it in the DASHBOARD line itself or the related node's Notes section.
+
+### L.1 — Skip-log enum for `sync-linked.md` (v4.12.3+)
+
+Same constraint applies to `<config-root>/memory/staged/skip-logs/sync-linked.md` (written by `/sync-linked-entities` on user `(s)kip` action). The previously-free-form `reason` field is now constrained to the same enum: `not-stale | intentional-archive | pending-review | unclear`. Existing entries with free-form text continue to parse; new entries use the enum.
 
 This section closes the dogfooding gap surfaced 2026-05-28: DASHBOARD accumulates stale lines because nothing actively detects them. Provenance + this scan turns staleness from invisible drift into a routine `/cleanup` review.
 
