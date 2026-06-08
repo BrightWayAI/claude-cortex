@@ -1,5 +1,5 @@
 ---
-description: End-of-day orchestration ritual (v4.2+). Chains five steps with user gates between them — inbox triage for tomorrow, transcript review for uncaptured commitments, cortex auto-commit with Phase 4 cheap-tier triage, reflective prompts, and pre-stage tomorrow's brief artifact. Run once per work day, late afternoon. Takes 10-15 minutes including user-gated decisions.
+description: End-of-day orchestration ritual (v4.13+). Opens with a per-source consent + cost gate (Today's Brief required & first), mines the brief artifact (task/outreach actions → memory write-backs + suppression learning into surfacing-prefs.md), surfaces the day's learnings as a plain-language narrative then proposes memories AND forgettings side by side, walks proposals batchably, proposes tomorrow's priorities/outreach individually, asks "anything else," offers to log anything to HubSpot, and captures a reflection appended to both the brief markdown and a longitudinal reflections.md store. Quick mode by default; --full adds transcript/inbox/Slack mining. Run once per work day, late afternoon.
 ---
 
 # /end-day
@@ -114,6 +114,46 @@ See `references/migrations.md` for the pattern and `commands/migrate-staged-subs
 If transcripts ≥ 2 OR inbox ≥ 5, surface a one-line prompt: "Heads up — you have <N> transcripts and <M> inbox threads from today. Want the full close (`/end-day --full`)? (default: no)" — default `no` after ~5s. If user says yes, restart in `--full` mode.
 
 If transcripts and inbox are both low, **don't ask** — just run the quick chain. Don't introduce a prompt when there's nothing to prompt about.
+
+---
+
+## Step 0.7 — Source review & cost gate (B.1 — v4.13+)
+
+Before reading anything, present **one lightweight batch card** (not five sequential yes/no prompts) listing the sources to be reviewed, each with a checkbox (default on/off per config) and an **approximate cost shown before running**.
+
+Sources, in priority order:
+
+1. **Today's Brief responses** — *required input, always first, never a checkbox.* Read the `todays-brief` widget context (tasks, annotations, outreach actions) in Step 2c. Cheapest and highest-signal source.
+2. **Transcripts** (Granola/Gemini) — today's meetings. (full mode)
+3. **Email** (Gmail) — today's threads where the user is a participant. (full mode)
+4. **Slack** — configured channels/DMs since yesterday. (full mode)
+5. **CRM** (HubSpot) — today's deal/task/activity changes. (full / activity-miner)
+
+**Cost estimate model.** For each source, estimate `volume × per-unit token cost` and convert to a rough dollar figure, e.g. *"Transcripts: 2 meetings (~14k tokens) ≈ $0.05"*, *"Email: 23 threads, ~4 likely-relevant ≈ $0.03"*. Show a **running total** at the bottom. Do a fast pre-count (the same counts the quick-mode auto-offer uses) to fill in volumes; if a count is unavailable, show "~" and estimate conservatively.
+
+Card shape:
+
+```
+Tonight's close will review these sources. Estimated cost shown before running.
+
+  [✓] Today's Brief responses   — required, always first      ~$0.00
+  [✓] Transcripts               — 2 meetings (~14k tok)       ≈ $0.05
+  [✓] Email                     — 23 threads, ~4 relevant     ≈ $0.03
+  [ ] Slack                     — 3 channels since yesterday  ≈ $0.02
+  [✓] CRM                       — today's deal/task changes   ≈ $0.01
+  ─────────────────────────────────────────────────────────────────
+  Running total (checked)                                     ≈ $0.09
+
+  [R] Review all   ·   [C] Let me choose (toggle rows)   ·   [G] Go
+```
+
+- **Quick mode:** only "Today's Brief responses" + "CRM" (activity-miner) are in scope; the card is trivially small. Show it only if there's more than the brief to review — otherwise skip straight to Step 2c.
+- **Full mode:** show the full card. Default checkbox states come from `<config-root>/plugins/cortex.user-context.md` `end_day.sources:` if set, else all-on except Slack.
+- Respect the **autonomy slider** (`references/autonomy.md`): in `auto` mode, skip the card and review the default-on set; in `suggest`/`confirm`, show it.
+
+Whatever the user unchecks is **skipped and logged** so Step 6's summary is honest about what was and wasn't reviewed. Record the skipped set in memory for the close summary ("Reviewed: brief, transcripts, CRM. Skipped: email, Slack.").
+
+> Design note: this is one card with checkboxes + costs + a single confirm. Never gate each source behind its own prompt.
 
 ---
 
@@ -276,6 +316,90 @@ Accepted proposals (and edits) are passed forward to Step 3 as additional input 
 
 ---
 
+## Step 2c — Mine the brief artifact (B.1 source #1 — ALWAYS runs, both modes — v4.13+)
+
+The brief is the user's most explicit daily signal, yet historically it was the one source `/end-day` never mined. This step closes that loop. It runs in **quick mode and full mode** — the brief is the required first source from Step 0.7.
+
+### Step 2c.0 — Read the brief state
+
+Read the `todays-brief` artifact via `mcp__cowork__read_widget_context(artifact_id="todays-brief")`. Parse the localStorage blob at key `brief-<today_local>` (canonical v0.5.0 shape — see `daily-brief/commands/brief.md` localStorage contract):
+
+```json
+{
+  "tasks":            { "task-123": { "action": "done|delegate|skip|not_important", "detail": "", "ts": "", "name": "" } },
+  "annotations":      { "task-123": "free text", "inbox-...": "..." },
+  "outreach_actions": { "contact-1": { "name": "", "action": "sent|skip|nudge|let_go|booked|dead", "bucket": "", "signal": "", "value_add": "", "detail": "", "ts": "" } },
+  "last_interaction_at": "ISO8601"
+}
+```
+
+Back-compat: a `tasks_checked: {id: bool}` map (v0.4.x) maps each `true` → `{action: "done"}`.
+
+If Cowork artifact tools aren't available (Claude Code) or no `todays-brief` artifact exists, skip Step 2c with a one-line note and continue. Don't fabricate brief actions.
+
+### Step 2c.1 — Write back task actions (per surfacing-prefs taxonomy)
+
+For each entry in `tasks`, apply the action's write-back (taxonomy is canonical in `<config-root>/memory/surfacing-prefs.md` "Action taxonomy"):
+
+| Action | Write-back |
+|---|---|
+| `done` | Mark the source node action COMPLETED (project node `## Next Actions`); if CRM-linked and not already closed by `/process-brief`, queue COMPLETED. **Candidate "biggest thing done"** → carry to Step 4 reflection pre-fill. |
+| `delegate` (detail = who) | Reassign in the source node (`[WAITING:<who>]`); if CRM connected and no delegatee task exists yet, create one. Log the delegation. |
+| `skip` (detail = duration) | Defer; **increment a per-task skip counter** in `<config-root>/memory/.brief-skip-counts.json` (`{task_id: {count, last_skipped, title}}`). Feeds the repeat-ignore rule (Step 2c.3). |
+| `not_important` | Append the item to `surfacing-prefs.md` **Do-not-resurface** (Step 2c.3) and demote/close the source node action. |
+
+`annotations` that weren't already handled by `/process-brief` route the same way `/process-brief` Step 2 routes them (draft_reply / reschedule_task / dismiss / clarify). If `/process-brief` already ran today (check `daily-brief.dismissed-log.md` / the brief's processed section), don't double-act — only handle annotations with no recorded downstream action.
+
+### Step 2c.2 — Write back outreach actions
+
+For each entry in `outreach_actions`, write to the relevant person/bizdev node (idempotent — skip if `/process-brief` already logged the same touch today):
+
+- `sent` → log a touch + the `value_add` used on the person/bizdev node Recent Interactions; roll `bucket` + `signal` + `value_add` into outreach analytics.
+- `booked` → advance the pipeline stage + create a prep task.
+- `nudge` → log a follow-up touch.
+- `let_go` / `dead` → mark dead, remove from the active queue.
+- `skip` → defer reappearance by `detail`.
+
+Bucket/value-add/signal roll up into outreach analytics over time (append a line to `<config-root>/relationships/outreach-analytics.jsonl` if relationships is installed: `{date, contact, action, bucket, signal, value_add}`).
+
+### Step 2c.3 — Suppression learning (writes surfacing-prefs.md)
+
+This is the learning half — what the user explicitly skips/dismisses teaches the brief to stop surfacing noise.
+
+1. **`not_important` actions** → for each, append to `surfacing-prefs.md` **Do-not-resurface** with a reason and source:
+   `- **<title>** (<source node/id>) — marked not-important via brief <today>. [suppressed:<today>, reason:user-stated-unimportant]`
+   Also demote/close the source node action so it stops generating the task.
+
+2. **Repeat-ignore rule** → read `.brief-skip-counts.json`. For any task surfaced ≥3 times with 0 `done`/`delegate` actions (only carryover or `skip`), surface a one-line proposal:
+   > "`<title>` has been surfaced <N> times and you've never acted on it. Move it to do-not-resurface? (y / keep / never-ask)"
+   On `y` → append to Do-not-resurface with `reason:repeat-ignore`. On `keep` → reset nothing, it'll re-ask after 3 more. On `never-ask` → mark the counter entry `suppress_prompt: true`.
+   In `auto` autonomy, apply repeat-ignore suppressions silently and log them.
+
+3. **Create the file if missing** — if `surfacing-prefs.md` doesn't exist, create it from the template in `references/surfacing-prefs-template.md` (Do-not-resurface / Surfacing rules / Action taxonomy / Changelog) before writing.
+
+Append a Changelog line to `surfacing-prefs.md` summarizing what was suppressed this close.
+
+### Step 2c.4 — Feed forward
+
+- "Biggest thing done" candidates (from `done` actions) → Step 4 reflection pre-fill.
+- Surviving incomplete P0/P1 tasks (skipped or untouched, not suppressed) → Step 4.5 tomorrow-priorities proposal.
+- Brief mining proposals (any learnings inferred from annotations) join the merged proposal set reviewed in Step 2b's gate if full mode ran, or are committed directly via Step 3 in quick mode.
+
+---
+
+## Step 2.9 — Learnings-first narrative, then memories AND forgettings (B.2 — v4.13+)
+
+Before walking individual proposals, **say what today was about in plain language first** — a short narrative ("here's what today was about"), not raw proposals. Two or three sentences synthesized from the brief actions, the day's transcripts/conversations (full mode), and the reflection candidates. This orients the user before any accept/reject decisions.
+
+Then present **memories and forgettings side by side** — forgettings are first-class, not an afterthought:
+
+- **Memories** (proposed adds/updates): new/updated knowledge, decisions, relationship context. Each shows **type, confidence, target node, source citation**.
+- **Forgettings** (proposed removals): stale facts to demote/archive (from the v4.4 decay layer surfacing Cold/Dormant entries touched today), items to suppress (the `not_important` + repeat-ignore proposals from Step 2c.3), and superseded beliefs (concept-drift flags). Each shows what's being demoted/suppressed and why.
+
+The unified review gate (Step 2b in full mode, or a compact version here in quick mode) walks both columns with the batchable controls in B.4 (below). Forgettings use the same accept/edit/skip affordances as memories.
+
+---
+
 ## Step 3 — Cortex auto-commit with cheap-tier triage
 
 **Goal:** capture the day's learnings, decisions, and observations to memory — without burning Sonnet tokens on trivial conversations.
@@ -329,26 +453,15 @@ If `memory/.person-mention-counts.json` doesn't exist or is empty (no candidates
 
 **Goal:** capture the human-readable version of what mattered today, separate from the structured commits in Step 3.
 
-### Step 4.0 — Pre-fill from brief artifact (v4.12.2+)
+### Step 4.0 — Pre-fill from brief artifact (v4.13+ reads v0.5.0 shape)
 
-Before asking the user the reflection questions cold, READ the `todays-brief` artifact's current state via `mcp__cowork__read_widget_context(artifact_id="todays-brief")`. The returned widget context contains the localStorage state under key `brief-<today_local>`:
+Reuse the brief state already read in Step 2c (`mcp__cowork__read_widget_context(artifact_id="todays-brief")` → `brief-<today_local>`, canonical v0.5.0 shape: `tasks` / `annotations` / `outreach_actions`). Don't re-read if Step 2c already loaded it.
 
-```json
-{
-  "tasks_checked": {"task-12345": true, "task-67890": false, ...},
-  "annotations": {"inbox-thread-id": "draft reply: ...", "task-12345": "moved to tomorrow", ...},
-  "outreach_tier_collapsed": {...},
-  "last_interaction_at": "2026-05-28T14:32:00-04:00"
-}
-```
+Pre-fill the reflection prompts from the mined actions:
 
-(Per `daily-brief v0.4.0+` canonical localStorage contract. Shape lives in `daily-brief/commands/brief.md` Step 3.)
-
-Use the read result to pre-fill the reflection prompts:
-
-- From `tasks_checked` entries where value is `true`, look up the task titles (cross-reference the `today.json` snapshot at `<config-root>/relationships/today.json` if available, OR the most recent CRM task list cached at `<config-root>/briefs/<today_local>.md` Section 3) to surface them as "Things that got done."
-- From `annotations` entries containing keywords like "blocked", "stuck", "waiting", surface as candidate blockers.
-- From `annotations` entries containing "tomorrow", "P0", "must", surface as candidate next-day priorities.
+- **Biggest thing done** ← the "biggest thing done" candidates carried forward from Step 2c.4 (tasks with `action == "done"`, most-substantial first; title from `tasks[id].name`).
+- **What blocked you** ← `annotations` containing "blocked", "stuck", "waiting"; and any `delegate` actions (handed off because blocked).
+- **One thing tomorrow has to move** ← `annotations` containing "tomorrow", "P0", "must"; and the top surviving incomplete P0 from Step 2c.4.
 
 **Sanitize, don't quote verbatim.** The annotation content may contain raw business context ("Sarah is unhappy with proposal terms" → render as "Issue with proposal discussion"). The reflection captures the user's read of the day; it should NOT include verbatim sensitive client content. See nucleus contracts.md "Data-flow trace for annotations" for the privacy reasoning.
 
@@ -358,11 +471,11 @@ If Cowork artifact tools aren't available (Claude Code), skip Step 4.0 and ask t
 
 Ask the user, conversationally, one at a time (pre-filled candidates from Step 4.0 shown as suggestions, not assumptions):
 
-1. **"Biggest thing that got done today?"** — pre-fill with the most-substantial checked-off task if any. User can accept, edit, or override. Captured as a LESSON or INSIGHT depending on shape, written to the relevant project node.
-2. **"What blocked you, if anything?"** — pre-fill with candidate blockers from annotations. Captured as a GOTCHA if structural, or as a BLOCKER on the project's open threads.
-3. **"What's the one thing tomorrow has to move?"** — pre-fill with candidate priorities from annotations. Captured as a `[P0]` next-action on the relevant project node, dated tomorrow.
+1. **"Biggest thing that got done today?"** — pre-fill with the most-substantial `done` task from Step 2c.4. User can accept, edit, or override. Captured as an INSIGHT (or DECISION if it was a choice) on the relevant project node, per the consolidated taxonomy (`/remember` B.3: Insight / Decision / Gotcha / Correction).
+2. **"What blocked you, if anything?"** (optional) — pre-fill with candidate blockers from annotations. Captured as a GOTCHA if structural, or as a BLOCKER on the project's open threads.
+3. **"What's the one thing tomorrow has to move?"** — pre-fill with candidate priorities from annotations. Captured as a `[P0]` next-action on the relevant project node, dated tomorrow, AND fed to Step 4.5 + section 1 (Center of Gravity) of tomorrow's brief.
 
-These three answers also feed Step 5's pre-stage as section-6 content of tomorrow's brief (yesterday's reflection, from tomorrow's perspective).
+These three answers also feed Step 5's pre-stage as section 5 (Yesterday's Reflection) content of tomorrow's brief.
 
 Keep conversational. If the user says "nothing major today," that's valid — skip to Step 5.
 
@@ -379,9 +492,74 @@ Format:
 - _Captured by /end-day at <HH:MM>._
 ```
 
-This is the canonical write — tomorrow's `/brief` Section 6 reads from this section. If the user said "nothing major today," still write the `## Reflection` section with `—` placeholders and a "skipped" timestamp so tomorrow's brief shows the explicit non-event rather than "no reflection logged."
+This is the canonical write — tomorrow's `/brief` Section 5 (Yesterday's Reflection) reads from this section. If the user said "nothing major today," still write the `## Reflection` section with `—` placeholders and a "skipped" timestamp so tomorrow's brief shows the explicit non-event rather than "no reflection logged."
 
 If `<config-root>/briefs/<today_local>.md` doesn't exist (user ran `/end-day` without ever generating today's brief), create the file with a minimal `# End-of-day reflection — <today>` header followed by the `## Reflection` section. Don't try to back-fill the missing brief content.
+
+### Step 4.2 — Append to the longitudinal reflection store (B.7 — v4.13+)
+
+In addition to the per-day `## Reflection` in the brief markdown, append today's reflection to the rolling **`<config-root>/memory/reflections.md`** so reflections become a longitudinal, queryable record ("what have my biggest wins been this month," "what keeps blocking me"). This store is itself an input to `/end-week` / `/review` and to future surfacing decisions.
+
+Create the file from `references/reflections-template.md` if missing (header + "newest first" convention). Append one dated block at the top of the log:
+
+```markdown
+## <today_local> (<Day>)
+- **Biggest thing done:** <answer or "—">
+- **What blocked you:** <answer or "—">
+- **One thing tomorrow has to move:** <answer or "—">
+```
+
+Append-only; never rewrite prior entries. Idempotent for the same day (replace today's block if it already exists from a re-run). `reflections.md` decays slowly — it's a record, not a working surface — so it's excluded from the v4.4 decay sweep. Queue an index refresh (it's a memory file) so it appears in `index.md`.
+
+---
+
+## Step 4.5 — Propose tomorrow's priorities & outreach (B.5 — individually, batchable — v4.13+)
+
+After memory is settled, propose **tomorrow's priority tasks and outreach** so the morning surface is ready. This is where deliberateness matters most, so walk items **individually** — but offer a batch path when sensible.
+
+Candidate priorities come from: surviving incomplete P0/P1 tasks (Step 2c.4), the "one thing tomorrow has to move" reflection answer, accepted `[P0]` next-actions from Step 3, and any `skip`-deferred tasks whose snooze elapses tomorrow. Candidate outreach comes from the relationships/lead-engine pipeline tier for tomorrow plus any `nudge`/deferred contacts.
+
+- **Respect `surfacing-prefs.md`** — never propose suppressed or noise-class items.
+- Walk each proposed priority and outreach item individually: `(k)eep / (e)dit / (d)rop`.
+- Offer a batch shortcut when items obviously carry over unchanged: "These 3 priorities carry over unchanged — keep all? (y / pick)".
+- Output writes straight into **tomorrow's brief sections 3 (Priority Tasks) & 4 (Outreach Queue)** — these become the seed set Step 5 renders into the pre-staged `todays-brief` artifact. Persist them so Step 5's `/brief --target_date=tomorrow` includes them (write to `<config-root>/briefs/<tomorrow_local>.seed.json` with `{priorities:[...], outreach:[...]}` that `/brief` reads if present).
+
+If there's nothing material to propose, say so and continue — don't pad tomorrow with filler.
+
+## Step 4.6 — Anything else for tomorrow (B.6 — v4.13+)
+
+Explicitly ask, once: **"Any other priorities or outreach for tomorrow?"** Free-form capture. Append whatever the user gives to tomorrow's seed (`briefs/<tomorrow_local>.seed.json`) so it lands in tomorrow's brief. If the user says "no" / stays silent, continue.
+
+---
+
+## Step 4.7 — Log to HubSpot (optional — v4.13+)
+
+Explicitly ask, once: **"Anything to log in HubSpot before we close?"** This is the catch-all for CRM updates the user wants captured that didn't already flow through the brief actions in Step 2c (which already handles `done`→COMPLETED, `delegate`→delegatee task, outreach `sent`→touch, `booked`→prep task). Use it for meeting notes, new deals/contacts, deal-stage moves, follow-up tasks, or activity logging that came up in conversation today.
+
+**Skip the prompt entirely if HubSpot MCP isn't connected** (no CRM to write to) — say nothing and continue to Step 5.
+
+If connected, ask the single open question above. Then:
+
+1. **If the user says "no" / stays silent** (or, in `auto` autonomy, when nothing actionable surfaced today) → continue to Step 5, no writes.
+2. **If the user names things to log**, interpret each into a concrete HubSpot write and route via the HubSpot MCP (use the same tool surface the rest of Nucleus uses — `manage_crm_objects` for create/update, the HubSpot search tool to resolve named entities to object ids):
+   - **Note / activity** on a contact, company, or deal → create the engagement/note and associate it to the right object (search the CRM for the named entity first).
+   - **Task / follow-up** → create a task object, owner = user, due date as given (default tomorrow).
+   - **Deal stage / property update** → update the deal's stage or property.
+   - **New contact / company / deal** → create the object, pre-filled from what the user said + any matching cortex node context.
+3. **Confirm before writing.** Present a single batch table of the intended HubSpot writes (object, action, key fields) and get one approval:
+   ```
+   Log to HubSpot:
+     · Note → deal "Barker & Scott" : "Sent phased plan; Common Cause ~July 1 creates pull"
+     · Task → contact "Javier (Globant)" : "Confirm FIFA App ID" due tomorrow
+     · Stage → deal "Gaggle diagnostic" : Qualified → Proposal
+
+   [Y]es to all · [N]o to all · [E]dit (toggle per row)
+   ```
+   On Y → batch-write; report successes/failures. On N → no writes. On E → per-row toggle, then batch.
+   In `auto` autonomy, skip the confirmation table and write directly (still logging what was written).
+4. **Cross-link to memory.** For any HubSpot object that maps to a cortex person/bizdev/client node, append a one-line Recent Interactions / Changelog entry noting the CRM write, so the memory trail and CRM stay in sync. Reuse the relationships `/touchpoint` path if relationships is installed.
+
+Record what was logged for the Step 6 close summary ("Logged to HubSpot: 1 note, 1 task, 1 stage move.").
 
 ---
 
@@ -391,11 +569,11 @@ If `<config-root>/briefs/<today_local>.md` doesn't exist (user ran `/end-day` wi
 
 If the `daily-brief` plugin is installed:
 
-1. Invoke its `/brief` command with `target_date: tomorrow_local`.
+1. Invoke its `/brief` command with `target_date: tomorrow_local`. `/brief` reads `<config-root>/briefs/<tomorrow_local>.seed.json` (written by Steps 4.5/4.6) if present and seeds sections 3 (Priority Tasks) & 4 (Outreach Queue) from it, then merges live pulls — so the priorities/outreach the user just walked are already on tomorrow's surface.
 2. If Step 1 ran (full mode only), pass the inbox-triage results so the brief doesn't re-query Gmail. In quick mode, the brief queries Gmail itself in the morning — no shared state needed.
-3. **Today's reflection is read by tomorrow's `/brief` Section 6 directly from today's markdown's `## Reflection` section** (daily-brief v0.3.0+). No explicit handoff from this step.
+3. **Today's reflection is read by tomorrow's `/brief` Section 5 (Yesterday's Reflection) directly from today's markdown's `## Reflection` section** (daily-brief v0.5.0+). No explicit handoff from this step.
 4. **Artifact consistency rule (v4.12.0+):** the brief generator MUST call `mcp__cowork__update_artifact` with id `todays-brief` to refresh the persistent Cowork artifact. **Never** create a new artifact and never produce only a markdown-only fallback when Cowork is available — the artifact id must remain stable so the user always opens the same persistent surface. If no `todays-brief` artifact exists yet, create it once with that id; update it on every subsequent `/end-day` and `/brief` run. The markdown snapshot at `<config-root>/briefs/<tomorrow_local>.md` is still written as the canonical text record, but the Cowork artifact is the working surface and must also be updated.
-5. **Canonical artifact format (established 2026-05-21, formalized in v4.12.0):** the `todays-brief` artifact should always include these sections in order — (1) sticky header with date badge and generated-by note, (2) day-at-a-glance timeline strip, (3) meetings card with per-meeting context blocks, (4) priority tasks card with **interactive checkboxes** + progress bar (P0s only; no deferred/P1 tasks cluttering the surface), (5) bizdev outreach queue with tiered sections (today / next week / early next month / backlog), (6) yesterday's reflection. localStorage key should be `brief-YYYY-MM-DD` and rotate with the date. Reference implementation: daily-brief v0.4.0+ ships this format as the canonical template; this Step 5 routes to that.
+5. **Canonical artifact format (v4.13+ — 5 fixed sections per the End-Day Routine Improvement Spec Part A):** the `todays-brief` artifact always includes these sections in this order — (1) **Center of Gravity** accent banner (the single most important thing; not interactive), (2) **Calendar Block** = visual timeline strip + written block list with per-meeting notes, (3) **Priority Tasks** with richer per-row actions (done / delegate / skip / not_important / annotate) + progress bar (P0/P1 only), (4) **Outreach Queue** tiered (today / this week / backlog) with per-contact actions + optional category tags (bucket / value-add; signal auto-fills), (5) **Yesterday's Reflection** (read-only). A sticky header carries the date + counts line. localStorage key is `brief-YYYY-MM-DD` (schema_version 0.5.0). Reference implementation: daily-brief v0.5.0+ ships this as `references/brief-artifact-template.html`; this Step 5 routes to that. Formatting MUST be identical whether produced by `/brief` or this pre-stage.
 6. If Cowork artifact tools aren't available (Claude Code), produce the markdown snapshot only with a clear notice — but explicitly flag the degraded surface so the user knows to open the Cowork app for the full working brief.
 
 ### User gate after Step 5
@@ -566,7 +744,9 @@ Always (on success or failure path): rm <config-root>/memory/.write-lock
 
 Confirm completion briefly:
 
-> "Day closed. [N] commitments converted, [M] memory entries, [K] person pages touched. Tomorrow's brief staged for [tomorrow_local]. See you tomorrow."
+> "Day closed. [N] commitments converted, [M] memory entries, [K] person pages touched[, [H] HubSpot writes]. Tomorrow's brief staged for [tomorrow_local]. See you tomorrow."
+
+Include the HubSpot count only if Step 4.7 actually wrote anything.
 
 Adjust the count summary based on what actually ran (don't fabricate counts for skipped steps).
 
@@ -580,6 +760,7 @@ If the user is running this in a fire-and-forget mode (e.g., via a scheduled tas
 - **Step 1 gate** (full mode only) → "Wait" after ~10s
 - **Step 2 commitments gate** (full mode only) → "Skip" per item after ~10s (don't auto-create CRM tasks without confirmation — destructive on the wrong side)
 - **Step 2b unified review gate** (full mode only) → "Skip all" after ~30s. Never auto-commit mined proposals; too easy to pollute nodes silently. The 30s window (vs. 10s elsewhere) is longer because this gate has more density and the user may actually be reviewing it.
+- **Step 4.7 HubSpot-logging gate** → "no" after ~10s (never auto-write to CRM in a fire-and-forget run — destructive on the wrong side)
 - **Step 5 brief-pre-stage gate** → "Wait" after ~10s
 
 The chain should never block. If the user is engaged, gates pause for input. If not, gates pick the conservative default and move on. Skipped Step 2b proposals are logged to the dismissal log per the Step 2b spec so they don't re-surface tomorrow.
