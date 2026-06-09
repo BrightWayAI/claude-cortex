@@ -358,7 +358,7 @@ For each entry in `outreach_actions`, write to the relevant person/bizdev node (
 - `booked` → advance the pipeline stage + create a prep task.
 - `nudge` → log a follow-up touch.
 - `let_go` / `dead` → mark dead, remove from the active queue.
-- `skip` → defer reappearance by `detail`.
+- `skip` → defer reappearance by `detail` (the v2 brief UI has no outreach detail prompt, so `detail` is usually absent — default to a 3-day defer when it's empty).
 
 Bucket/value-add/signal roll up into outreach analytics over time (append a line to `<config-root>/relationships/outreach-analytics.jsonl` if relationships is installed: `{date, contact, action, bucket, signal, value_add}`).
 
