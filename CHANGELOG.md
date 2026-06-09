@@ -29,6 +29,10 @@ Before walking proposals, `/end-day` says **what today was about in plain langua
 
 After memory settles, `/end-day` walks tomorrow's candidate priorities and outreach **individually** (keep/edit/drop) with a batch shortcut for unchanged carryovers, respecting `surfacing-prefs.md`. Then asks once: "Any other priorities or outreach for tomorrow?" Output is written to `briefs/<tomorrow>.seed.json`, which `/brief` reads when Step 5 pre-stages tomorrow's brief.
 
+### Added — Step 5.8 offers to initialize memory-as-git when absent
+
+`/end-day` Step 5.8 previously skipped silently (one-line suggestion) when `<config-root>/memory/.git/` didn't exist. It now **offers to initialize** once (autonomy-aware: `auto` skips, `suggest`/`confirm` prompt y / not now / never→writes `memory_as_git.enabled:false`), running the same init path as `/setup-identity` Step 3.6. Closes the memory-as-git proposal's migration build-plan item; pairs with the new core-ops `/diagnose` Step 1D health line. Memory-as-git is now fully wired into the routine (`/setup-identity` init · `/end-day` 5.8 commit · `/morning` 0.5 diff review · `/diagnose` health).
+
 ### Added — Step 4.7 optional HubSpot logging
 
 After "anything else," `/end-day` asks once: **"Anything to log in HubSpot before we close?"** (skipped silently if HubSpot MCP isn't connected). Interprets the user's answer into concrete CRM writes — notes/activities, tasks, deal-stage moves, new contacts/companies/deals — presents one batch confirmation table, then writes via the HubSpot MCP and cross-links each object to its cortex person/bizdev/client node. Never auto-writes in a fire-and-forget run (10s → "no").

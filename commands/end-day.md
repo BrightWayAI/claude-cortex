@@ -626,8 +626,14 @@ Adjust the metric counts based on what actually ran (don't include reflection-co
 If memory-as-git is enabled, auto-commit today's memory changes. This makes the day a reviewable unit and gives `/morning` a diff to surface.
 
 Check whether `<config-root>/memory/.git/` exists.
-- **If not** → skip (memory-as-git not enabled; nothing to do). Optionally surface a one-line: "Memory-as-git not initialized. Run `/setup-identity` to enable, or set `memory_as_git.enabled: true` in `<config-root>/plugins/cortex.user-context.md`."
 - **If exists** → proceed.
+- **If not** → offer to initialize it once (closes the proposal's "next /end-day after upgrade runs init" migration path), respecting the autonomy slider:
+  - `auto` → skip silently (don't init without consent — git init + first commit is a meaningful change); log a one-line note.
+  - `suggest` (default) / `confirm` → prompt once: "Memory-as-git isn't initialized — it powers `/morning`'s overnight-diff review and rollback safety. Initialize `<config-root>/memory/` as a local git repo now? (y / not now / never)."
+    - `y` → run the same init path as `/setup-identity` Step 3.6 (symlink-into-cloud-sync warning, write `memory/.gitignore` from `references/memory-gitignore-template.md`, `git init`, initial commit), then continue with today's commit below.
+    - `not now` → skip this run; re-offer next `/end-day`.
+    - `never` → write `memory_as_git.enabled: false` to `<config-root>/plugins/cortex.user-context.md` so this never re-prompts. Skip.
+  - If, after the offer, `.git/` still doesn't exist → skip the rest of Step 5.8.
 
 ### Step 5.8.0 — Memory write-lock acquisition (v4.12.2+)
 
