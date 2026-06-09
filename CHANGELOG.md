@@ -6,6 +6,49 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.13.0] — End-Day Routine Improvement Spec: brief mining, cost gate, taxonomy consolidation, reflections store (2026-06-08)
+
+Implements Part B + the cross-cutting pieces of the End-Day Routine Improvement Spec. Coordinated with daily-brief v0.5.0.
+
+### Added — Step 0.7 source review & cost gate (B.1)
+
+Before reading anything, `/end-day` shows **one lightweight batch card** listing the sources it will review, each with a checkbox (defaults from config) and an **approximate token→$ cost shown before running**, with a running total. "Today's Brief responses" is required, always first, never a checkbox. Unchecked sources are skipped and logged so the close summary is honest. Respects the autonomy slider (auto skips the card).
+
+### Added — Step 2c mine the brief artifact (headline fix; runs in BOTH modes)
+
+The brief was the one source `/end-day` never mined. Step 2c reads the `todays-brief` widget context (v0.5.0 blob: `tasks` / `annotations` / `outreach_actions`) and writes back:
+- **task actions** — `done`→COMPLETE source action + "biggest thing done" candidate; `delegate`→reassign + delegatee task; `skip`→defer + increment per-task skip counter (`.brief-skip-counts.json`); `not_important`→suppress.
+- **outreach actions** — `sent`→log touch + value-add; `booked`→advance stage + prep task; `nudge`→follow-up touch; `let_go`/`dead`→mark dead; categories roll into outreach analytics.
+- **suppression learning (2c.3)** — `not_important` items + the **repeat-ignore rule** (≥3 surfacings, 0 actions) write into `<config-root>/memory/surfacing-prefs.md` Do-not-resurface, which `/brief` reads to filter future briefs. Creates `surfacing-prefs.md` from `references/surfacing-prefs-template.md` if missing.
+
+### Added — Step 2.9 learnings-first narrative + memories AND forgettings (B.2)
+
+Before walking proposals, `/end-day` says **what today was about in plain language first**, then presents **memories and forgettings side by side** — forgettings (stale-fact demotions, suppressions, superseded beliefs) are first-class. Each proposal shows type, confidence, target node, source citation.
+
+### Added — Steps 4.5 / 4.6 propose tomorrow's priorities & outreach (B.5 / B.6)
+
+After memory settles, `/end-day` walks tomorrow's candidate priorities and outreach **individually** (keep/edit/drop) with a batch shortcut for unchanged carryovers, respecting `surfacing-prefs.md`. Then asks once: "Any other priorities or outreach for tomorrow?" Output is written to `briefs/<tomorrow>.seed.json`, which `/brief` reads when Step 5 pre-stages tomorrow's brief.
+
+### Added — Step 5.8 offers to initialize memory-as-git when absent
+
+`/end-day` Step 5.8 previously skipped silently (one-line suggestion) when `<config-root>/memory/.git/` didn't exist. It now **offers to initialize** once (autonomy-aware: `auto` skips, `suggest`/`confirm` prompt y / not now / never→writes `memory_as_git.enabled:false`), running the same init path as `/setup-identity` Step 3.6. Closes the memory-as-git proposal's migration build-plan item; pairs with the new core-ops `/diagnose` Step 1D health line. Memory-as-git is now fully wired into the routine (`/setup-identity` init · `/end-day` 5.8 commit · `/morning` 0.5 diff review · `/diagnose` health).
+
+### Added — Step 4.7 optional HubSpot logging
+
+After "anything else," `/end-day` asks once: **"Anything to log in HubSpot before we close?"** (skipped silently if HubSpot MCP isn't connected). Interprets the user's answer into concrete CRM writes — notes/activities, tasks, deal-stage moves, new contacts/companies/deals — presents one batch confirmation table, then writes via the HubSpot MCP and cross-links each object to its cortex person/bizdev/client node. Never auto-writes in a fire-and-forget run (10s → "no").
+
+### Added — Step 4.2 longitudinal reflections store (B.7)
+
+Reflection answers are appended (newest-first) to a rolling `<config-root>/memory/reflections.md` in addition to the per-day brief `## Reflection`. Created from `references/reflections-template.md`. Decays slowly; excluded from the v4.4 decay sweep. Step 4.0 pre-fill updated to read the v0.5.0 brief shape.
+
+### Changed — knowledge taxonomy consolidated to four types (B.3)
+
+`/remember` now writes **Insight · Decision · Gotcha · Correction**. Model→`INSIGHT [mental-model]`, Lesson→`INSIGHT`, Recipe→`INSIGHT [recipe]`. Node-file Knowledge sections, entry formats, concept-drift detection, and the Step 5 confirm list all updated. Legacy `MODEL`/`LESSON`/`RECIPE` entries remain readable. Absence of migration is a legible default.
+
+### Added — reference templates
+
+`references/surfacing-prefs-template.md` and `references/reflections-template.md`.
+
 ## [4.12.3] — Followup: deferred items from v4.12.2 (2026-05-28)
 
 Completes the deferred-list from v4.12.2 CHANGELOG. Coordinated with daily-brief v0.4.2 + relationships v0.2.3.

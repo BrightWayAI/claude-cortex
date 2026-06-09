@@ -14,8 +14,16 @@ description: >
   get the full chain.
 
   Reflection (Step 4) appends a `## Reflection` section to today's brief
-  markdown — that's the canonical write surface and what tomorrow's `/brief`
-  Section 6 reads (daily-brief v0.3.0+).
+  markdown — what tomorrow's `/brief` reads — AND to a longitudinal
+  `memory/reflections.md` store (v4.13+).
+
+  v4.13+ additions (End-Day Routine Improvement Spec): a per-source consent +
+  cost gate (Step 0.7, Today's Brief required & first); Step 2c mines the brief
+  artifact (task/outreach actions → memory write-backs + suppression learning
+  into `surfacing-prefs.md`, both modes); a learnings-first narrative then
+  memories AND forgettings side by side (Step 2.9); and tomorrow's
+  priorities/outreach proposed individually with a batch path, seeded into
+  tomorrow's brief (Steps 4.5/4.6).
 ---
 
 See `commands/end-day.md` for the full workflow.

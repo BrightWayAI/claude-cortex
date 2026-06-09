@@ -184,6 +184,13 @@ NEXT ACTIONS:
 
 ### B. Knowledge (what was learned)
 
+> **Canonical knowledge taxonomy (v4.13+ — consolidated).** There are now **four** knowledge types: **Insight · Decision · Gotcha · Correction**. The old Model / Lesson / Recipe types are folded in:
+> - **Model** → write as **INSIGHT** with a `mental-model` tag.
+> - **Lesson** → write as **INSIGHT** (a lesson is an insight about what worked/failed).
+> - **Recipe** → write as **INSIGHT** with a `recipe` tag, *unless* it's a genuine step-by-step repeatable procedure, in which case you may keep a `RECIPE`-shaped body — but still file it as an INSIGHT with the `recipe` tag (no separate section).
+> Tags are appended in brackets after the type, e.g. `INSIGHT [mental-model]` / `INSIGHT [recipe]`.
+> The extraction buckets below remain as *prompts for what to look for*; map each to one of the four canonical types when you write it in Step 3.
+
 ```
 INSIGHTS:
 - New understanding gained during this session
@@ -399,23 +406,24 @@ Surfaced by `/cleanup`'s orphan-detection guardrail. Nodes with no incoming/outg
 
 ## Knowledge
 
-### Models
-[node] MODEL (date): [entry]
+### Insights
+[node] INSIGHT (date): [entry]
+[node] INSIGHT [mental-model] (date): [entry]
+[node] INSIGHT [recipe] (date): [entry]
+
+### Decisions
+[node] DECISION (date): [entry]
 
 ### Gotchas
 [node] GOTCHA (date): [entry]
 
-### Lessons
-[node] LESSON (date): [entry]
-
-### Recipes
-[node] RECIPE (date): [entry]
-
-### Insights
-[node] INSIGHT (date): [entry]
-
 ### Corrections
 [node] CORRECTION (date): [entry]
+
+(v4.13+ consolidated taxonomy: Insight / Decision / Gotcha / Correction, with
+`[mental-model]` / `[recipe]` tags on Insights. Legacy `### Models` / `### Lessons`
+/ `### Recipes` sections in older node files are still read; new writes use the
+sections above.)
 
 ## People
 [node] PEOPLE: [[person/<slug>]] (role) — context. Also in: [[<other-node>]], [[<other-node>]]
@@ -522,34 +530,38 @@ These tags are the substrate for v4.4's forgetting/decay layer. **In v4.3 we wri
 
 Existing pre-v4.3 entries without tags are treated as if `confirmed:` and `recalled:` both equal the original commit date. No migration step needed — the absence of a tag is itself a legible default.
 
-#### C.1 Entry formats
+#### C.1 Entry formats (v4.13+ — four canonical types)
 
 ```
 [node-id] INSIGHT (YYYY-MM-DD): [the insight, compressed but precise]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
 ```
 ```
-[node-id] LESSON (YYYY-MM-DD): [what was tried] → [what happened] → [the takeaway]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+[node-id] INSIGHT [mental-model] (YYYY-MM-DD): [how something works, 1-3 sentences]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
 ```
 ```
-[node-id] MODEL (YYYY-MM-DD): [how something works, 1-3 sentences]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+[node-id] INSIGHT [recipe] (YYYY-MM-DD): [technique name] — [when to use] → [how to do it]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
 ```
 ```
-[node-id] GOTCHA (YYYY-MM-DD): [the trap and how to avoid it]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+[node-id] DECISION (YYYY-MM-DD): [the choice] (see DECISION required fields in §B above)  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
 ```
 ```
-[node-id] RECIPE (YYYY-MM-DD): [technique name] — [when to use] → [how to do it]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+[node-id] GOTCHA (YYYY-MM-DD): [the trap and how to avoid it — an actionable warning]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
 ```
 ```
 [node-id] CORRECTION (YYYY-MM-DD): [old belief] → [corrected understanding]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
 ```
 
-On new commit, both `confirmed` and `recalled` are set to the commit date.
+- A former **Lesson** ("what was tried → what happened → takeaway") writes as a plain **INSIGHT**.
+- A former **Model** writes as **INSIGHT [mental-model]**; a former **Recipe** as **INSIGHT [recipe]**.
+- On new commit, both `confirmed` and `recalled` are set to the commit date.
+
+**Backward compatibility:** existing `MODEL` / `LESSON` / `RECIPE` entries in node files remain valid and are still read by `/recall` and `memory-librarian` — no migration is forced. `/cleanup` may opportunistically rewrite them to the consolidated form (`MODEL`→`INSIGHT [mental-model]`, `LESSON`→`INSIGHT`, `RECIPE`→`INSIGHT [recipe]`) when it next touches the node, but absence of migration is a legible default.
 
 **Quality bar**: Only write knowledge entries for things that are genuinely reusable. The test: "Would future-me benefit from this surfacing automatically?"
 
 #### C.2 Concept-drift detection (v4.4+)
 
-Before writing a new INSIGHT / MODEL / GOTCHA / LESSON entry, check whether it contradicts, supersedes, or meaningfully refines an existing entry on the same node. RECIPE entries are excluded from this check (recipes are additive techniques, not competing facts). CORRECTION entries already encode supersede explicitly via `[old belief] → [corrected understanding]` and don't need the check.
+Before writing a new INSIGHT or GOTCHA entry (including `[mental-model]`-tagged Insights), check whether it contradicts, supersedes, or meaningfully refines an existing entry on the same node. `[recipe]`-tagged Insights are excluded from this check (recipes are additive techniques, not competing facts). DECISION entries supersede via their own concept-drift path (a later DECISION on the same topic demotes the earlier — see §B). CORRECTION entries already encode supersede explicitly via `[old belief] → [corrected understanding]` and don't need the check.
 
 Process:
 
@@ -731,7 +743,7 @@ Scan for:
 Respond with:
 1. **Node(s)** written to
 2. **Living summary** (for verification)
-3. **Knowledge captured** — list INSIGHT/LESSON/MODEL/GOTCHA/RECIPE/CORRECTION entries
+3. **Knowledge captured** — list INSIGHT (incl. `[mental-model]`/`[recipe]`) / DECISION / GOTCHA / CORRECTION entries
 4. **Observations captured** — count of preferences, corrections, patterns written to user node
 5. **Open threads** with staleness
 6. **Blockers** (if any)
