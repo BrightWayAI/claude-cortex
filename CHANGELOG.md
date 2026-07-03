@@ -6,6 +6,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.13.1] — Daily-Brief Improvement Spec companion: brief-state fallback gate + doc fixes (2026-07-03)
+
+Companion to daily-brief v0.6.0 (Daily-Brief Improvement Spec, 2026-07-02).
+
+### Fixed — `/end-day` can now actually read brief state (D2)
+
+Step 2c specified `read_widget_context(artifact_id="todays-brief")`, but Cowork exposes no widget-context handle for *persisted* artifacts, so brief clicks were invisible to the close and completed items resurfaced in the next brief. Step 2c.0 now reads through a fallback chain:
+1. **State-mirror file** `<config-root>/briefs/<today>.state.json` (written by the v0.6.0 artifact on every action) — canonical read path.
+2. **Widget context** (legacy fallback).
+3. **Explicit fallback gate (Step 2c.0a, D2c)** — when state is unreadable, `/end-day` asks one multi-select seeded with today's brief task list ("Which items did you complete / delegate / kill?") and routes answers through the normal Step 2c write-backs, instead of silently skipping. Makes the 7/2 manual reconciliation a spec'd step.
+
+### Added — reprioritize write-back (Step 2c.1a, D3)
+
+`tasks` entries with `reprioritized: true` edit the priority tag on the source-node action (`[P0]`/`[P1]`/`[P2]`) and carry the change into Step 4.5's tomorrow-priority ordering. Readers tolerate entries with a `priority` but no `action`.
+
+### Fixed — Step 0.7 cost-card `$`-placeholder corruption (P1)
+
+Literal `$0.05`-style figures in the Step 0.7 example were mangled by command-args interpolation (rendered `≈ --full.05`) when `/end-day` was invoked with arguments. Examples now use the `USD 0.05` form, with a note to keep it.
+
+### Changed — brief-contract references bumped to v0.6.0
+
+Step 2c.0 / 4.0 / 5 reference the v0.6.0 blob shape, the state-mirror read path, and the no-native-dialogs sandbox invariant.
+
 ## [4.13.0] — End-Day Routine Improvement Spec: brief mining, cost gate, taxonomy consolidation, reflections store (2026-06-08)
 
 Implements Part B + the cross-cutting pieces of the End-Day Routine Improvement Spec. Coordinated with daily-brief v0.5.0.

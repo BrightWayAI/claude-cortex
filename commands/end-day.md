@@ -129,20 +129,22 @@ Sources, in priority order:
 4. **Slack** — configured channels/DMs since yesterday. (full mode)
 5. **CRM** (HubSpot) — today's deal/task/activity changes. (full / activity-miner)
 
-**Cost estimate model.** For each source, estimate `volume × per-unit token cost` and convert to a rough dollar figure, e.g. *"Transcripts: 2 meetings (~14k tokens) ≈ $0.05"*, *"Email: 23 threads, ~4 likely-relevant ≈ $0.03"*. Show a **running total** at the bottom. Do a fast pre-count (the same counts the quick-mode auto-offer uses) to fill in volumes; if a count is unavailable, show "~" and estimate conservatively.
+**Cost estimate model.** For each source, estimate `volume × per-unit token cost` and convert to a rough dollar figure, e.g. *"Transcripts: 2 meetings (~14k tokens) ≈ USD 0.05"*, *"Email: 23 threads, ~4 likely-relevant ≈ USD 0.03"*. Show a **running total** at the bottom. Do a fast pre-count (the same counts the quick-mode auto-offer uses) to fill in volumes; if a count is unavailable, show "~" and estimate conservatively.
+
+> Note: figures below use `USD` rather than a literal `$0` prefix on purpose — when this command is invoked with arguments, a bare `$0` in the doc gets mangled by args interpolation (renders `≈ --full.05` instead of `≈ USD 0.05`). Keep the `USD` form, or escape the dollar sign, in any example.
 
 Card shape:
 
 ```
 Tonight's close will review these sources. Estimated cost shown before running.
 
-  [✓] Today's Brief responses   — required, always first      ~$0.00
-  [✓] Transcripts               — 2 meetings (~14k tok)       ≈ $0.05
-  [✓] Email                     — 23 threads, ~4 relevant     ≈ $0.03
-  [ ] Slack                     — 3 channels since yesterday  ≈ $0.02
-  [✓] CRM                       — today's deal/task changes   ≈ $0.01
+  [✓] Today's Brief responses   — required, always first      ~USD 0.00
+  [✓] Transcripts               — 2 meetings (~14k tok)       ≈ USD 0.05
+  [✓] Email                     — 23 threads, ~4 relevant     ≈ USD 0.03
+  [ ] Slack                     — 3 channels since yesterday  ≈ USD 0.02
+  [✓] CRM                       — today's deal/task changes   ≈ USD 0.01
   ─────────────────────────────────────────────────────────────────
-  Running total (checked)                                     ≈ $0.09
+  Running total (checked)                                     ≈ USD 0.09
 
   [R] Review all   ·   [C] Let me choose (toggle rows)   ·   [G] Go
 ```
@@ -322,20 +324,34 @@ The brief is the user's most explicit daily signal, yet historically it was the 
 
 ### Step 2c.0 — Read the brief state
 
-Read the `todays-brief` artifact via `mcp__cowork__read_widget_context(artifact_id="todays-brief")`. Parse the localStorage blob at key `brief-<today_local>` (canonical v0.5.0 shape — see `daily-brief/commands/brief.md` localStorage contract):
+The brief's action state lives in the artifact's `localStorage`. Cowork exposes **no widget-context handle for persisted artifacts** (`read_widget_context` only works for in-conversation widgets), so `localStorage` alone is invisible to the close — without a workaround, Done/Skip/Not-important clicks are lost and completed items resurface in the next brief. Read the state through this fallback chain, **stopping at the first source that yields a blob**:
+
+1. **State-mirror file (primary — D2a).** Read `<config-root>/briefs/<today_local>.state.json`. The v0.6.0 artifact mirrors its full localStorage blob to this file on every action (via `window.cowork.callMcpTool`, or the user's manual "Sync for end-day" button). This is the canonical read path.
+2. **Widget context (legacy).** If no state file exists, try `mcp__cowork__read_widget_context(artifact_id="todays-brief")` for the blob at key `brief-<today_local>`. Works only where in-conversation widget context is exposed; usually empty for the persisted artifact.
+3. **Explicit fallback gate (Step 2c.0a).** If neither yields state, run the fallback gate below — do **not** silently skip. Silently skipping is what let completed items resurface.
+
+Canonical v0.6.0 blob shape (see `daily-brief/commands/brief.md` localStorage contract):
 
 ```json
 {
-  "tasks":            { "task-123": { "action": "done|delegate|skip|not_important", "detail": "", "ts": "", "name": "" } },
+  "tasks":            { "task-123": { "action": "done|delegate|skip|not_important", "detail": "", "priority": "P0|P1|P2", "reprioritized": true, "ts": "", "name": "" } },
   "annotations":      { "task-123": "free text", "inbox-...": "..." },
   "outreach_actions": { "contact-1": { "name": "", "action": "sent|skip|nudge|let_go|booked|dead", "bucket": "", "signal": "", "value_add": "", "detail": "", "ts": "" } },
   "last_interaction_at": "ISO8601"
 }
 ```
 
-Back-compat: a `tasks_checked: {id: bool}` map (v0.4.x) maps each `true` → `{action: "done"}`.
+Back-compat: a `tasks_checked: {id: bool}` map (v0.4.x) maps each `true` → `{action: "done"}`. A `tasks` entry may carry a `reprioritized: true` + `priority` with **no `action`** (priority changed, no disposition) — tolerate a missing `action` (route it via Step 2c.1a). Never fabricate brief actions.
 
-If Cowork artifact tools aren't available (Claude Code) or no `todays-brief` artifact exists, skip Step 2c with a one-line note and continue. Don't fabricate brief actions.
+### Step 2c.0a — Fallback gate (D2c — fires only when state is unreadable)
+
+When neither the state file nor widget context yields a blob, **ask exactly one multi-select question** rather than skipping the brief:
+
+> "I couldn't read today's brief state automatically. Which of today's surfaced items did you complete / delegate / kill?"
+
+Seed the options from **today's brief task list** (read the priorities from `<config-root>/briefs/<today_local>.md` or the `<today_local>.seed.json` that generated it — the same list rendered into the artifact). Let the user tag each selected item done / delegated / skipped / not-important (a second quick prompt per selected item, or free-text). Route the answers through the **normal Step 2c.1 / 2c.2 write-backs** exactly as if they'd come from the blob. This makes the manual reconciliation Zach did by hand on 7/2 a spec'd step, not improvisation.
+
+If the brief task list itself is unavailable (no markdown, no seed), only then skip Step 2c with a one-line honest note ("brief state unreadable and no task list on disk — skipped").
 
 ### Step 2c.1 — Write back task actions (per surfacing-prefs taxonomy)
 
@@ -347,6 +363,8 @@ For each entry in `tasks`, apply the action's write-back (taxonomy is canonical 
 | `delegate` (detail = who) | Reassign in the source node (`[WAITING:<who>]`); if CRM connected and no delegatee task exists yet, create one. Log the delegation. |
 | `skip` (detail = duration) | Defer; **increment a per-task skip counter** in `<config-root>/memory/.brief-skip-counts.json` (`{task_id: {count, last_skipped, title}}`). Feeds the repeat-ignore rule (Step 2c.3). |
 | `not_important` | Append the item to `surfacing-prefs.md` **Do-not-resurface** (Step 2c.3) and demote/close the source node action. |
+
+**Step 2c.1a — Reprioritizations (D3).** For any `tasks` entry with `reprioritized: true`, edit the priority on the source-node action (`## Next Actions` `[P0]`/`[P1]`/`[P2]` tag on the matching item) to the entry's `priority`. This applies whether or not the entry also has a disposition `action`. Carry the new priority into Step 4.5's tomorrow-priority ordering so the change is reflected in the next day's brief.
 
 `annotations` that weren't already handled by `/process-brief` route the same way `/process-brief` Step 2 routes them (draft_reply / reschedule_task / dismiss / clarify). If `/process-brief` already ran today (check `daily-brief.dismissed-log.md` / the brief's processed section), don't double-act — only handle annotations with no recorded downstream action.
 
@@ -453,9 +471,9 @@ If `memory/.person-mention-counts.json` doesn't exist or is empty (no candidates
 
 **Goal:** capture the human-readable version of what mattered today, separate from the structured commits in Step 3.
 
-### Step 4.0 — Pre-fill from brief artifact (v4.13+ reads v0.5.0 shape)
+### Step 4.0 — Pre-fill from brief artifact (v4.13+ reads v0.6.0 shape)
 
-Reuse the brief state already read in Step 2c (`mcp__cowork__read_widget_context(artifact_id="todays-brief")` → `brief-<today_local>`, canonical v0.5.0 shape: `tasks` / `annotations` / `outreach_actions`). Don't re-read if Step 2c already loaded it.
+Reuse the brief state already read in Step 2c (via the Step 2c.0 fallback chain: state-mirror file `briefs/<today_local>.state.json` → widget context → fallback gate; canonical v0.6.0 shape: `tasks` / `annotations` / `outreach_actions`). Don't re-read if Step 2c already loaded it.
 
 Pre-fill the reflection prompts from the mined actions:
 
@@ -573,7 +591,7 @@ If the `daily-brief` plugin is installed:
 2. If Step 1 ran (full mode only), pass the inbox-triage results so the brief doesn't re-query Gmail. In quick mode, the brief queries Gmail itself in the morning — no shared state needed.
 3. **Today's reflection is read by tomorrow's `/brief` Section 5 (Yesterday's Reflection) directly from today's markdown's `## Reflection` section** (daily-brief v0.5.0+). No explicit handoff from this step.
 4. **Artifact consistency rule (v4.12.0+):** the brief generator MUST call `mcp__cowork__update_artifact` with id `todays-brief` to refresh the persistent Cowork artifact. **Never** create a new artifact and never produce only a markdown-only fallback when Cowork is available — the artifact id must remain stable so the user always opens the same persistent surface. If no `todays-brief` artifact exists yet, create it once with that id; update it on every subsequent `/end-day` and `/brief` run. The markdown snapshot at `<config-root>/briefs/<tomorrow_local>.md` is still written as the canonical text record, but the Cowork artifact is the working surface and must also be updated.
-5. **Canonical artifact format (v4.13+ — 5 fixed sections per the End-Day Routine Improvement Spec Part A):** the `todays-brief` artifact always includes these sections in this order — (1) **Center of Gravity** accent banner (the single most important thing; not interactive), (2) **Calendar Block** = visual timeline strip + written block list with per-meeting notes, (3) **Priority Tasks** with richer per-row actions (done / delegate / skip / not_important / annotate) + progress bar (P0/P1 only), (4) **Outreach Queue** tiered (today / this week / backlog) with per-contact actions + optional category tags (bucket / value-add; signal auto-fills), (5) **Yesterday's Reflection** (read-only). A sticky header carries the date + counts line. localStorage key is `brief-YYYY-MM-DD` (schema_version 0.5.0). Reference implementation: daily-brief v0.5.0+ ships this as `references/brief-artifact-template.html`; this Step 5 routes to that. Formatting MUST be identical whether produced by `/brief` or this pre-stage.
+5. **Canonical artifact format (v4.13+ — 5 fixed sections per the End-Day Routine Improvement Spec Part A):** the `todays-brief` artifact always includes these sections in this order — (1) **Center of Gravity** accent banner (the single most important thing; not interactive), (2) **Calendar Block** = visual timeline strip + written block list with per-meeting notes, (3) **Priority Tasks** with richer per-row actions (done / delegate / skip / not_important / **reprioritize** / annotate) + progress bar, (4) **Outreach Queue** tiered (today / this week / backlog) with per-contact actions + optional category tags (bucket / value-add; signal auto-fills), (5) **Yesterday's Reflection** (read-only). A sticky header carries the date + counts line. localStorage key is `brief-YYYY-MM-DD` (schema_version 0.6.0); the artifact also mirrors its state to `briefs/<date>.state.json` for the close to read (D2a). All interactive controls are inline — the template uses **no** `prompt()`/`confirm()`/`alert()` (blocked in Cowork's artifact sandbox). Reference implementation: daily-brief v0.6.0+ ships this as `references/brief-artifact-template.html`; this Step 5 routes to that. Formatting MUST be identical whether produced by `/brief` or this pre-stage.
 6. If Cowork artifact tools aren't available (Claude Code), produce the markdown snapshot only with a clear notice — but explicitly flag the degraded surface so the user knows to open the Cowork app for the full working brief.
 
 ### User gate after Step 5
