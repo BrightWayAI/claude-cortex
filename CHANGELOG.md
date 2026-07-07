@@ -6,6 +6,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.13.2] — `/end-day` brief-state paste path (2026-07-07)
+
+Companion to daily-brief v0.6.1 (state-mirror fix). Root cause of "end-day never sees my brief actions": the v0.6.0 artifact auto-mirror silently never worked (malformed tool name, no `mcp_tools` allowlist declaration, no connected filesystem MCP server — see daily-brief 0.6.1 changelog), so Step 2c.0 always fell through to the multi-select gate, forcing the user to re-state every action by hand.
+
+### Added — Step 2c.0p paste path
+
+New source in the Step 2c.0 read chain, between widget context and the multi-select gate: ask the user to click **🔄 Sync for end-day** in the brief artifact and paste the copied blob. `/end-day` validates the JSON and writes it verbatim to `<config-root>/briefs/<today_local>.state.json`, then proceeds exactly as if the state-mirror file had existed. One click + one paste instead of re-stating the day item by item. Step 4.0's chain reference updated to match.
+
+### Changed
+
+- Step 2c.0 source 1 documents the real mirror mechanism (daily-brief ≥0.6.1: filesystem MCP tool resolved at render time + `mcp_tools` allowlist; manual paste otherwise) and adds a staleness check on `last_interaction_at`.
+- Step 2c.0a fallback gate now fires only after the paste path is skipped or fails.
+
 ## [4.13.1] — Daily-Brief Improvement Spec companion: brief-state fallback gate + doc fixes (2026-07-03)
 
 Companion to daily-brief v0.6.0 (Daily-Brief Improvement Spec, 2026-07-02).

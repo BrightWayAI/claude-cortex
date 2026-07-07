@@ -123,7 +123,7 @@ Before reading anything, present **one lightweight batch card** (not five sequen
 
 Sources, in priority order:
 
-1. **Today's Brief responses** — *required input, always first, never a checkbox.* Read the `todays-brief` widget context (tasks, annotations, outreach actions) in Step 2c. Cheapest and highest-signal source.
+1. **Today's Brief responses** — *required input, always first, never a checkbox.* Read the brief state (tasks, annotations, outreach actions) via the Step 2c.0 chain. Cheapest and highest-signal source.
 2. **Transcripts** (Granola/Gemini) — today's meetings. (full mode)
 3. **Email** (Gmail) — today's threads where the user is a participant. (full mode)
 4. **Slack** — configured channels/DMs since yesterday. (full mode)
@@ -326,9 +326,10 @@ The brief is the user's most explicit daily signal, yet historically it was the 
 
 The brief's action state lives in the artifact's `localStorage`. Cowork exposes **no widget-context handle for persisted artifacts** (`read_widget_context` only works for in-conversation widgets), so `localStorage` alone is invisible to the close — without a workaround, Done/Skip/Not-important clicks are lost and completed items resurface in the next brief. Read the state through this fallback chain, **stopping at the first source that yields a blob**:
 
-1. **State-mirror file (primary — D2a).** Read `<config-root>/briefs/<today_local>.state.json`. The v0.6.0 artifact mirrors its full localStorage blob to this file on every action (via `window.cowork.callMcpTool`, or the user's manual "Sync for end-day" button). This is the canonical read path.
+1. **State-mirror file (primary — D2a).** Read `<config-root>/briefs/<today_local>.state.json`. The daily-brief ≥0.6.1 artifact auto-mirrors its full localStorage blob here on every action — but **only when `/brief` resolved a filesystem MCP write tool at render time** and declared it in the artifact's `mcp_tools` allowlist (the Cowork sandbox rejects undeclared tools; there is no built-in file access). Where no such tool is connected, this file exists only if the user pasted a sync blob earlier today (paste path, below). This is the canonical read path. Sanity-check freshness: if the file's `last_interaction_at` is from a prior day, treat it as absent.
 2. **Widget context (legacy).** If no state file exists, try `mcp__cowork__read_widget_context(artifact_id="todays-brief")` for the blob at key `brief-<today_local>`. Works only where in-conversation widget context is exposed; usually empty for the persisted artifact.
-3. **Explicit fallback gate (Step 2c.0a).** If neither yields state, run the fallback gate below — do **not** silently skip. Silently skipping is what let completed items resurface.
+3. **Paste path (Step 2c.0p — try BEFORE the multi-select gate).** Ask once: "I couldn't read today's brief state. Open Today's Brief, click **🔄 Sync for end-day** (bottom of the artifact — it copies your action state), and paste it here. Or say 'skip' and I'll walk the list with you." If the user pastes a blob: validate it parses as a JSON object (tolerate surrounding whitespace/code fences), **write it verbatim to `<config-root>/briefs/<today_local>.state.json`**, then proceed exactly as if source 1 succeeded. This is one click + one paste versus re-stating every item by hand.
+4. **Explicit fallback gate (Step 2c.0a).** If the user skips the paste (or the paste doesn't parse twice), run the fallback gate below — do **not** silently skip. Silently skipping is what let completed items resurface.
 
 Canonical v0.6.0 blob shape (see `daily-brief/commands/brief.md` localStorage contract):
 
@@ -343,9 +344,9 @@ Canonical v0.6.0 blob shape (see `daily-brief/commands/brief.md` localStorage co
 
 Back-compat: a `tasks_checked: {id: bool}` map (v0.4.x) maps each `true` → `{action: "done"}`. A `tasks` entry may carry a `reprioritized: true` + `priority` with **no `action`** (priority changed, no disposition) — tolerate a missing `action` (route it via Step 2c.1a). Never fabricate brief actions.
 
-### Step 2c.0a — Fallback gate (D2c — fires only when state is unreadable)
+### Step 2c.0a — Fallback gate (D2c — fires only when state is unreadable AND the paste path was skipped)
 
-When neither the state file nor widget context yields a blob, **ask exactly one multi-select question** rather than skipping the brief:
+When no source yields a blob, **ask exactly one multi-select question** rather than skipping the brief:
 
 > "I couldn't read today's brief state automatically. Which of today's surfaced items did you complete / delegate / kill?"
 
@@ -473,7 +474,7 @@ If `memory/.person-mention-counts.json` doesn't exist or is empty (no candidates
 
 ### Step 4.0 — Pre-fill from brief artifact (v4.13+ reads v0.6.0 shape)
 
-Reuse the brief state already read in Step 2c (via the Step 2c.0 fallback chain: state-mirror file `briefs/<today_local>.state.json` → widget context → fallback gate; canonical v0.6.0 shape: `tasks` / `annotations` / `outreach_actions`). Don't re-read if Step 2c already loaded it.
+Reuse the brief state already read in Step 2c (via the Step 2c.0 chain: state-mirror file `briefs/<today_local>.state.json` → widget context → paste path → fallback gate; canonical v0.6.0 shape: `tasks` / `annotations` / `outreach_actions`). Don't re-read if Step 2c already loaded it.
 
 Pre-fill the reflection prompts from the mined actions:
 
