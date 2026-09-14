@@ -221,7 +221,7 @@ The `learnings_delta` stream is NOT reviewed here. Hold the proposals; they get 
 
 **Goal:** mine the day's other Cowork sessions and CRM/email/calendar events for learnings that aren't yet in node content.
 
-Run the following agents **in parallel** (one chat message, multiple Task tool blocks):
+Run the following agents **in parallel** via the `subagent.delegate` capability (see `references/capability-matrix.md`) — one chat message, multiple delegation calls:
 
 1. `conversation-miner` with:
    - `time_window: 1 day`
@@ -421,18 +421,18 @@ The unified review gate (Step 2b in full mode, or a compact version here in quic
 
 ## Step 3 — Cortex auto-commit with cheap-tier triage
 
-**Goal:** capture the day's learnings, decisions, and observations to memory — without burning Sonnet tokens on trivial conversations.
+**Goal:** capture the day's learnings, decisions, and observations to memory — without burning full-tier model tokens on trivial conversations.
 
 Run `/remember` in silent mode with **two inputs**:
 
 1. The current session's content (normal /remember source)
-2. The list of accepted proposals from Step 2b — these are pre-routed (each has a `target_node` and `section`) so /remember treats them as already-classified rather than re-classifying through Step 0's Haiku triage. The triage runs ONLY on the current session content; accepted proposals bypass it (the user just accepted them, that's the commit-worthy signal).
+2. The list of accepted proposals from Step 2b — these are pre-routed (each has a `target_node` and `section`) so /remember treats them as already-classified rather than re-classifying through Step 0's low-cost/fast-tier triage. The triage runs ONLY on the current session content; accepted proposals bypass it (the user just accepted them, that's the commit-worthy signal).
 
 **Step 0 (cheap-tier triage) is mandatory for the current-session content** — it's the whole reason the session half is cost-disciplined.
 
 - Classifier decides commit-worthiness and node list for the current session
 - Synthesis runs only on affected nodes
-- Trivial day with no accepted proposals → `commit: false` on the session AND empty accepted-proposals list → one line in `triage-log.md`, no Sonnet call
+- Trivial day with no accepted proposals → `commit: false` on the session AND empty accepted-proposals list → one line in `triage-log.md`, no full-tier model call
 - Substantive day OR accepted proposals exist → normal flow, with the Phase 3 person-page graduation logic firing where relevant
 
 User-observation CORRECTIONs always commit to the `user` node regardless of the classifier's decision (see `skills/observe/SKILL.md` for the override rule).
@@ -458,9 +458,22 @@ Surface a one-line graduation prompt:
 
 > "I've seen `<Name>` mentioned <N> times across <M> nodes. Graduate to a person page? (y / not yet / never — suppress)"
 
-- **y** → run a one-shot synthesis pass: read all node files mentioning `<Name>`, compose a person page (Identity / Relationship / Open threads / Recent interactions / Notes / Linked entities), write to `memory/person/<slug>.md`, then ALSO update all those source nodes to use `[[person/<slug>]]` instead of the bare name (per the wikilink rule in CLAUDE.md).
+- **y** → run a one-shot synthesis pass: read all node files mentioning `<Name>`, compose a person page (Identity / Relationship / Open threads / Recent interactions / Notes / Linked entities), then write it and update the source nodes via `scripts/cortex_cli.py` (locks and writes atomically — see `references/core-contract.md` §11):
+  ```
+  python3 scripts/cortex_cli.py write-file --memory-root <config-root>/memory \
+    "person/<slug>.md" "<composed page content>"
+
+  python3 scripts/cortex_cli.py write-file --memory-root <config-root>/memory \
+    "<source-node-relative-path>" "<entire file content with bare mentions replaced by [[person/<slug>]]>"
+  ```
+  (Same pattern as `/relink-memory` Step 6 — a wikilink conversion is a whole-file text substitution, not a single-section edit.)
 - **not yet** → leave mention count growing; will re-surface next day if threshold still crossed.
-- **never** → suppress this name in `memory/.person-mention-counts.json` (set `suppressed: true` for the entry); never propose again.
+- **never** → suppress this name:
+  ```
+  python3 scripts/cortex_cli.py write-file --memory-root <config-root>/memory \
+    ".person-mention-counts.json" "<updated JSON with suppressed: true for this entry>"
+  ```
+  never propose again.
 
 Cap: 3 graduation prompts per `/end-day` run (otherwise the close turns into a graduation marathon). The remaining candidates re-surface tomorrow.
 
@@ -610,7 +623,11 @@ If `daily-brief` is NOT installed, skip Step 5 entirely. The chain still produce
 
 Regenerate `<config-root>/memory/index.md` so the next day's `/recall`, non-cortex agents, and Obsidian users see an up-to-date catalog.
 
-Invoke the `indexer` skill (see `skills/indexer/SKILL.md` and `commands/reindex.md`). Deterministic and zero-LLM — runs in seconds, no user input required.
+```
+python3 scripts/cortex_cli.py reindex --memory-root <config-root>/memory
+```
+
+Deterministic and zero-LLM (see `scripts/lib/index_generator.py` and `commands/reindex.md`) — runs in seconds, no user input required.
 
 If `<config-root>/memory/staged/queues/reindex` exists (from prior `/remember` calls), the indexer notices it and deletes it after running.
 
@@ -620,9 +637,11 @@ No user gate. This step always runs. If the indexer fails, log the error and con
 
 ## Step 5.6 — Refresh hot cache (v4.7+)
 
-Regenerate `<config-root>/memory/hot.md` so tomorrow's `/recall` auto-fire opens with a fresh 7-day rolling buffer.
+```
+python3 scripts/cortex_cli.py refresh-hot --memory-root <config-root>/memory --trigger end-day
+```
 
-Pure file walk + filter + render per `references/hot-cache.md`. Zero LLM cost.
+Regenerates `<config-root>/memory/hot.md` so tomorrow's `/recall` auto-fire opens with a fresh 7-day rolling buffer. Pure file walk + filter + render per `references/hot-cache.md`. Zero LLM cost.
 
 If `hot_cache.enabled: false` is set in user-context, skip this step.
 
@@ -656,28 +675,18 @@ Check whether `<config-root>/memory/.git/` exists.
 
 ### Step 5.8.0 — Memory write-lock acquisition (v4.12.2+)
 
-Before any git operation, acquire the memory write-lock at `<config-root>/memory/.write-lock`.
+Before any git operation, acquire the memory lock — the `git add`/`git commit` sequence below spans multiple shell commands, not one `cortex_cli.py` call, so use the paired acquire/release subcommands (see `scripts/lib/locking.py`'s `acquire_lock_for_external_section`/`release_lock_for_external_section` and `references/core-contract.md` §11):
 
 ```
-LOCK_PATH = <config-root>/memory/.write-lock
-
-If LOCK_PATH exists:
-  Read its content (format: "<command>|<iso8601-acquired-at>|<pid-or-session-id>")
-  age_seconds = now - acquired_at
-  If age_seconds > 600 (10 min):
-    Treat as stale; remove and proceed (likely a crashed run).
-  Else:
-    Surface to user: "Memory write-lock held by <command> since <acquired-at> (<age>s ago). Another command is mid-write — skipping memory commit; retry next /end-day, or remove <LOCK_PATH> manually if you're certain no command is running."
-    Exit Step 5.8 with a status note. Continue to Step 6 (close).
-Else:
-  Write "end-day|<iso8601-now>|<session-id-or-pid>" to LOCK_PATH.
-
-# (The lock is released at end of Step 5.8 — or on any failure path — by deleting LOCK_PATH.)
+python3 scripts/cortex_cli.py lock-acquire --memory-root <config-root>/memory --timeout 10 --stale-after 600
 ```
 
-The same lock is acquired by `/listen` Step 4 (commit-drafts → memory writes), `/morning` Step 2 (per-proposal merges), `/remember` Step 3 (node writes), `/cleanup` Step 4 (executions), and `/research-gaps`/`merge-research-draft` writes. Each grabs the lock before any node-file mutation.
+- On success (exit 0): proceed to Step 5.8.1.
+- On failure (exit 1, timeout — lock held by another process past its staleness window): surface "Memory write-lock held by another process — skipping memory commit; retry next `/end-day`." Exit Step 5.8 with a status note. Continue to Step 6 (close). Do **not** manually delete the lock file — staleness reclaim is automatic and handled by the lock itself.
 
-The lock is `memory/.write-lock` — covered by both gitignore variants (local-only and remote-safe).
+The same lock (and CLI) is used by `/listen`, `/morning`, `/remember`, `/note`, `/forget`, `/cleanup`, `/rehearse`, `/relink-memory`, and `/sync-linked-entities` for every node-file mutation — this is one shared lock, not a per-command one.
+
+The lock is `memory/.lock` — covered by both gitignore variants (local-only and remote-safe).
 
 ### Step 5.8.1 — Defensive .gitignore validation (v4.12.2+ fingerprint-precise)
 
@@ -752,8 +761,10 @@ if post_status > 0:
 ### Step 5.8.5 — Release the write-lock
 
 ```
-Always (on success or failure path): rm <config-root>/memory/.write-lock
+python3 scripts/cortex_cli.py lock-release --memory-root <config-root>/memory
 ```
+
+Run this on every exit path from Step 5.8 — success or failure — same as the old prose said, but now backed by real ownership-checked release logic instead of an unconditional `rm` (which could otherwise delete a different process's lock if this one's had already gone stale and been reclaimed).
 
 **Optional push:**
 - If `cortex.user-context.md` has `memory_as_git.remote: <url>` AND `memory_as_git.push_on_close: true`, run `git push origin main` after commit.

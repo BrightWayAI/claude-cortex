@@ -14,7 +14,7 @@ This is the bigger sibling of `/end-day`. End-day captures today's reflection; e
 
 If `claude-cortex` is installed and the user uses Granola (or another call-transcript source) for meetings:
 
-Use the Task tool with `subagent_type="transcript-reviewer"` and pass:
+Delegate via the `subagent.delegate` capability (see `references/capability-matrix.md`) to the `transcript-reviewer` role, passing:
 - `time-window` — 7 days
 - `sources` — `["granola"]` (default; add `"gemini-drive"` if user has Gemini transcripts and the user-context says so)
 

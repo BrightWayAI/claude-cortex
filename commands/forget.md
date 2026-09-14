@@ -74,17 +74,37 @@ Wait for confirmation before modifying memory (unless autonomy mode = `auto`).
 
 ### File Operations
 
-Memory is stored in `~/Documents/Claude/memory/`.
+Memory is stored at `<config-root>/memory/` (resolve per `references/core-contract.md` §1).
 
-**Before modifying**: Check if `~/Documents/Claude/memory/` is accessible.
-- **Cowork**: Use `mcp__cowork__request_cowork_directory(path="~/Documents/Claude")` to request access. Wait for the user to approve.
+**Before modifying**: Check if `<config-root>/memory/` is accessible.
+- **Cowork**: Use `mcp__cowork__request_cowork_directory(path=<config-root>)` to request access. Wait for the user to approve.
 - **Claude Code**: The directory is accessible directly via the filesystem.
 
 If the directory cannot be accessed, explain that memory cannot be modified without this folder and stop.
 
-- **Archive** (default): Move the node file from its current location to `memory/archive/{filename}`. Remove the node's entry from DASHBOARD.md Active Nodes. Add a one-line entry to the Dormant or a new "Archived" section in DASHBOARD.md.
-- **Merge**: Read both node files. Append source's changelog, knowledge, and people entries to the target file. Delete the source file. Update DASHBOARD.md.
-- **Delete**: Remove the node file entirely. Remove from DASHBOARD.md.
+All operations below go through `scripts/cortex_cli.py`, which acquires the shared lock, performs the change, and releases it in one call (see `references/core-contract.md` §11) — do not hand-edit or hand-delete node files for this step.
+
+- **Archive** (default): move the node file into `memory/archive/`:
+  ```
+  python3 scripts/cortex_cli.py move-node --memory-root <config-root>/memory \
+    "<node-relative-path>" "archive/<filename>"
+  ```
+  Then remove the node's entry from DASHBOARD.md Active Nodes and add a one-line entry to the Dormant or a new "Archived" section, using `replace-section`/`append-section` as in `/remember` Step 3.
+- **Merge**: read both node files first (to build the merged content), then:
+  ```
+  python3 scripts/cortex_cli.py append-section --memory-root <config-root>/memory \
+    "<target-relative-path>" "## Changelog" "<merge note + transferred entries>"
+
+  python3 scripts/cortex_cli.py delete-node --memory-root <config-root>/memory \
+    "<source-relative-path>"
+  ```
+  Update the target's living summary via `replace-section` and update DASHBOARD.md.
+- **Delete**:
+  ```
+  python3 scripts/cortex_cli.py delete-node --memory-root <config-root>/memory \
+    "<node-relative-path>"
+  ```
+  Remove the node's entry from DASHBOARD.md.
 
 After execution, confirm what was done:
 - For archive: "Archived [node-id]. It's searchable but won't appear in dashboards."

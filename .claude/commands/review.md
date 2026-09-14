@@ -1,20 +1,22 @@
 ---
-description: Generate a synthesized weekly review across all projects. Covers progress, learning, blockers, decisions, and upcoming actions.
+description: Generate a synthesized weekly review of activity and learning across all projects. Produces a shareable summary covering what moved forward, what was learned, what's stuck, and what's coming up. Different from /timeline (raw chronology) — this is an analytical digest.
 ---
 
 # /review $ARGUMENTS
 
 Generate a weekly (or custom period) review that synthesizes project activity and learning into a shareable digest.
 
-Parse `$ARGUMENTS` for optional flags: `--since [date]` and `--until [date]`.
-
 ---
 
 ### Data Source
 
-Memory is stored at `~/Documents/Claude/memory/`.
+**Before reviewing**: Check if `~/Documents/Claude/memory/` is accessible.
+- **Cowork**: Use `mcp__cowork__request_cowork_directory(path="~/Documents/Claude")` to request access. Wait for the user to approve.
+- **Claude Code**: The directory is accessible directly via the filesystem.
 
-1. Read `memory/DASHBOARD.md` for the overview
+If the directory cannot be accessed, explain that the review cannot be generated without this folder and stop.
+
+1. Read `~/Documents/Claude/memory/DASHBOARD.md` for the overview
 2. Read node files for any nodes updated within the review period
 3. Focus on: new knowledge entries, decisions in changelogs, changes in P0/P1 actions, resolved vs. new threads
 

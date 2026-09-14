@@ -5,9 +5,34 @@ from __future__ import annotations
 import json
 import re
 import sys
+import unittest
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from scripts.lib.command_sync import COMMAND_ADAPTER_NAMES, derive_claude_command  # noqa: E402
+from scripts.lib.repo_checks import run_all_checks  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
+
+# Commands that are intentionally skill-less: pure deterministic/migration
+# entrypoints with no natural-language workflow to wrap. See docs/PORTABILITY_REFACTOR_PROMPT.md
+# Phase 0 audit and references/core-contract.md.
+SKILL_COVERAGE_EXCEPTIONS = frozenset(
+    {"merge-research-draft", "migrate-staged-substrates", "reindex"}
+)
+
+
+def run_unit_tests() -> int:
+    """Run the fixture-based deterministic-utility test suite under tests/."""
+    loader = unittest.TestLoader()
+    suite = loader.discover(str(ROOT / "tests"), pattern="test_*.py", top_level_dir=str(ROOT))
+    result = unittest.TextTestRunner(verbosity=0).run(suite)
+    if not result.wasSuccessful():
+        print("ERROR: unit tests failed", file=sys.stderr)
+        return 1
+    print(f"OK: {result.testsRun} unit tests passed.")
+    return 0
 
 
 def main() -> int:
@@ -42,7 +67,36 @@ def main() -> int:
             checked += 1
 
     print(f"OK: plugin.json valid; {checked} markdown files checked.")
-    return 1 if errors else 0
+
+    findings = run_all_checks(ROOT, SKILL_COVERAGE_EXCEPTIONS)
+    for f in findings:
+        print(f"ERROR: {f}", file=sys.stderr)
+    if findings:
+        print(f"ERROR: {len(findings)} repo-check finding(s).", file=sys.stderr)
+    else:
+        print("OK: repo checks (skill names, internal references, taxonomy, "
+              "skill coverage, version agreement) passed.")
+
+    stale_adapters = []
+    for name in COMMAND_ADAPTER_NAMES:
+        canonical_path = ROOT / "commands" / f"{name}.md"
+        generated_path = ROOT / ".claude" / "commands" / f"{name}.md"
+        expected = derive_claude_command(canonical_path.read_text(encoding="utf-8"))
+        current = generated_path.read_text(encoding="utf-8") if generated_path.exists() else ""
+        if current != expected:
+            stale_adapters.append(name)
+    if stale_adapters:
+        print(
+            "ERROR: .claude/commands/ is stale for: " + ", ".join(stale_adapters) +
+            " — run `python3 scripts/generate_claude_commands.py --write`",
+            file=sys.stderr,
+        )
+    else:
+        print(f"OK: .claude/commands/ is in sync for {len(COMMAND_ADAPTER_NAMES)} generated commands.")
+
+    test_status = run_unit_tests()
+
+    return 1 if (errors or findings or stale_adapters or test_status) else 0
 
 
 def check_markdown(path: Path) -> int:

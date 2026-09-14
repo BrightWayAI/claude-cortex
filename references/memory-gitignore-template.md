@@ -27,8 +27,8 @@ Emit this EXACT content; do not re-format. The blank line below the opening fenc
 # Operational state (changes every tick; would dirty every diff)
 .state.json
 
-# Write-lock marker (v4.12.2+) — flags an in-progress memory mutation
-.write-lock
+# Lock marker (v4.12.2+) — flags an in-progress memory mutation; see scripts/lib/locking.py
+.lock
 
 # Operations chronicle — too noisy for daily diff review
 log.md
@@ -67,7 +67,7 @@ Emit this EXACT content. Adds exclusions for PII-dense files that the local-only
 
 # === Everything from the local-only variant ===
 .state.json
-.write-lock
+.lock
 log.md
 staged/
 hot.md

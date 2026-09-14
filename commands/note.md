@@ -35,27 +35,25 @@ If node is ambiguous or missing, infer from conversation context or ask.
 
 ### Storage Location
 
-**Before writing**: Check if `~/Documents/Claude/memory/` is accessible.
-- **Cowork**: Use `mcp__cowork__request_cowork_directory(path="~/Documents/Claude")` to request access. Wait for the user to approve.
-- **Claude Code**: The directory is accessible directly via the filesystem. Create it with `mkdir -p` if it doesn't exist.
+**Before writing**: Resolve `<config-root>` per `references/core-contract.md` §1 (respects the legacy pointer, the new `~/.cortex/config-root` pointer, and the `~/Documents/Claude` default — do not hardcode the default path).
+- **Cowork**: Use `mcp__cowork__request_cowork_directory(path=<config-root>)` to request access. Wait for the user to approve.
+- **Claude Code**: The directory is accessible directly via the filesystem.
 
 If the directory cannot be accessed, explain that memory cannot be persisted without this folder and stop.
 
-1. Determine the node file path from the node ID:
-   - If node has a prefix (e.g., `client:acme-corp`): `~/Documents/Claude/memory/{prefix}/{slug}.md`
-   - If no prefix (e.g., `hiring`): `~/Documents/Claude/memory/{node-id}.md`
-2. Read the node file if it exists
-3. Prepend the LOG entry to the Changelog section (newest first)
-4. If the node file doesn't exist, create it with the standard node file template
-5. If the directory doesn't exist, create it
-6. Update `~/Documents/Claude/memory/DASHBOARD.md` "Last updated" timestamp
-7. Only update the dashboard summary if the note represents a significant state change
+1. Determine the node's relative file path from the node ID (`references/core-contract.md` §3; legacy `client:acme-corp` colon syntax and `client/acme-corp` slash syntax map to the same file).
+2. Build the LOG entry: `[node-id] LOG YYYY-MM-DD — Note: [content]`
+3. Write it with the shared locking/atomic-write utility rather than an ad-hoc file edit — this is what actually acquires the lock, creates the node file from the standard template if it doesn't exist, and performs the write atomically:
 
-Append a lightweight LOG entry:
+   ```
+   python3 scripts/cortex_cli.py prepend-section \
+     --memory-root <config-root>/memory \
+     "<node-relative-path>" "## Changelog" "[node-id] LOG YYYY-MM-DD — Note: [content]"
+   ```
 
-```
-[node-id] LOG YYYY-MM-DD — Note: [content]
-```
+   This inserts the entry newest-first in `## Changelog` and creates the section/file if absent. It handles locking and atomic writes internally — do not also hand-edit the file for this step.
+4. Update `<config-root>/memory/DASHBOARD.md` "Last updated" timestamp.
+5. Only update the dashboard summary if the note represents a significant state change.
 
 Do NOT update the living summary unless the note represents a significant state change (e.g. a project completing, a major blocker resolving).
 

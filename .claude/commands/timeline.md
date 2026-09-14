@@ -1,22 +1,24 @@
 ---
-description: Show a chronological timeline of activity across all projects or a single project. Useful for reviewing what happened over a time period.
+description: Show a chronological timeline of activity across all projects or a single project. Useful for reviewing what happened over a time period, preparing weekly updates, or understanding the arc of a project.
 ---
 
 # /timeline $ARGUMENTS
 
 You are constructing a chronological view of session history from working memory.
 
-Parse `$ARGUMENTS` for an optional project node and optional flags: `--since [date]` and `--until [date]`.
-
 ---
 
 ### Data Source
 
-Memory is stored at `~/Documents/Claude/memory/`.
+**Before loading**: Check if `~/Documents/Claude/memory/` is accessible.
+- **Cowork**: Use `mcp__cowork__request_cowork_directory(path="~/Documents/Claude")` to request access. Wait for the user to approve.
+- **Claude Code**: The directory is accessible directly via the filesystem.
 
-1. If a project is specified: read that node's file, extract all LOG entries, sort chronologically
+If the directory cannot be accessed, explain that the timeline cannot be built without this folder and stop.
+
+1. If a project is specified: read that node's file from `~/Documents/Claude/memory/`, extract all LOG entries, sort chronologically
 2. If no project: read all node files, extract all LOG entries, sort chronologically across all nodes
-3. Use `memory/DASHBOARD.md` to identify which nodes to scan
+3. Use `~/Documents/Claude/memory/DASHBOARD.md` to identify which nodes to scan
 
 ---
 

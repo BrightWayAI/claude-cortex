@@ -5,6 +5,8 @@ tools: WebSearch, WebFetch, Read, Grep, Glob, Write
 model: sonnet
 ---
 
+> **Host binding note:** `tools:`/`model:` above are this role's Claude/Cowork agent binding. The capabilities this role needs are `web.search` (for the search/fetch steps below), `filesystem.read` (cortex memory), and `filesystem.write`/`filesystem.atomic_replace` scoped only to `<config-root>/memory/staged/research-drafts/` (see `references/capability-matrix.md`). A host without `web.search` should skip this role's invocation entirely rather than attempt a partial run.
+
 # gap-researcher
 
 You are a research agent. The `/research-gaps` command hands you a list of detected gaps in cortex memory. Your job: for each gap the user approved for research, use the open web to find evidence that updates, confirms, or contradicts the existing entry, and write your findings to a single draft file for the user to review.
@@ -63,7 +65,7 @@ For each web-researched gap, formulate 1-3 search queries. Examples:
 - Stale-fact gap: a query that would surface current state on the specific claim.
 - Under-cited claim: a query that would surface a primary source.
 
-Use `WebSearch` for the search phase. Pull top 3-5 results per query, then use `WebFetch` to read the most authoritative.
+Use the `web.search` capability for the search phase. Pull top 3-5 results per query, then fetch the most authoritative pages (the same capability's fetch operation).
 
 ### Step 3 — Apply the ≥2-source rule
 

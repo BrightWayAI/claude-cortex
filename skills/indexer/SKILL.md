@@ -34,15 +34,10 @@ See `commands/reindex.md` for the explicit command path and `references/memory-i
 
 ## What to do
 
-1. Resolve `<config-root>` via the standard pattern (`~/Documents/.claude-plugin-config-root`).
-2. Read `<config-root>/memory/.decay-config.md` for thresholds (use defaults if missing).
-3. Walk `<config-root>/memory/` per `references/memory-index.md` rules.
-4. For each node file, extract descriptor and latest `[confirmed:...]` date.
-5. Classify state per the decay model.
-6. Render the grouped catalog with state flags.
-7. Write `<config-root>/memory/index.md` (overwrite).
-8. If a `staged/queues/reindex` marker exists, delete it.
-9. Report briefly: "Indexed N nodes (X fresh, Y stale, Z dormant, W cold). Demoted: D entries across M nodes. Archived: A person pages, K nodes." Do not list every node.
+1. Resolve `<config-root>` per `references/core-contract.md` §1.
+2. Run `python3 scripts/cortex_cli.py reindex --memory-root <config-root>/memory` — this single call does the walk, decay classification, and atomic write (see `scripts/lib/index_generator.py`; no separate steps needed).
+3. If a `staged/queues/reindex` marker exists, delete it.
+4. Report briefly from the regenerated `index.md`'s header line: "Indexed N nodes (X fresh, Y stale, Z dormant, W cold)." Do not list every node.
 
 ## What this skill does NOT do
 

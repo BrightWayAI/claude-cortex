@@ -14,8 +14,8 @@ See commands/learn.md for the full workflow.
 
 When this skill fires automatically:
 
-- Identify the knowledge type from the content (model, gotcha, lesson, recipe,
-  correction, or insight)
+- Identify the knowledge type from the content (insight, lesson, model, gotcha,
+  recipe, correction, or decision — see `CLAUDE.md` Knowledge Taxonomy)
 
 - Identify the most relevant project node from conversation context
 

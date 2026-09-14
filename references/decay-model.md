@@ -113,7 +113,7 @@ When `/recall` renders any knowledge entry (project view, person view, topic vie
 When `/remember` writes a new INSIGHT, MODEL, GOTCHA, LESSON, or DECISION to a node:
 
 1. After classification (Step 0 cheap-tier triage) decides the affected node, but BEFORE writing the new entry, scan the node's existing entries of the same type.
-2. Send (new entry, existing entries of same type, last 60 days) to a Haiku-tier classifier:
+2. Send (new entry, existing entries of same type, last 60 days) to a low-cost/fast-tier model (Claude adapter: Haiku-tier):
    > "Does this new entry contradict, supersede, or meaningfully refine any of the existing entries? Output exactly: `{supersedes: [<entry-id>], reason: '...'}` or `{supersedes: null}`."
 3. If `supersedes` is non-null → propose to the user:
    > "New entry: '...'.

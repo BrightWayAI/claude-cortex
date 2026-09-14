@@ -49,7 +49,7 @@ The scanner walks `<config-root>/memory/` once and applies all rules in parallel
 
 **What:** Two active entries on the same node make opposing claims about the same thing.
 
-**How to scan:** Cheap-tier classifier (Haiku) reads pairs of active entries from the same node when:
+**How to scan:** A low-cost/fast-tier model (Claude adapter: Haiku) reads pairs of active entries from the same node when:
 - Both are typed INSIGHT, MODEL, or GOTCHA.
 - Their `[confirmed:...]` dates differ by ≥7 days (recent flips don't count — they're naturally superseding via the v4.4 concept-drift detector).
 - Their text similarity (cheap embedding or n-gram overlap) is ≥ 0.4 on key noun phrases.
@@ -59,7 +59,7 @@ For each candidate pair, ask the classifier: "Do these two entries make opposing
 **Priority:** Critical. Contradictions actively pollute future recall.
 
 **Notes:**
-- This is the only rule with a model cost. Budget: ~100 Haiku calls per scan, capped. If a node has >20 active entries, sample 20 pairs by recency rather than checking all.
+- This is the only rule with a model cost. Budget: ~100 low-cost/fast-tier model calls per scan, capped. If a node has >20 active entries, sample 20 pairs by recency rather than checking all.
 - A "supersedes" relationship marked by the v4.4 drift detector is not a contradiction — it's a resolved one. Skip those.
 
 ---

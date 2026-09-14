@@ -78,47 +78,53 @@ Still true? Still useful?
   (s) skip — leave as-is, will resurface in a later rehearsal
 ```
 
-Per-entry behavior:
+Per-entry behavior. All file mutations below go through `scripts/cortex_cli.py` (acquires the lock, writes atomically, releases — see `references/core-contract.md` §11); do not hand-edit node files for these actions.
 
 ### confirm
 
-Update the entry's `[confirmed:<today>]` tag in place. Leave `[recalled:...]` alone — `/rehearse` is a confirmation event, not a recall event (the user isn't surfacing the knowledge into a working conversation; they're maintaining its status).
+Update the entry's `[confirmed:<today>]` tag in place:
+```
+python3 scripts/cortex_cli.py replace-section --memory-root <config-root>/memory \
+  "<node-relative-path>" "<section heading containing this entry>" "<section body with this entry's tag updated>"
+```
+Leave `[recalled:...]` alone — `/rehearse` is a confirmation event, not a recall event (the user isn't surfacing the knowledge into a working conversation; they're maintaining its status).
 
 ### update
 
-Drop into inline edit mode. Show the current entry text; let the user edit. On save:
-- Replace the entry text in the node file
-- Update `[confirmed:<today>]`
-- Note in the changelog: `[node-id] LOG <today> — rehearsal-edit: refined <type> entry`
+Drop into inline edit mode. Show the current entry text; let the user edit. On save, `replace-section` the containing section with the edited entry text and updated `[confirmed:<today>]`, then:
+```
+python3 scripts/cortex_cli.py prepend-section --memory-root <config-root>/memory \
+  "<node-relative-path>" "## Changelog" "[node-id] LOG <today> — rehearsal-edit: refined <type> entry"
+```
 
 ### demote
 
-Move the entry to the node's `## Demoted knowledge` section (create if missing). Append the demotion metadata:
-
+Two calls: remove the entry from its active section, and append it to `## Demoted knowledge`.
 ```
-↳ demoted <today> by rehearse-action, reason: user judged stale during rehearsal
-```
+python3 scripts/cortex_cli.py replace-section --memory-root <config-root>/memory \
+  "<node-relative-path>" "<section heading>" "<section body with entry removed>"
 
-Preserve the original `[confirmed:...]` and `[recalled:...]` tags on the moved entry. The active section loses the entry; the demoted section gains it.
+python3 scripts/cortex_cli.py append-section --memory-root <config-root>/memory \
+  "<node-relative-path>" "## Demoted knowledge" "<entry text>
+  ↳ demoted <today> by rehearse-action, reason: user judged stale during rehearsal"
+```
+Preserve the original `[confirmed:...]` and `[recalled:...]` tags on the moved entry.
 
 ### archive
 
-Same as demote in effect, but with a different metadata trail:
-
+Same two calls as demote, with a different metadata line:
 ```
-↳ archived <today> by rehearse-action — user removed from active rotation
+  ↳ archived <today> by rehearse-action — user removed from active rotation
 ```
-
 The entry still lives in `## Demoted knowledge` (entry-level archive isn't a separate folder — it's still demoted, just with stronger user intent).
 
 ### skip
 
-No file changes. Optionally, append the entry to `<config-root>/memory/staged/skip-logs/rehearse.md` so the agent doesn't surface this same entry next week:
-
+No node file changes. Optionally log it so the agent doesn't surface this same entry next week:
 ```
-<entry-ref> skipped <today> — defer for at least 30 days
+python3 scripts/cortex_cli.py append-line --memory-root <config-root>/memory \
+  "staged/skip-logs/rehearse.md" "<entry-ref> skipped <today> — defer for at least 30 days"
 ```
-
 The skip log expires entries after 30 days, so they can resurface in a later rehearsal.
 
 ---
@@ -148,6 +154,12 @@ Invoke the `log-writer` skill (see `skills/log-writer/SKILL.md`) with:
 ## Step 5 — Update staged/queues/rehearse.md
 
 After the batch is processed, remove any successfully-handled entries from `<config-root>/memory/staged/queues/rehearse.md` (entries that `/cleanup` had previously deferred). Skipped entries stay in the queue and may be re-surfaced in the next rehearsal.
+
+Since this is a flat, non-sectioned file, rewrite it wholesale with the handled entries removed:
+```
+python3 scripts/cortex_cli.py write-file --memory-root <config-root>/memory \
+  "staged/queues/rehearse.md" "<remaining entries, one per line>"
+```
 
 ---
 

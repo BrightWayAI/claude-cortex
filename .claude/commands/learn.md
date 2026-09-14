@@ -1,15 +1,10 @@
 ---
-description: Capture standalone knowledge without a full session commit. Use for gotchas, mental models, techniques, lessons, and corrections.
+description: Capture standalone knowledge without a full session commit. Use when you've discovered something worth remembering — a gotcha, a mental model, a technique — and want to commit it directly. Faster and more focused than /remember.
 ---
 
 # /learn $ARGUMENTS
 
 Quick-commit a single piece of knowledge to a project node.
-
-Parse `$ARGUMENTS` to extract:
-- **Node**: Which project node this belongs to (required)
-- **Type**: One of: `insight`, `lesson`, `model`, `gotcha`, `recipe`, `correction` (optional — infer if omitted)
-- **Content**: The knowledge to capture
 
 ---
 
@@ -27,7 +22,12 @@ Parse `$ARGUMENTS` to extract:
 
 ## Step 1 — Parse the input
 
-If the user provides just natural language (e.g. `/learn that the API rate limit resets hourly not daily`):
+Extract:
+- **Node**: Which project node this belongs to (required)
+- **Type**: One of: `insight`, `lesson`, `model`, `gotcha`, `recipe`, `correction` (optional — Claude will infer if omitted)
+- **Content**: The knowledge to capture
+
+If the user provides just natural language (e.g. `/learn that the API rate limit resets hourly not daily`), Claude should:
 1. Infer the most relevant node from conversation context or ask
 2. Infer the type from the content
 3. Format appropriately
@@ -49,16 +49,22 @@ If the user provides just natural language (e.g. `/learn that the API rate limit
 
 ## Step 3 — Write to memory
 
-Memory is stored at `~/Documents/Claude/memory/`. Create directories as needed.
+### Storage Location
+
+**Before writing**: Check if `~/Documents/Claude/memory/` is accessible.
+- **Cowork**: Use `mcp__cowork__request_cowork_directory(path="~/Documents/Claude")` to request access. Wait for the user to approve.
+- **Claude Code**: The directory is accessible directly via the filesystem. Create it with `mkdir -p` if it doesn't exist.
+
+If the directory cannot be accessed, explain that memory cannot be persisted without this folder and stop.
 
 1. Determine the node file path from the node ID:
-   - If node has a prefix (e.g., `client:acme-corp`): `memory/{prefix}/{slug}.md`
-   - If no prefix (e.g., `hiring`): `memory/{node-id}.md`
+   - If node has a prefix (e.g., `client:acme-corp`): `~/Documents/Claude/memory/{prefix}/{slug}.md`
+   - If no prefix (e.g., `hiring`): `~/Documents/Claude/memory/{node-id}.md`
 2. Read the node file if it exists
 3. Append the knowledge entry to the appropriate section (Models, Gotchas, Lessons, etc.)
 4. If the node file doesn't exist, create it with just a Knowledge section using the standard node file template
 5. If the directory doesn't exist, create it
-6. Update `memory/DASHBOARD.md`:
+6. Update `~/Documents/Claude/memory/DASHBOARD.md`:
    - Add/update the node's summary in Active Nodes (if this is a new node)
    - Add the entry to Recent Knowledge
    - If the entry is a GOTCHA that applies broadly, also add to Global Gotchas

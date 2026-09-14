@@ -4,6 +4,8 @@ A rolling 7-day buffer of recent substrate, auto-maintained by `/listen`, `/morn
 
 Inspired by Karpathy's LLM-wiki `hot.md` pattern: keep the most-load-bearing recent context in one always-loaded file so the AI doesn't cold-start every time.
 
+**Implementation:** `scripts/lib/hot_cache_generator.py` (`render_hot_cache` / `generate_and_write_hot_cache`), fixture-tested in `tests/test_hot_cache_generator.py`. Invoked via `python3 scripts/cortex_cli.py refresh-hot --memory-root <config-root>/memory --trigger <listen|morning|end-day|manual>`. **Current scope:** the implementation covers node-local sources — `## Changelog`, `## Open threads`, and `DECISION` entries (generation steps 1-6 below). Pulling from `<config-root>/briefs/` reflections and resolved `staged/commit-drafts/archive/` items (steps 7-8) is not yet implemented; this is a documented gap, not a silent omission.
+
 ## What it contains
 
 A single markdown file, regenerated wholesale on each maintenance run. Sections:

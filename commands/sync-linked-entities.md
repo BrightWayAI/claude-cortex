@@ -152,15 +152,23 @@ DRIFT SCAN — source: [[person/rob-buelow]] (modified 2026-05-28)
 SUMMARY: 4 drift candidates across 2 linked nodes (1 no-drift).
 ```
 
-Walk each candidate; accept user input per-row.
+Walk each candidate; accept user input per-row. All writes below go through `scripts/cortex_cli.py` (acquires the lock, writes atomically, releases — see `references/core-contract.md` §11); do not hand-edit linked node files.
 
-**On `u` / `update-linked-summary` / `update-summary`:** open the linked node, draft a proposed update to the relevant section (Summary, status block, etc.) reflecting the new source-side reality. Show the diff. User confirms before writing.
+**On `u` / `update-linked-summary` / `update-summary`:** draft a proposed update to the relevant section. Show the diff. On confirmation:
+```
+python3 scripts/cortex_cli.py replace-section --memory-root <config-root>/memory \
+  "<linked-node-relative-path>" "## Summary" "<updated summary text>"
+```
 
-**On `c` / `close-on-linked`:** mark the linked open thread as completed (add `[COMPLETED <today>]` prefix or move to a Closed Out section). User confirms.
+**On `c` / `close-on-linked`:** on confirmation, mark the linked open thread as completed via `replace-section` on `## Open threads` with the item prefixed `[COMPLETED <today>]` or moved to a Closed Out section.
 
-**On `r` / `remove`:** remove the line from the linked node. User confirms.
+**On `r` / `remove`:** on confirmation, `replace-section` the containing section with the line removed.
 
-**On `k` / `keep`:** suppress this candidate for 30 days. Log to `<config-root>/memory/staged/skip-logs/sync-linked.md` with `(source, linked, candidate-id, reason)`.
+**On `k` / `keep`:** suppress this candidate for 30 days:
+```
+python3 scripts/cortex_cli.py append-line --memory-root <config-root>/memory \
+  "staged/skip-logs/sync-linked.md" "<source>, <linked>, <candidate-id>, <reason>"
+```
 
 **On `s` / `skip`:** no action; re-surfaces on next `/sync-linked-entities` run.
 

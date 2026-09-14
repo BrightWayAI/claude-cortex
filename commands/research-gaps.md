@@ -24,7 +24,7 @@ Apply all rules from `references/gap-detection-rules.md`:
 
 1. **Thin entity** — `person/*.md` or `company/*.md` with ≤1 active entry but ≥3 inbound refs.
 2. **Stale fact in active rotation** — INSIGHT/MODEL/LESSON past `threshold_dormant` on a node referenced by Fresh nodes in the last 30 days.
-3. **Contradiction within a node** — opposing active claims (cheap-tier classifier; budgeted to ~100 Haiku calls).
+3. **Contradiction within a node** — opposing active claims (cheap-tier classifier; budgeted to ~100 low-cost/fast-tier calls, Claude adapter: Haiku).
 4. **Orphan node** — zero inbound wikilinks AND no confirmation in 90 days.
 5. **Under-cited high-confidence claim** — `[high-confidence]` tag with no source attribution.
 6. **Decision gap** — `## Open threads` / `## Next Actions` entry with a past date and no resolution.
