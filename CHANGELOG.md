@@ -6,6 +6,87 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.14.0] — Portability and stabilization refactor (2026-09-14)
+
+Host-neutral core: a canonical storage/workflow contract, a capability
+matrix, and real deterministic code replacing several previously prose-only
+"the model does this carefully every time" claims. Establishes the
+foundation for a future Codex adapter without adding any Codex-specific
+workflow files.
+
+### Added
+- `references/core-contract.md` — single canonical contract: config-root
+  resolution, memory layout, node schema, the 7-type knowledge taxonomy,
+  wikilinks, timestamp/append-vs-replace rules, staging/archive, locking
+  requirements, concept-drift, privacy tiers, backward-compat guarantees,
+  and the capability-name list.
+- `references/capability-matrix.md` — logical capabilities
+  (`filesystem.*`, `web.search`, `connector.*`, `subagent.delegate`, etc.)
+  with per-host (Claude Code / Cowork) implementation and degrade behavior.
+- `AGENTS.md` — durable entrypoint for a future Codex session.
+- `docs/PORTABILITY_READINESS.md` — Codex mapping table, known gaps, and
+  risks requiring real-memory testing (explicitly not done here).
+- `scripts/cortex_cli.py` + `scripts/lib/{locking,atomic_write,node_paths,
+  sections,decay,index_generator,hot_cache_generator,command_sync,
+  repo_checks}.py` — real, fixture-tested code for cross-process locking
+  (with automatic stale-lock reclaim), atomic writes, node-path traversal
+  guards, section-aware Markdown edits, decay classification, and
+  deterministic `memory/index.md` / `memory/hot.md` generation.
+- `scripts/generate_claude_commands.py` — regenerates `.claude/commands/*.md`
+  from the canonical `commands/*.md` files; CI now fails if they drift.
+- 131 unit/integration tests under `tests/`, including
+  `tests/test_integration_cli_subprocess.py`, which exercises `cortex_cli.py`
+  as a real subprocess through full command-like sequences (a `/remember`-
+  style write chain, `/forget --archive`, `/rehearse`'s demote flow, and
+  the paired lock-acquire/lock-release around an external critical
+  section like `/end-day`'s git commit step).
+
+### Changed
+- `commands/remember.md`, `README.md`, `skills/learn/SKILL.md` — reverted a
+  stray four-type knowledge-taxonomy consolidation back to the canonical
+  seven types (Insight/Lesson/Model/Gotcha/Recipe/Correction/Decision).
+- `/remember` and `/note` now write through `cortex_cli.py` (real locking +
+  atomic writes) instead of ad-hoc file edits.
+- `/forget`, `/cleanup`, `/rehearse`, `/relink-memory`,
+  `/sync-linked-entities`, and `/end-day`'s index/hot-cache/git-commit-lock
+  steps also now write through `cortex_cli.py`.
+- `/reindex` and the `indexer` skill now call the real deterministic
+  generator instead of re-deriving the algorithm from prose each time.
+- All 9 `.claude/commands/*.md` files regenerated from canonical
+  `commands/*.md` (they had silently drifted — missing features like
+  `/search`'s subagent-delegation step and `/remember`'s commit triage).
+- Canonical lock filename standardized on `.lock` (was inconsistently
+  `.write-lock` in some prose/gitignore templates that predated any real
+  lock implementation).
+- `agents/*.md` role files annotated with capability-matrix references
+  instead of naming Claude tools/MCP servers directly in role prose; added
+  a missing `connector.crm.read` (and new `connector.slack.read` /
+  `connector.drive.read`) capability.
+- Bare `Haiku`/`Sonnet` model-tier references across `commands/*.md`,
+  `agents/*.md`, and `references/*.md` reframed as "low-cost/fast-tier" /
+  "full-tier" with the Claude-specific choice kept as an explicit adapter
+  annotation.
+- `SECURITY.md` rewritten to match actual behavior (previously claimed no
+  network access and no code execution — both now false given `/listen`,
+  `/research-gaps`, and `cortex_cli.py`).
+- `CONTRIBUTING.md` updated to describe the generator-based
+  `.claude/commands/` workflow instead of manual duplication.
+- `scripts/check_repo.py` expanded: skill name/directory agreement, broken
+  internal file references, taxonomy-drift regression guard, command/skill
+  coverage with documented exceptions, `plugin.json`/`CHANGELOG.md` version
+  agreement, `.claude/commands/` freshness, and the full test suite — all
+  as part of one `python3 scripts/check_repo.py` entry point.
+
+### Compatibility
+- Existing `~/Documents/Claude` default, the legacy
+  `~/Documents/.claude-plugin-config-root` pointer, and all existing node
+  identifiers continue to resolve unchanged. A new optional
+  `CORTEX_CONFIG_ROOT` env var and `~/.cortex/config-root` pointer file are
+  added above the legacy pointer in precedence, for sharing memory with a
+  future Codex host.
+- No real user memory was read, migrated, or tested against in this
+  refactor — all tests use `tempfile.TemporaryDirectory()` fixtures.
+
 ## [4.13.2] — `/end-day` brief-state paste path (2026-07-07)
 
 Companion to daily-brief v0.6.1 (state-mirror fix). Root cause of "end-day never sees my brief actions": the v0.6.0 artifact auto-mirror silently never worked (malformed tool name, no `mcp_tools` allowlist declaration, no connected filesystem MCP server — see daily-brief 0.6.1 changelog), so Step 2c.0 always fell through to the multi-select gate, forcing the user to re-state every action by hand.

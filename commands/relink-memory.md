@@ -150,9 +150,15 @@ Choose:
 
 ## Step 6 — Execute per user choice
 
+All file mutations below go through `scripts/cortex_cli.py` (acquires the lock, writes atomically, releases — see `references/core-contract.md` §11); do not hand-edit node files directly. Because a wikilink conversion is a text substitution across an entire file rather than one section, use `write-file` with the full updated content:
+```
+python3 scripts/cortex_cli.py write-file --memory-root <config-root>/memory \
+  "<node-relative-path>" "<entire file content with mentions converted>"
+```
+
 ### `accept-all`
-- For each conversion in the plan: edit the file, replacing the plain-text mention with the wikilink. Preserve surrounding whitespace and punctuation.
-- For each graduation candidate: run the synthesis pass (Step 7) to create the person page. Then re-scan that name across all nodes and convert plain-text mentions to `[[person/<slug>]]`.
+- For each affected node: read the file, replace every plain-text mention with the wikilink in memory (preserve surrounding whitespace and punctuation), then `write-file` the whole updated content back in one call.
+- For each graduation candidate: run the synthesis pass (Step 7) to create the person page. Then re-scan that name across all nodes and convert plain-text mentions to `[[person/<slug>]]` the same way.
 - Log every change.
 
 ### `links-only`
@@ -194,9 +200,18 @@ For each name being graduated:
    - **Primary engagements:** `[[client/<slug>]]`, `[[bizdev/<slug>]]`, `[[workstream/<slug>]]`
    - **Other people (v4.10.1+):** cross-linked colleagues from Step 7.3
    - **Topics they discuss:** `[[topic/<slug>]]` if there are clear topic threads in their interactions
-5. Write to `<config-root>/memory/person/<slug>.md`.
-6. Update `<config-root>/memory/.person-mention-counts.json` — reset the count for this person to 0 (now that they have a page, future mentions are wikilinked directly).
-7. **Reciprocal back-linking (v4.10.1+).** For each `Other people` entry added in Step 7.3, also append the new person to THAT person's page's `Other people` list. Avoids one-way edges — if Erica links to Mary Kate, Mary Kate also links back to Erica. Idempotent: don't add if already present.
+5. Write the new page:
+   ```
+   python3 scripts/cortex_cli.py write-file --memory-root <config-root>/memory \
+     "person/<slug>.md" "<composed page content>"
+   ```
+6. Update `<config-root>/memory/.person-mention-counts.json` — reset the count for this person to 0 (now that they have a page, future mentions are wikilinked directly). Also a `write-file` call, same pattern.
+7. **Reciprocal back-linking (v4.10.1+).** For each `Other people` entry added in Step 7.3, also append the new person to THAT person's page's `Other people` list:
+   ```
+   python3 scripts/cortex_cli.py append-section --memory-root <config-root>/memory \
+     "person/<other-slug>.md" "## Linked entities" "Other people: [[person/<new-slug>]]"
+   ```
+   Avoids one-way edges — if Erica links to Mary Kate, Mary Kate also links back to Erica. Idempotent: check the section body first and skip the call if already present.
 
 If the synthesis can't extract enough context (e.g., the name only appears in a list with no surrounding detail), the page is created with sparse content + a note: "Sparse page — populate via /recall person:<slug> or by editing directly."
 
@@ -216,18 +231,20 @@ This back-fills the network fabric on pages that were graduated before v4.10.1 (
 
 After conversions complete:
 
-1. Invoke the `indexer` skill to regenerate `<config-root>/memory/index.md` (now with workstream + person sections populated correctly).
-2. Trigger a hot.md refresh.
-3. Append to `<config-root>/memory/staged/queues/reindex` — the next `/end-day` will re-confirm.
+1. `python3 scripts/cortex_cli.py reindex --memory-root <config-root>/memory` — regenerates `<config-root>/memory/index.md` (now with workstream + person sections populated correctly).
+2. `python3 scripts/cortex_cli.py refresh-hot --memory-root <config-root>/memory --trigger manual` — refreshes hot.md.
+3. `python3 scripts/cortex_cli.py append-line --memory-root <config-root>/memory "staged/queues/reindex" "<today ISO> touched: relink-memory"` — the next `/end-day` will re-confirm.
 
 ---
 
 ## Step 9 — Write the marker
 
-If the full pass completed successfully (`accept-all`, `links-only`, or `select` with at least one accept), write `<config-root>/memory/.migration-wikilink-relink-done` with content:
+If the full pass completed successfully (`accept-all`, `links-only`, or `select` with at least one accept):
 
 ```
-<today ISO> wikilink-relink complete: <C> mentions converted, <G> person pages graduated, <S> entity types touched.
+python3 scripts/cortex_cli.py write-file --memory-root <config-root>/memory \
+  ".migration-wikilink-relink-done" "<today ISO> wikilink-relink complete: <C> mentions converted, <G> person pages graduated, <S> entity types touched.
+"
 ```
 
 If user chose `cancel`, do NOT write the marker — next run starts fresh.
@@ -293,7 +310,7 @@ After successful completion, the marker file gates re-execution. `/relink-memory
 For a typical memory (30-100 nodes):
 - Scan + match: pure file walk, ~5 seconds.
 - Conversion application: file writes, ~10 seconds.
-- Person-page synthesis: Sonnet-tier for each graduation, ~30 seconds per page.
+- Person-page synthesis: full-tier model (Claude adapter: Sonnet) for each graduation, ~30 seconds per page.
 - Total: 1-3 minutes for ~30 nodes; 5-10 minutes for ~100 nodes.
 
 Token cost: ~$0.10-0.50 per run depending on graduation count and node-content volume.

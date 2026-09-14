@@ -12,13 +12,13 @@ You are performing maintenance on Claude's working memory. This keeps the memory
 
 ### How to Audit
 
-**Before auditing**: Check if `~/Documents/Claude/memory/` is accessible.
-- **Cowork**: Use `mcp__cowork__request_cowork_directory(path="~/Documents/Claude")` to request access. Wait for the user to approve.
+**Before auditing**: Check if `<config-root>/memory/` is accessible (resolve `<config-root>` per `references/core-contract.md` §1).
+- **Cowork**: Use `mcp__cowork__request_cowork_directory(path=<config-root>)` to request access. Wait for the user to approve.
 - **Claude Code**: The directory is accessible directly via the filesystem.
 
 If the directory cannot be accessed, explain that memory cannot be audited without this folder and stop.
 
-1. Read `~/Documents/Claude/memory/DASHBOARD.md`
+1. Read `<config-root>/memory/DASHBOARD.md`
 2. List all `.md` files in `memory/` and subdirectories (excluding DASHBOARD.md and archive/)
 3. For each file, check: last modified date, number of LOG entries, staleness of open threads
 4. Compare dashboard entries against actual files (detect orphaned dashboard entries or node files missing from dashboard)
@@ -104,7 +104,7 @@ Scan all memory nodes for files that are floating off the map. A node is "isolat
 For each isolated node, suggest one of three dispositions:
 
 - **Archive** — recommended if the node has < 5 entries total and no open threads
-- **Merge into <candidate>** — recommended if a sibling node covers the same topic; suggest by Haiku-tier semantic match against active node summaries (1 call, ~$0.01)
+- **Merge into <candidate>** — recommended if a sibling node covers the same topic; suggest by low-cost/fast-tier semantic match (Claude adapter: Haiku) against active node summaries (1 call, ~$0.01)
 - **Keep as standalone** — accept the orphan if it's a genuine one-off (a reference file, a personal log)
 
 Format:
@@ -226,7 +226,7 @@ System files (DASHBOARD, CLAUDE.md, etc.) are always excluded — they're struct
 Scan all active DECISION entries across nodes. For each:
 
 1. Read the entry's `Revisit when:` field. If "n/a" or empty → skip.
-2. Determine whether the trigger condition appears to have fired. Cheap-tier (Haiku) classifier:
+2. Determine whether the trigger condition appears to have fired. Cheap-tier (low-cost/fast-tier model, Claude adapter: Haiku) classifier:
    - Read the trigger text + last 30 days of activity in the same node + recent log.md entries
    - Output: `{triggered: true|false, reason: '...'}`
 3. If `triggered: true`, surface for re-evaluation:
@@ -251,7 +251,7 @@ DECISION potentially needs revisit: [[<node>]] · "<decision>"
 
 7. **On skip:** no action; this DECISION will be re-checked at next `/cleanup`.
 
-Cap: 10 DECISIONs per `/cleanup` run. Run too many at once and the user fatigues. Prioritize by trigger-confidence (Haiku's `reason` strength) and recency of trigger activity.
+Cap: 10 DECISIONs per `/cleanup` run. Run too many at once and the user fatigues. Prioritize by trigger-confidence (the classifier's `reason` strength) and recency of trigger activity.
 
 ---
 
@@ -372,13 +372,13 @@ Execute all? Or select specific actions? (all / 1,3,5 / none)
 
 ## Step 4 — Execute approved actions
 
-For each approved action:
-- **Consolidate**: Create archive entry, delete individual old logs
-- **Escalate**: Move thread to SUMMARY with [STALE] tag
-- **Archive**: Run the archive process from `/forget --archive`
-- **Clean**: Remove or update orphaned entries
-- **Expire**: Delete old signal entries
-- **Deduplicate**: Merge duplicate entries, keeping the most recent
+For each approved action, use `scripts/cortex_cli.py` (see `references/core-contract.md` §11 — every one of these acquires the lock and writes atomically in one call; do not hand-edit files for these actions):
+- **Consolidate**: write the archive entry with `append-section`/`replace-section`, then remove the individual old log lines with `replace-section` on `## Changelog`.
+- **Escalate**: `replace-section`/`append-section` to move the thread into `## Summary` with a `[STALE]` tag.
+- **Archive**: same primitive as `/forget --archive` — `move-node` into `archive/`, then update DASHBOARD.md.
+- **Clean**: `replace-section` to remove or update orphaned entries.
+- **Expire**: `replace-section` to delete old signal entries.
+- **Deduplicate**: `replace-section` to merge duplicate entries, keeping the most recent.
 
 Report what was done after each action.
 

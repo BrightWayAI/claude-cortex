@@ -303,7 +303,7 @@ Use kebab-case. Organize however fits your work:
 | Contextual recall | Always on | Always on |
 | User profile | Shared | Shared |
 | Per-project config | Supported | Supported |
-| Explicit commands | All 10 | All 10 |
+| Explicit commands | All 26 | 9 mirrored (see `.claude/commands/`); remaining 17 available via natural-language auto-fire per `CLAUDE.md` |
 | Memory files | Shared location | Shared location |
 
 Both platforms read/write the same memory files. Learn something in Cowork → Claude Code knows it. And vice versa.

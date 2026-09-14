@@ -55,10 +55,10 @@ If the marker already exists when /listen starts:
 
 ## Step 0.8 — Acquire memory write-lock (v4.12.2+)
 
-Same pattern as `/end-day` Step 5.8.0. Acquire `<config-root>/memory/.write-lock`:
+Same pattern as `/end-day` Step 5.8.0. Acquire `<config-root>/memory/.lock`:
 
 ```
-LOCK_PATH = <config-root>/memory/.write-lock
+LOCK_PATH = <config-root>/memory/.lock
 If LOCK_PATH exists:
   age_seconds = now - <acquired-at from file content>
   If age_seconds > 600:
@@ -200,7 +200,11 @@ This file is what `/morning` walks the user through. It is **not** active memory
 
 ## Step 5 — Refresh `<config-root>/memory/hot.md`
 
-Invoke the hot-cache regeneration logic per `references/hot-cache.md`. Pure file walk + filter + render. Zero LLM cost.
+```
+python3 scripts/cortex_cli.py refresh-hot --memory-root <config-root>/memory --trigger listen
+```
+
+Implemented in `scripts/lib/hot_cache_generator.py` (see `references/hot-cache.md` for the spec and its current scope). Pure file walk + filter + render. Zero LLM cost.
 
 After this step, the morning's `/recall` auto-fire will load the freshest possible context including yesterday's activity.
 
@@ -249,7 +253,7 @@ Always (success or failure path):
 
 ```
 rm <config-root>/memory/staged/queues/listen-in-progress 2>/dev/null
-rm <config-root>/memory/.write-lock 2>/dev/null
+rm <config-root>/memory/.lock 2>/dev/null
 ```
 
 Both removals are silent on no-op. Use `trap` semantics in shell or `try/finally` in code — the locks MUST be released even if Step 1-7 errored. Otherwise subsequent `/listen` or `/morning` runs will see stale locks.

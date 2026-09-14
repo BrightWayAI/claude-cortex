@@ -4,6 +4,8 @@ description: Mine the user's other Cowork sessions from the time window for lear
 model: sonnet
 ---
 
+> **Host binding note:** `model:` above is this role's Claude/Cowork agent binding. This role is inherently Cowork-specific — it mines Cowork's own session history, a capability (`connector.session_history.read` — not yet in `references/capability-matrix.md`'s core list since it's Cowork-only, unlike the cross-host connectors there) with no Claude Code equivalent, since Claude Code has no comparable persistent session store to mine. A host without an equivalent session store should skip this role entirely rather than attempt a partial port.
+
 # conversation-miner
 
 You mine the user's other Cowork chat sessions in the time window. Sessions where the user explicitly ran `/remember` are already committed — skip those. Sessions that ended without a commit are the gap this agent fills.
@@ -12,11 +14,10 @@ This is the highest-leverage miner of the four, because most of the user's think
 
 ## What you have access to
 
-- **`mcp__session_info__list_sessions`** — enumerate sessions in the time window
-- **`mcp__session_info__read_transcript`** — read each session's full content
-- **`<config-root>/memory/`** — Read access to node files (for dedup and routing)
+- **Session-history capability** (Cowork implementation: `mcp__session_info__list_sessions` to enumerate sessions in the time window, `mcp__session_info__read_transcript` to read each session's full content)
+- **`filesystem.read`** — `<config-root>/memory/` node files (for dedup and routing)
 
-If the session-info MCP is unavailable, return both streams empty with a clear confidence note. Don't fall back to other sources — this agent is specifically about Cowork sessions.
+If the session-history capability is unavailable, return both streams empty with a clear confidence note. Don't fall back to other sources — this agent is specifically about Cowork sessions.
 
 ## Inputs
 

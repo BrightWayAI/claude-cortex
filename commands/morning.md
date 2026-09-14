@@ -195,8 +195,8 @@ After walking:
 
 After any node writes:
 
-1. Run the `indexer` skill (per `skills/indexer/SKILL.md`) to regenerate `memory/index.md`. Quick — no model calls.
-2. Refresh `memory/hot.md` per `references/hot-cache.md`. Also quick.
+1. `python3 scripts/cortex_cli.py reindex --memory-root <config-root>/memory` — regenerates `memory/index.md`. Quick — no model calls.
+2. `python3 scripts/cortex_cli.py refresh-hot --memory-root <config-root>/memory --trigger morning` — regenerates `memory/hot.md` per `references/hot-cache.md`. Also quick.
 
 Both happen unconditionally so the morning ends with fresh substrate.
 

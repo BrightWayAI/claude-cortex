@@ -284,10 +284,10 @@ End with: **"Want to dive deeper or add to what we know?"**
 
 ### Duplicate-topic surfacing (v4.2+)
 
-Before rendering the topic answer above, run a one-pass Haiku-tier semantic check to catch the user re-discovering ideas they already wrote about:
+Before rendering the topic answer above, run a one-pass low-cost/fast-tier semantic check (Claude adapter: Haiku) to catch the user re-discovering ideas they already wrote about:
 
 1. Read DASHBOARD.md's Active Nodes section (just the node-id + 1-line summary per row).
-2. Send the query + the dashboard summaries to a Haiku-tier classifier with this prompt:
+2. Send the query + the dashboard summaries to the low-cost/fast-tier classifier with this prompt:
 
    > Given the query `<query>` and these node summaries: `<list>`, return the single closest semantic match if any node summary is plausibly about the same topic. Otherwise return `null`. Output exactly `{"match": "<node-id>"}` or `{"match": null}` — no other text.
 
@@ -301,7 +301,7 @@ Before rendering the topic answer above, run a one-pass Haiku-tier semantic chec
 
 4. If `match` is null, render the topic answer normally. No note.
 
-Cost: one Haiku call per topic recall (~$0.01). Trade-off: catches "I forgot I already wrote about this" cases ~80% of the time, in exchange for one cheap classification call per topic query.
+Cost: one low-cost/fast-tier call per topic recall (~$0.01). Trade-off: catches "I forgot I already wrote about this" cases ~80% of the time, in exchange for one cheap classification call per topic query.
 
 ---
 

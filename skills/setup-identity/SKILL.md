@@ -20,7 +20,7 @@ With it: identity lives in one canonical file. Plugins read it. You update it in
 
 ## What's NOT in identity.md
 
-- Plugin-specific configuration (CRM custom property names, ICP, voice rules, offerings catalog) — those stay in each plugin's `references/user-context.md`.
-- Observations / preferences (communication style, corrections, working patterns) — those live in cortex's `~/Documents/Claude/memory/user.md` and are managed by passive observation.
+- Plugin-specific configuration (CRM custom property names, ICP, voice rules, offerings catalog) — those stay in *that sibling plugin's own* `<sibling-plugin>/references/user-context.md` (a cross-plugin path — not a file in this repo).
+- Observations / preferences (communication style, corrections, working patterns) — those live in cortex's `<config-root>/memory/user.md` and are managed by passive observation.
 
 Identity is the *facts that don't change often*. Plugin context is the *plugin-specific configuration*. User profile is the *learned preferences*. Three different things, three different files.

@@ -4,6 +4,8 @@ How cortex maintains `<config-root>/memory/index.md` — an always-current, huma
 
 The index is **deterministic and zero-LLM**. It's a file-walk + string-extract that runs as part of `/end-day`, `/cleanup`, and on demand via `/reindex`. It never invents content; it summarizes what's already in the files.
 
+**Implementation:** `scripts/lib/index_generator.py` (`render_index` / `generate_and_write_index`), backed by `scripts/lib/decay.py` for decay-state classification. Fixture-tested in `tests/test_index_generator.py`. Invoked via `python3 scripts/cortex_cli.py reindex --memory-root <config-root>/memory`. This is real code, not model instructions — the algorithm below describes what that code does. **Current scope:** the implementation covers the node catalog and decay-state classification; it does not yet render the `## Demoted knowledge (preserved for context)` or `## Archived` footer sections described below — a documented gap, not a silent omission.
+
 ## Why
 
 - **Obsidian gets a home page.** The user opens `<config-root>/` in Obsidian, the index renders the whole graph as a navigable catalog. No plugin code needed in Obsidian itself.

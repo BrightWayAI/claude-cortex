@@ -25,7 +25,7 @@ Before doing any work, decide whether to delegate to the `memory-librarian` suba
 
 ### To delegate
 
-Use the Task tool with `subagent_type="memory-librarian"` and pass:
+Delegate via the `subagent.delegate` capability (see `references/capability-matrix.md`) to the `memory-librarian` role, passing:
 
 - **query** — the user's question, verbatim
 - **scope-hint** (optional) — if the user said "in the last 30 days," "across clients only," "lead-engine project specifically," etc., pass that

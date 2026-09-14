@@ -20,7 +20,7 @@ With it: voice lives in one canonical file. Drafters read it. You update it in o
 
 ## What's NOT in voice.md
 
-- Plugin-specific voice rules (e.g., "lead-engine DMs follow the 27-word opener pattern") — those stay in each plugin's `references/user-context.md` or rules files.
+- Plugin-specific voice rules (e.g., "lead-engine DMs follow the 27-word opener pattern") — those stay in *that sibling plugin's own* `<sibling-plugin>/references/user-context.md` (a cross-plugin path — not a file in this repo) or rules files.
 - Audience-specific tonal adjustments — that's drafting-time logic.
 
 The shared voice.md is the **default voice for everything you ship**. Specific contexts adjust on top.

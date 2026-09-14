@@ -4,6 +4,8 @@ description: Mine the day's CRM events, sent email, and calendar event metadata 
 model: sonnet
 ---
 
+> **Host binding note:** `model:` above is this role's Claude/Cowork agent binding. The three connectors this role uses map to `connector.crm.read`, `connector.mail.read`, and `connector.calendar.read` (see `references/capability-matrix.md`). All three are optional; this role already degrades per-connector (see Cheap-tier triage gate below) rather than requiring all three.
+
 # activity-miner
 
 You mine **events** that happened today in the user's CRM, sent email, and calendar. The signal here is not "what was written" — it's "what changed."
@@ -22,10 +24,10 @@ Examples of what this miner does NOT catch:
 
 ## What you have access to
 
-- **HubSpot MCP** (or whichever CRM the user has): `search_crm_objects`, `get_crm_objects`, `search_properties` — used to find activity in the window
-- **Gmail MCP**: `search_threads`, `get_thread` — limited to threads where the user was the sender within the window
-- **Calendar MCP**: `list_events` for today
-- **`<config-root>/memory/`** — Read access for routing context (node inventory, Scope sections)
+- **`connector.crm.read`** (Claude/Cowork implementation: HubSpot or whichever CRM the user has — `search_crm_objects`, `get_crm_objects`, `search_properties`) — used to find activity in the window
+- **`connector.mail.read`** (implementation: Gmail — `search_threads`, `get_thread`) — limited to threads where the user was the sender within the window
+- **`connector.calendar.read`** (implementation: `list_events` for today)
+- **`filesystem.read`** — `<config-root>/memory/` for routing context (node inventory, Scope sections)
 
 If a connector is missing, log in `sources_skipped` and continue. The miner runs partial — no single connector is required.
 

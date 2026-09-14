@@ -28,11 +28,11 @@ This command runs in one of two modes:
 
 ## Step 0 — Cheap-tier commit triage (v4.2+)
 
-Before running the full Sonnet-tier extraction below, run a cheap Haiku-class classifier on the conversation to decide whether to commit at all and, if yes, which nodes are affected. This keeps per-commit cost predictable as commit volume grows.
+Before running the full-tier extraction below (Claude adapter: Sonnet), run a low-cost/fast-tier classifier (Claude adapter: Haiku) on the conversation to decide whether to commit at all and, if yes, which nodes are affected. This keeps per-commit cost predictable as commit volume grows.
 
 ### A — Classifier prompt
 
-Send the last ~30 conversation turns (or the whole conversation if shorter) to a Haiku-tier model with this prompt:
+Send the last ~30 conversation turns (or the whole conversation if shorter) to the low-cost/fast-tier model with this prompt:
 
 > System: You are a memory-commit triage classifier for a personal working-memory system. Decide:
 >
@@ -79,11 +79,11 @@ _Auto-appended by cortex's two-stage commit triage. Audit weekly for false-negat
 
 ### D — Cost discipline
 
-The Haiku call is the only model call until classification completes. If `commit: false`, Steps 1-5 (Sonnet synthesis) never run. Expected cost per `/remember` invocation:
-- Trivial conversations: ~$0.001 (Haiku classifier only)
+The low-cost/fast-tier call is the only model call until classification completes. If `commit: false`, Steps 1-5 (full-tier synthesis) never run. Expected cost per `/remember` invocation:
+- Trivial conversations: ~$0.001 (low-cost/fast-tier classifier only)
 - Substantive conversations: previous cost + ~$0.001 (negligible overhead)
 
-Total Sonnet cost drops 30-50% measured weekly when ~30-40% of conversations are trivial.
+Total full-tier cost drops 30-50% measured weekly when ~30-40% of conversations are trivial.
 
 ### E — When to bypass Step 0
 
@@ -184,12 +184,8 @@ NEXT ACTIONS:
 
 ### B. Knowledge (what was learned)
 
-> **Canonical knowledge taxonomy (v4.13+ — consolidated).** There are now **four** knowledge types: **Insight · Decision · Gotcha · Correction**. The old Model / Lesson / Recipe types are folded in:
-> - **Model** → write as **INSIGHT** with a `mental-model` tag.
-> - **Lesson** → write as **INSIGHT** (a lesson is an insight about what worked/failed).
-> - **Recipe** → write as **INSIGHT** with a `recipe` tag, *unless* it's a genuine step-by-step repeatable procedure, in which case you may keep a `RECIPE`-shaped body — but still file it as an INSIGHT with the `recipe` tag (no separate section).
-> Tags are appended in brackets after the type, e.g. `INSIGHT [mental-model]` / `INSIGHT [recipe]`.
-> The extraction buckets below remain as *prompts for what to look for*; map each to one of the four canonical types when you write it in Step 3.
+> **Canonical knowledge taxonomy.** There are seven knowledge types: **Insight · Lesson · Model · Gotcha · Recipe · Correction · Decision** (see `CLAUDE.md` and `references/core-contract.md` for definitions and decay rules — GOTCHA and RECIPE decay 1.5× slower, CORRECTION never decays).
+> The extraction buckets below map directly to these types; use the bucket name as the type when you write the entry in Step 3.
 
 ```
 INSIGHTS:
@@ -312,31 +308,36 @@ Memory is stored in `~/Documents/Claude/memory/`.
 
 If the directory cannot be accessed, explain that memory cannot be persisted without this folder and stop.
 
-### Step 3.0 — Acquire memory write-lock (v4.12.2+)
+### Step 3.0 — Acquire memory write-lock
 
-If memory-as-git is enabled (`<config-root>/memory/.git/` exists), acquire the write-lock to coordinate with `/end-day` Step 5.8, `/listen`, `/morning`, `/cleanup`, and other memory-mutating commands.
+Every write in this step goes through `scripts/cortex_cli.py`, which acquires
+`<config-root>/memory/.lock` internally (see `scripts/lib/locking.py` and
+`references/core-contract.md` §11), performs the read-modify-write, and
+releases the lock before returning — this coordinates with `/end-day`,
+`/listen`, `/morning`, `/cleanup`, and any other command using the same CLI,
+regardless of whether memory-as-git is enabled. Do not hand-edit node files
+for the writes in this step; do not additionally implement a separate
+`.write-lock` file — the CLI's lock is the single lock for this purpose. If
+the CLI reports a timeout (lock held by another process past its timeout),
+surface: "Memory write-lock held by another process — wait or override?" and
+retry once before asking the user (`auto` autonomy) or asking immediately
+(`suggest`).
 
-```
-LOCK_PATH = <config-root>/memory/.write-lock
-If LOCK_PATH exists AND age < 10 min:
-  Surface: "Memory write-lock held by <command-from-content> — wait or override?"
-  In `auto` autonomy: wait 5s and retry once; on second contention, log + skip the write.
-  In `suggest`: ask user.
-Else (no lock, or stale lock > 10 min):
-  Write "remember|<iso8601-now>|<session-id>" to LOCK_PATH.
+1. Determine the node's relative file path from the node ID (`references/core-contract.md` §3; `client:acme-corp` and `client/acme-corp` map to the same file).
+2. Determine each section's new content (living summary, new knowledge entries, changelog line, etc.) per the formats below.
+3. For each section that changes, invoke:
+   ```
+   python3 scripts/cortex_cli.py replace-section \
+     --memory-root <config-root>/memory "<node-relative-path>" "## Summary" "<new summary text>"
 
-# Release the lock at the END of Step 3 (after node + DASHBOARD writes complete), even on partial failure.
-```
+   python3 scripts/cortex_cli.py append-section \
+     --memory-root <config-root>/memory "<node-relative-path>" "## Knowledge" "<new entry line>"
 
-If memory-as-git is NOT enabled, skip the lock entirely (no coordination needed when there's no git layer).
-
-1. Determine the file path from the node ID:
-   - If node has a prefix (e.g., `client:acme-corp`): `memory/{prefix}/{slug}.md`
-   - If no prefix (e.g., `hiring`): `memory/{node-id}.md`
-2. If the directory doesn't exist, create it
-3. If the node file doesn't exist, create it with the standard template (see Node File Format below)
-4. If the node file exists, READ it first, then update the relevant sections
-5. After writing the node file, ALWAYS update `memory/DASHBOARD.md`:
+   python3 scripts/cortex_cli.py prepend-section \
+     --memory-root <config-root>/memory "<node-relative-path>" "## Changelog" "<new changelog line>"
+   ```
+   Each call creates the node file (with the standard template) if it doesn't exist, and creates the named section if absent — you do not need a separate "create the file" step.
+4. After writing the node file, ALWAYS update `memory/DASHBOARD.md`:
    - Replace or add the node's living summary in the Active Nodes section
    - Update the Unified P0 Actions list
    - Update Waiting On if applicable
@@ -408,8 +409,15 @@ Surfaced by `/cleanup`'s orphan-detection guardrail. Nodes with no incoming/outg
 
 ### Insights
 [node] INSIGHT (date): [entry]
-[node] INSIGHT [mental-model] (date): [entry]
-[node] INSIGHT [recipe] (date): [entry]
+
+### Lessons
+[node] LESSON (date): [entry]
+
+### Models
+[node] MODEL (date): [entry]
+
+### Recipes
+[node] RECIPE (date): [entry]
 
 ### Decisions
 [node] DECISION (date): [entry]
@@ -420,10 +428,10 @@ Surfaced by `/cleanup`'s orphan-detection guardrail. Nodes with no incoming/outg
 ### Corrections
 [node] CORRECTION (date): [entry]
 
-(v4.13+ consolidated taxonomy: Insight / Decision / Gotcha / Correction, with
-`[mental-model]` / `[recipe]` tags on Insights. Legacy `### Models` / `### Lessons`
-/ `### Recipes` sections in older node files are still read; new writes use the
-sections above.)
+(Canonical taxonomy: Insight / Lesson / Model / Gotcha / Recipe / Correction /
+Decision — see `CLAUDE.md` Knowledge Taxonomy. Entries written under the earlier
+v4.13 four-type consolidation attempt (`INSIGHT [mental-model]` / `INSIGHT [recipe]`)
+are still read; new writes use the sections above.)
 
 ## People
 [node] PEOPLE: [[person/<slug>]] (role) — context. Also in: [[<other-node>]], [[<other-node>]]
@@ -530,16 +538,19 @@ These tags are the substrate for v4.4's forgetting/decay layer. **In v4.3 we wri
 
 Existing pre-v4.3 entries without tags are treated as if `confirmed:` and `recalled:` both equal the original commit date. No migration step needed — the absence of a tag is itself a legible default.
 
-#### C.1 Entry formats (v4.13+ — four canonical types)
+#### C.1 Entry formats (seven canonical types — see `CLAUDE.md` Knowledge Taxonomy)
 
 ```
 [node-id] INSIGHT (YYYY-MM-DD): [the insight, compressed but precise]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
 ```
 ```
-[node-id] INSIGHT [mental-model] (YYYY-MM-DD): [how something works, 1-3 sentences]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+[node-id] LESSON (YYYY-MM-DD): [what was tried] → [what happened] → [takeaway]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
 ```
 ```
-[node-id] INSIGHT [recipe] (YYYY-MM-DD): [technique name] — [when to use] → [how to do it]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+[node-id] MODEL (YYYY-MM-DD): [how something works, 1-3 sentences]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+```
+```
+[node-id] RECIPE (YYYY-MM-DD): [technique name] — [when to use] → [how to do it]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
 ```
 ```
 [node-id] DECISION (YYYY-MM-DD): [the choice] (see DECISION required fields in §B above)  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
@@ -551,23 +562,22 @@ Existing pre-v4.3 entries without tags are treated as if `confirmed:` and `recal
 [node-id] CORRECTION (YYYY-MM-DD): [old belief] → [corrected understanding]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
 ```
 
-- A former **Lesson** ("what was tried → what happened → takeaway") writes as a plain **INSIGHT**.
-- A former **Model** writes as **INSIGHT [mental-model]**; a former **Recipe** as **INSIGHT [recipe]**.
 - On new commit, both `confirmed` and `recalled` are set to the commit date.
+- GOTCHA and RECIPE decay 1.5× slower than the default; CORRECTION never decays (see `references/decay-model.md`).
 
-**Backward compatibility:** existing `MODEL` / `LESSON` / `RECIPE` entries in node files remain valid and are still read by `/recall` and `memory-librarian` — no migration is forced. `/cleanup` may opportunistically rewrite them to the consolidated form (`MODEL`→`INSIGHT [mental-model]`, `LESSON`→`INSIGHT`, `RECIPE`→`INSIGHT [recipe]`) when it next touches the node, but absence of migration is a legible default.
+**Backward compatibility:** entries written under the earlier v4.13 four-type consolidation attempt (`INSIGHT [mental-model]`, `INSIGHT [recipe]`) remain valid and are still read by `/recall` and `memory-librarian` — no migration is forced or performed by this refactor.
 
 **Quality bar**: Only write knowledge entries for things that are genuinely reusable. The test: "Would future-me benefit from this surfacing automatically?"
 
 #### C.2 Concept-drift detection (v4.4+)
 
-Before writing a new INSIGHT or GOTCHA entry (including `[mental-model]`-tagged Insights), check whether it contradicts, supersedes, or meaningfully refines an existing entry on the same node. `[recipe]`-tagged Insights are excluded from this check (recipes are additive techniques, not competing facts). DECISION entries supersede via their own concept-drift path (a later DECISION on the same topic demotes the earlier — see §B). CORRECTION entries already encode supersede explicitly via `[old belief] → [corrected understanding]` and don't need the check.
+Before writing a new INSIGHT, LESSON, MODEL, or GOTCHA entry, check whether it contradicts, supersedes, or meaningfully refines an existing entry of the same type on the same node. RECIPE entries are excluded from this check (recipes are additive techniques, not competing facts). DECISION entries supersede via their own concept-drift path (a later DECISION on the same topic demotes the earlier — see §B). CORRECTION entries already encode supersede explicitly via `[old belief] → [corrected understanding]` and don't need the check.
 
 Process:
 
 1. Read all entries of the same type from the target node's active sections (skip `## Demoted knowledge` and `## Archive`). If the node is brand new with no prior entries of this type, skip the drift check.
 2. If there are more than 20 existing entries of the same type, scope to the most-recently-confirmed 20 (read each entry's `[confirmed:...]` tag; sort desc, take top 20). The drift check is most useful against recent beliefs; old beliefs that contradict are less likely to still be active.
-3. Send to a Haiku-tier classifier:
+3. Send to a low-cost/fast-tier model (Claude adapter: Haiku-tier):
 
    > "You are a concept-drift detector for working memory. New entry:
    > `<new entry text>`
@@ -617,7 +627,7 @@ Process:
 
 8. On `skip new entry` → do not commit the new entry. Log to triage-log: "skipped new <type> on <node> — concept-drift conflict with existing entry, user declined."
 
-Cost: one Haiku call per new knowledge entry that's being written to a node with > 0 prior entries of the same type. Typical commit writes 2-4 knowledge entries → 2-4 Haiku calls → ~$0.005 per `/remember` invocation. Negligible.
+Cost: one low-cost/fast-tier call per new knowledge entry that's being written to a node with > 0 prior entries of the same type. Typical commit writes 2-4 knowledge entries → 2-4 calls → ~$0.005 per `/remember` invocation. Negligible.
 
 ### D. People Index (append or update)
 
@@ -710,15 +720,12 @@ This step does NOT regenerate `<config-root>/memory/index.md`. That happens at t
 
 If the reindex-queue file ever exceeds 200 lines, the next consumer of it (indexer) ignores the contents and just runs a full regeneration — the queue is a *hint*, not a critical record.
 
-## Step 3.6 — Release memory write-lock (v4.12.2+)
+## Step 3.6 — Lock release
 
-If acquired in Step 3.0, release it now:
-
-```
-rm <config-root>/memory/.write-lock 2>/dev/null
-```
-
-Silent on no-op. Must run on success AND failure paths (use trap / try-finally semantics).
+No separate release step is needed: each `cortex_cli.py` invocation in Step
+3.0 acquires and releases its own lock within a single process call (see
+`scripts/lib/locking.py`'s context-manager semantics — release runs on
+success, failure, or exception, automatically).
 
 Silent mode (auto-commit) writes the queue line too. The next session's `/recall` auto-fire will trigger the next index refresh chain.
 
@@ -743,7 +750,7 @@ Scan for:
 Respond with:
 1. **Node(s)** written to
 2. **Living summary** (for verification)
-3. **Knowledge captured** — list INSIGHT (incl. `[mental-model]`/`[recipe]`) / DECISION / GOTCHA / CORRECTION entries
+3. **Knowledge captured** — list INSIGHT / LESSON / MODEL / RECIPE / DECISION / GOTCHA / CORRECTION entries
 4. **Observations captured** — count of preferences, corrections, patterns written to user node
 5. **Open threads** with staleness
 6. **Blockers** (if any)

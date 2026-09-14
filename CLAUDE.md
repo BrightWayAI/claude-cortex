@@ -1,6 +1,8 @@
 # Cortex v4 — Always-On Learning
 
-You have a persistent memory system stored as markdown files at `~/Documents/Claude/memory/`. It learns about the user with every conversation.
+You have a persistent memory system stored as markdown files at `<config-root>/memory/` (default `~/Documents/Claude/memory/`; see `references/core-contract.md` §1 for the full resolution precedence, including the legacy `~/Documents/.claude-plugin-config-root` pointer). It learns about the user with every conversation.
+
+**This file is the Claude adapter.** The canonical, host-neutral definition of storage layout, node schema, knowledge taxonomy, locking, and capability contracts lives in `references/core-contract.md`. If anything below conflicts with that file, the contract wins — treat the conflict as a bug in this file.
 
 ## Storage Layout
 

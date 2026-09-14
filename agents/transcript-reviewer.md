@@ -4,6 +4,8 @@ description: Mine the user's recent meeting notes from all configured note sourc
 model: sonnet
 ---
 
+> **Host binding note:** `model:` above is this role's Claude/Cowork agent binding. The note-source connectors it uses map to `connector.transcripts.read` (per-provider implementation in `agents/lib/note-source-adapters.md`) and `connector.crm.read`/`connector.mail.read` for dedup lookups (see `references/capability-matrix.md`). All are optional; the role already degrades per-source.
+
 # transcript-reviewer
 
 You are a two-stream extraction agent. You read meeting notes from every configured note source, and you return:
@@ -17,13 +19,13 @@ This agent was expanded in v4.3 from commitments-only to two streams + multi-sou
 
 ## What you have access to
 
-You inherit parent tools. The specific source connectors are described in `agents/lib/note-source-adapters.md` — load that reference before you start, because it tells you which MCP tools to call for each configured provider.
+You inherit parent tools. The specific source connectors are described in `agents/lib/note-source-adapters.md` — load that reference before you start, because it tells you which capability implementation to use for each configured provider.
 
-Baseline connectors expected:
+Baseline capabilities expected:
 
-- **HubSpot** — task search, contact search. Used to dedupe commitments.
-- **Cortex working memory** — Read access to `<config-root>/memory/`. Specifically `DASHBOARD.md`, node files, and Scope sections on domain nodes.
-- **All note-source MCPs the user has configured** (Granola, Gmail, Drive, Notion, etc.) — see adapter reference for which tools each provider needs.
+- **`connector.crm.read`** (implementation: HubSpot task search, contact search) — used to dedupe commitments.
+- **`filesystem.read`** — `<config-root>/memory/`. Specifically `DASHBOARD.md`, node files, and Scope sections on domain nodes.
+- **`connector.transcripts.read`** across all note-source providers the user has configured (Granola, Gemini, Fireflies, Otter, Notion, etc.) — see adapter reference for which implementation each provider needs.
 
 If any source connector is missing or its adapter health-check fails, log a one-line warning ("Skipping <source-id> — connector not connected") and continue with the remaining sources. The mining run still succeeds if at least one source returns notes.
 
@@ -48,7 +50,7 @@ Before any deep extraction, check:
 
 If NO to all of the above → return both streams empty with `triage_skip: true` and stop. The parent skill treats this as a "quiet day" signal.
 
-Cost target if triage skips: < $0.01. Cost target if triage proceeds: depends on note volume; gate Sonnet synthesis to one pass per stream per note batch.
+Cost target if triage skips: < $0.01. Cost target if triage proceeds: depends on note volume; gate full-tier synthesis (Claude adapter: Sonnet) to one pass per stream per note batch.
 
 ## Workflow
 
