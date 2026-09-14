@@ -1,4 +1,4 @@
-# Cortex v4.0 — Always-On Learning
+# Cortex v4.14 — Always-On Learning
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/BrightWayAI/claude-cortex/actions/workflows/validate.yml/badge.svg)](https://github.com/BrightWayAI/claude-cortex/actions/workflows/validate.yml)
@@ -311,6 +311,16 @@ Both platforms read/write the same memory files. Learn something in Cowork → C
 ---
 
 ## Changelog
+
+See `CHANGELOG.md` for the full version-by-version history (this section only tracks major milestones).
+
+### v4.14.0 — Portability and stabilization refactor
+- **Host-neutral core**: a single canonical storage/workflow contract (`references/core-contract.md`) and capability matrix (`references/capability-matrix.md`), so Claude and a future Codex adapter can share one memory without duplicating behavior
+- **Real locking and atomic writes**: memory mutation now goes through tested code (`scripts/cortex_cli.py` + `scripts/lib/`), not just careful prose — closes a real concurrent-write risk now that memory can be driven by more than one AI session at once
+- **Deterministic index/hot-cache generation**: `/reindex` and the rolling 7-day `hot.md` cache are backed by fixture-tested code, not model-executed algorithms
+- **`.claude/commands/` de-drifted**: mechanically regenerated from the canonical `commands/*.md` files (was hand-duplicated and had silently fallen behind)
+- **`AGENTS.md`**: durable entrypoint for a future Codex session
+- 131 unit/integration tests; `python3 scripts/check_repo.py` is now a much stronger validator (taxonomy drift, broken references, skill/command coverage, adapter freshness, version agreement)
 
 ### v4.0.0 — Always-On Learning
 - **Passive observation engine**: Claude silently learns about you during every conversation
