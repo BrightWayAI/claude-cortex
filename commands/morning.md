@@ -1,5 +1,5 @@
 ---
-description: Interactive morning routine. Reads the most-recent `<config-root>/memory/staged/commit-drafts/` file (produced overnight by `/listen`), walks the user through each proposal (accept / reject / edit / defer), applies accepted proposals to active memory nodes, refreshes hot.md and the memory index, and optionally chains into `/brief`. The JARVIS morning.
+description: Interactive morning routine. Reads the most-recent `<config-root>/memory/staged/commit-drafts/` file (produced overnight by `/listen`), walks the user through each proposal (accept / reject / edit / defer), applies accepted proposals to active memory nodes, refreshes hot.md and the memory index, captures a short reflection and seeds today's brief priorities/outreach (v4.16+, ported from `/end-day`), and optionally chains into `/brief`. The JARVIS morning.
 ---
 
 # /morning
@@ -210,6 +210,39 @@ Invoke the `log-writer` skill (see `skills/log-writer/SKILL.md`) with:
 
 ---
 
+## Step 4.6 — Reflect on yesterday, seed today's brief (v4.16+)
+
+_Ported from `/end-day` Steps 4.1/4.5/4.6 as part of the Nucleus Operating Model Refactor — `/end-day` is now optional, so this is the one required daily touch that keeps tomorrow's (today's) brief deliberately curated rather than purely auto-mined. Skip this step entirely if `daily-brief` isn't installed._
+
+Ask three questions conversationally, one at a time, pre-filled from candidates in the just-merged draft where available (accepted DECISION/INSIGHT entries → "biggest thing done"; GOTCHA entries or rejected/deferred items tagged blocked → "what blocked you"; any surviving P0 next-action or a proposal explicitly flagged urgent → "one thing today has to move"). If no draft was merged this run (e.g. `/morning` found nothing to walk), ask cold with no pre-fill.
+
+1. **"Biggest thing that got done yesterday?"**
+2. **"What blocked you, if anything?"** (optional — skip on silence)
+3. **"What's the one thing today has to move?"**
+
+If the user says "nothing major," accept that and continue — don't press.
+
+Write the answers to `<config-root>/briefs/<today_local>.md` under a `## Reflection` section (same format `/end-day` used to write, since tomorrow's `/brief` Section 5 reads it verbatim):
+
+```markdown
+## Reflection
+
+- **Biggest thing that got done yesterday:** <answer or "—">
+- **What blocked you:** <answer or "—">
+- **The one thing today has to move:** <answer or "—">
+- _Captured by /morning at <HH:MM>._
+```
+
+Idempotent: replace an existing `## Reflection` section from today rather than duplicating.
+
+Then propose **today's priority tasks and outreach**, walked individually (`(k)eep / (e)dit / (d)rop`, with a batch shortcut when items obviously carry over unchanged). Candidates: the "one thing today has to move" answer, any surviving P0/P1 next-actions from cortex nodes, and the relationships/lead-engine pipeline tier for today plus any `nudge`/deferred contacts. Respect `surfacing-prefs.md` — never propose a suppressed item. If there's nothing material, say so and move on.
+
+Write the accepted set to `<config-root>/briefs/<today_local>.seed.json` as `{priorities:[...], outreach:[...]}` — `/brief` reads this file if present and seeds sections 3 (Priority Tasks) & 4 (Outreach Queue) from it before merging live pulls.
+
+Finally, ask once: **"Anything else for today?"** — free-form capture, appended to the same seed file. Silence/"no" continues.
+
+---
+
 ## Step 5 — Report and offer brief handoff
 
 ```
@@ -221,6 +254,7 @@ Morning merge complete.
 
   hot.md: refreshed (<w> words)
   memory/index.md: refreshed (<n> nodes catalogued)
+  Reflection: captured · Today's priorities/outreach: <c> seeded to briefs/<today>.seed.json
 
 Run /brief to start the day with today's working surface? (y/N)
 ```
@@ -246,7 +280,7 @@ Run /brief to start the day with today's working surface? (y/N)
 - **Mid-day captures.** Use `/remember`.
 - **Memory health audits.** Use `/cleanup`.
 - **Web research for gaps.** Use `/research-gaps`.
-- **End-of-day reflection.** Use `/end-day`.
+- **A deeper end-of-day close** (transcript/inbox/Slack mining, HubSpot catch-all logging). `/end-day` is optional now but still available for that.
 
 ---
 

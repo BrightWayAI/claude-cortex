@@ -1,8 +1,11 @@
 ---
-description: End-of-day orchestration ritual (v4.13+). Opens with a per-source consent + cost gate (Today's Brief required & first), mines the brief artifact (task/outreach actions → memory write-backs + suppression learning into surfacing-prefs.md), surfaces the day's learnings as a plain-language narrative then proposes memories AND forgettings side by side, walks proposals batchably, proposes tomorrow's priorities/outreach individually, asks "anything else," offers to log anything to HubSpot, and captures a reflection appended to both the brief markdown and a longitudinal reflections.md store. Quick mode by default; --full adds transcript/inbox/Slack mining. Run once per work day, late afternoon.
+description: Optional 2-minute close (v4.16+ — demoted from required). The nightly `/listen` + `/morning` now handle overnight mining and tomorrow's brief seeding on their own; run this only when you want the deeper end-of-day pass — full transcript/inbox/Slack mining, a longitudinal reflections.md entry, or a HubSpot catch-all log. Opens with a per-source consent + cost gate (Today's Brief required & first), mines the brief artifact (task/outreach actions → memory write-backs + suppression learning into surfacing-prefs.md), surfaces the day's learnings as a plain-language narrative then proposes memories AND forgettings side by side, walks proposals batchably, proposes tomorrow's priorities/outreach individually, asks "anything else," offers to log anything to HubSpot, and captures a reflection appended to both the brief markdown and a longitudinal reflections.md store. Quick mode by default; --full adds transcript/inbox/Slack mining.
+disable-model-invocation: true
 ---
 
 # /end-day
+
+**Optional as of v4.16.0.** `/listen` (nightly) + `/morning` (the required daily touch) now cover overnight mining and tomorrow's brief seeding — see `/morning` Step 4.6. Run `/end-day` when you want the deeper pass: full-mode transcript/inbox/Slack mining, the longitudinal `reflections.md` entry, or the HubSpot catch-all log (Step 4.7). It won't auto-trigger from natural language; invoke it explicitly with `/end-day`.
 
 End-of-day closing chain. Reads the day, captures commitments, updates memory with cost discipline, and pre-stages tomorrow so the morning has a working surface waiting.
 

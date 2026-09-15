@@ -6,6 +6,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.16.0] — /end-day demoted to optional; /morning seeds today's brief (2026-09-15)
+
+Nucleus Operating Model Refactor, Phase 1 step 1.5. The nightly `/listen` loop covers
+passive overnight mining, but it never replicated `/end-day`'s deliberate
+tomorrow-priority curation — that gap is closed here before `/end-day` stops being a
+daily requirement.
+
+### Added
+- `/morning` Step 4.6 — ported from `/end-day` Steps 4.1/4.5/4.6: asks the three
+  reflection questions (biggest thing done yesterday / what blocked you / one thing
+  today has to move), writes a `## Reflection` section to today's brief markdown, then
+  walks candidate priorities/outreach individually and writes accepted items to
+  `<config-root>/briefs/<today_local>.seed.json` for `/brief` to read. Skips cleanly if
+  `daily-brief` isn't installed.
+
+### Changed
+- `/end-day` is now `disable-model-invocation: true` and described as an optional
+  2-minute close — the required daily touch is `/morning`, not `/end-day`. Still useful
+  for full-mode transcript/inbox/Slack mining, the longitudinal `reflections.md` entry,
+  and the HubSpot catch-all log; must be invoked explicitly.
+
 ## [4.15.0] — ChatGPT Work and organization distribution (2026-09-14)
 
 ### Added
