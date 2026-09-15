@@ -57,7 +57,8 @@ autonomy:
   /weekly-outreach: confirm
   /referral-ask: confirm
   /client-status: confirm
-  /ai-roundup: confirm
+  /ai-roundup: confirm        # renamed /roundup (research); stages candidates only — see research's own defaults
+  # /post: see comms's own autonomy defaults (drafting, moved from research's roundup pipeline)
   /style: suggest             # drafts are local; less risky
 
   # Daily flow — suggest
@@ -72,7 +73,7 @@ autonomy:
   /agent-metrics: auto
   /register-schedules: confirm
   /nucleus-status: auto
-  /nucleus-dashboard: suggest
+  # /nucleus-dashboard moved to briefing:dashboard (2026-09-15); see that plugin's own autonomy defaults.
 
   # Time tracking — confirm (creates billing-relevant data)
   /track-time: confirm
