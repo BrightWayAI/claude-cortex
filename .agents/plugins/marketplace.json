@@ -1,0 +1,20 @@
+{
+  "name": "cortex-local",
+  "interface": {
+    "displayName": "Cortex Local"
+  },
+  "plugins": [
+    {
+      "name": "cortex",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

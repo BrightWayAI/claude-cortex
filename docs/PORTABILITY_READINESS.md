@@ -1,10 +1,10 @@
 # Portability readiness
 
-This document describes how a host other than Claude would integrate
-Cortex, and specifically what a future Codex adapter would look like. It is
-a readiness assessment, not an implementation — no Codex-specific files
-exist in this repository as a result of this document, per the portability
-refactor's explicit scope boundary (`docs/PORTABILITY_REFACTOR_PROMPT.md`).
+This document describes how a host other than Claude integrates Cortex and
+records the implemented Codex adapter. The adapter is deliberately thin:
+canonical behavior remains in `commands/*.md`, deterministic mutation remains
+in `scripts/cortex_cli.py` and `scripts/lib/`, and both hosts resolve the same
+`<config-root>`.
 
 ## What already exists to build on
 
@@ -34,8 +34,8 @@ Any host integrating Cortex needs to provide, in its own idiom:
    the workflows in `commands/*.md` (or a host-native equivalent format
    generated from them, as `.claude/commands/` is via `scripts/generate_claude_commands.py`).
 3. **Lifecycle hooks** — session-start recall (read `hot.md`, `user.md`,
-   `DASHBOARD.md`) and session-end commit, translated into whatever hook
-   mechanism the host provides.
+   `DASHBOARD.md`) and only such session-end reminders as the host can safely
+   provide. Never represent a hook reminder as a guaranteed commit.
 4. **Filesystem permission configuration** — the host's own mechanism for
    granting read/write access to `<config-root>`, resolved via
    `scripts/lib/config_root.py`'s precedence chain (§1 of the contract) —
@@ -56,46 +56,80 @@ Any host integrating Cortex needs to provide, in its own idiom:
    equivalent) to the host's own scheduler, with the `scheduler.register`
    capability documenting the degrade path (manual invocation) when absent.
 
-## Codex-specific mapping
+## Implemented Codex mapping
 
-For Codex specifically, the future mapping is expected to use:
+| Cortex concept | Codex mechanism | Implementation |
+|---|---|---|
+| `CLAUDE.md` (durable instructions) | `AGENTS.md` | Root `AGENTS.md` is the mandatory entrypoint. |
+| `commands/*.md` (canonical workflows) | Agent Skills | `skills/*/SKILL.md` and `.agents/skills/*/SKILL.md` are generated thin wrappers; `scripts/generate_codex_skills.py` prevents drift. |
+| `.claude/commands/*.md` (slash-command adapter) | `$skill-name` or natural language | Use `$remember`, `$recall`, `$note`, etc. Identical slash syntax is neither required nor claimed. |
+| Claude Code hooks | Codex `SessionStart` hook | `hooks/hooks.json` invokes the read-only, bounded `hooks/session_start.py`. No session-end commit hook is installed. |
+| Claude Code filesystem access | Codex sandbox roots | The user adds the resolved `<config-root>` as a readable/writable root; machine-specific absolute paths are not committed. |
+| `agents/*.md` roles | Codex custom agents | Four read-only mappings live in `.codex/agents/`, sourced from `adapters/codex/agents/`. `conversation-miner` is unavailable. |
+| `.claude-plugin/plugin.json` | Portable Agent Plugins manifest | Root `plugin.json` packages the shared skills and the OpenAI hook extension. |
 
-| Cortex concept | Codex mechanism |
-|---|---|
-| `CLAUDE.md` (durable instructions) | `AGENTS.md` |
-| `commands/*.md` (canonical workflows) | Agent Skills — Codex's canonical workflow format |
-| `.claude/commands/*.md` (slash-command adapter) | `$skill-name` or natural-language invocation — Codex does not require identical slash-command syntax |
-| Claude Code hooks | Codex hooks for session-start recall; stop/session-end behavior needs careful design (see "Do not claim guaranteed behavior" below) |
-| Claude Code native filesystem access | Codex sandbox writable roots configured to include the resolved `<config-root>` |
-| `agents/*.md` roles | Codex custom-agent configuration |
-| `.claude-plugin/plugin.json` | A portable Agent Plugins manifest |
+Setup and trust steps are in `docs/CODEX_SETUP.md`.
 
-None of this is implemented. Building it is future work; this table exists
-so that work starts from an explicit mapping instead of guessing.
+## Implemented ChatGPT Work mapping
+
+| Cortex concept | ChatGPT Work mechanism | Implementation |
+|---|---|---|
+| Canonical workflows | Agent Skills in the shared plugin | Root `skills/*/SKILL.md`; invoke naturally, for example "use Cortex to recall…" |
+| Local memory access | Local Work plus bundled stdio MCP | Root `mcp.json` launches `adapters/chatgpt_work/server.py` |
+| Cloud memory access | Secure MCP Tunnel | The same stdio server runs on the machine that owns the Cortex folder |
+| Config-root pointer | Shared resolver | `scripts/lib/config_root.py`; no ChatGPT-specific pointer |
+| First-run configuration | Confirmed MCP setup tool or shared script | `cortex_configure` and `scripts/configure_cortex.py` write `~/.cortex/config-root`; replacing a different pointer requires separate confirmation |
+| Safe mutations | MCP tools wrapping shared CLI | `cortex_add_note`, `cortex_update_section`, `cortex_reindex`, `cortex_refresh_hot` |
+| Session recall | Trusted local hook, or explicit MCP recall | `hooks/session_start.py` locally; `cortex_recall` in cloud Work |
+| Destructive workflows | Deliberately unavailable remotely | No MCP move, delete, or whole-file-write tool |
+
+See `docs/CHATGPT_WORK_SETUP.md`. Work on the web cannot directly access the
+user's Mac filesystem; a marketplace install alone is not a memory sync
+mechanism.
+
+### Workflow support
+
+The generated frontmatter records `codex-status` for each workflow:
+
+- **Supported:** cleanup, forget, note, recall, rehearse, reindex,
+  relink-memory, remember, review, search, sync-linked-entities, timeline.
+- **Partial:** end-day, end-week, learn, listen, merge-research-draft,
+  migrate-staged-substrates, morning, research-gaps, all four setup workflows,
+  start-nucleus, and start-workstream.
+
+`partial` means the adapter can read, analyze, and run explicitly shared-CLI
+steps, but must preview or skip remaining prose-only mutations. It never means
+that a direct file edit is an acceptable fallback.
+
+The same wrappers record `chatgpt-work-status`. Work supports cleanup, note,
+recall, reindex, remember, review, search, and timeline through the bounded MCP
+bridge. Other workflows are partial because they depend on connectors,
+prose-only writes, or remote mutations the bridge intentionally does not
+expose (move, delete, append-line, and whole-file replacement).
 
 ## Do not claim guaranteed behavior that isn't
 
 Per `references/core-contract.md` and the working principles of this
 refactor: a "stop reminder" or hook firing is host-provided best-effort
 behavior, not a guarantee that auto-commit ran. Any adapter (Claude or
-future Codex) must document this distinction explicitly rather than imply
+Codex) must document this distinction explicitly rather than imply
 that session-end memory capture is guaranteed. Deterministic guarantees
 exist only for the code paths in `scripts/lib/` and `scripts/cortex_cli.py`
 — locking, atomic writes, index/hot-cache generation — not for model-driven
 steps like extraction or knowledge-typing.
 
-## Known gaps before a Codex adapter could actually be built
+## Known gaps in the implemented adapter
 
-These are the concrete blockers, not hypothetical ones:
+These are current, explicit degradations rather than reasons to fork the
+canonical workflows:
 
-1. **Most mutating commands aren't wired to the deterministic utilities
-   yet.** Only `/remember` and `/note` call `scripts/cortex_cli.py`. Every
-   other mutating command (`/end-day`, `/end-week`, `/listen`, `/morning`,
-   `/cleanup`, `/forget`, `/rehearse`, `/relink-memory`,
-   `/sync-linked-entities`) still describes its writes and its lock
-   protocol in prose only. A Codex adapter inheriting these commands
-   as-is would inherit the same "prose lock, no real code" gap this
-   refactor found in the Claude implementation.
+1. **Deterministic mutation coverage is incomplete.** `/remember`, `/note`,
+   `/forget`, `/cleanup`, `/rehearse`, `/relink-memory`,
+   `/sync-linked-entities`, and `/reindex` have explicit shared-CLI mutation
+   paths. `/end-day` is partially wired, while `/listen` and `/morning` wire
+   cache/index steps but not every surrounding write. Other mutating workflows
+   remain prose-specified. Their Agent Skills are marked `partial` and must
+   preview or skip unwired writes rather than hand-edit memory.
 2. **The capability matrix is applied to `commands/*.md` and `agents/*.md`,
    not yet to `references/*.md`.** `commands/search.md`, `commands/end-day.md`,
    `commands/end-week.md` (removed "Task tool"/`subagent_type=`), and all
@@ -115,21 +149,35 @@ These are the concrete blockers, not hypothetical ones:
    concept-drift check — this is a cost-tiering *decision*, not tool syntax,
    and rephrasing it as "a low-cost/fast-tier model" with the concrete choice
    pushed to the adapter layer has not been done.
-4. **`conversation-miner`'s session-history capability
-   (`connector.session_history.read`) is not yet in `references/capability-matrix.md`**
-   — it's referenced from the agent file but the matrix doesn't have a formal
-   entry for it, since it's Cowork-only with no cross-host equivalent
-   (unlike the `connector.*` entries that already exist). Documented as a
-   gap in the agent file itself rather than silently added to the matrix as
-   if it applied broadly.
-4. **No plugin manifest exists for any host but Claude.** `.claude-plugin/plugin.json`
-   is Claude/Cowork-specific; there's no generator producing a portable
-   manifest format yet.
-5. **Hot-cache generation is partial.** `scripts/lib/hot_cache_generator.py`
+4. **Conversation mining is unavailable on Codex.**
+   `connector.session_history.read` is now formalized in the capability matrix,
+   but Codex has no supported implementation. The adapter intentionally omits
+   `conversation-miner` instead of scraping host history.
+5. **External connectors remain installation-specific.** Calendar, mail,
+   transcript, Slack, Drive, and CRM reads require separately configured MCP
+   servers/apps. Each workflow follows the matrix's skip-and-disclose rule.
+6. **Hot-cache generation is partial.** `scripts/lib/hot_cache_generator.py`
    covers node-local sources (changelog, open threads, decisions) but not
    `<config-root>/briefs/` reflections or resolved `staged/commit-drafts/archive/`
    items — documented as a gap in `references/hot-cache.md`, not silently
-   dropped, but still a real gap a Codex adapter would inherit.
+   dropped, but still a real gap both adapters inherit.
+7. **Session-end capture is not guaranteed.** No Codex SessionEnd hook attempts
+   model extraction. Users should invoke `$remember` for important commits;
+   only completed CLI operations carry deterministic write guarantees.
+8. **Cloud Work requires a running private bridge.** Secure MCP Tunnel is the
+   supported private/developer transport. Organization members can install the
+   plugin from a workspace GitHub marketplace, but remote memory access still
+   requires the bridge on the machine that owns each user's files. Public
+   cloud distribution remains unavailable until a stable HTTPS deployment with
+   OAuth 2.1 and per-user storage isolation exists. Cloud hooks also cannot
+   execute laptop scripts; explicit `cortex_recall` is the reliable cloud
+   warm-start.
+9. **Some canonical prose still assumes Claude's local layout.** Several
+   `commands/*.md` files still show `~/Documents/Claude` or Claude/Cowork tool
+   labels even though the core contract requires config-root resolution. The
+   Work/Codex wrappers and MCP bridge override those host examples through the
+   capability matrix. The canonical files should receive a separate cleanup
+   pass rather than being forked inside this adapter.
 
 ## Risks that would require testing against real memory (not done here)
 

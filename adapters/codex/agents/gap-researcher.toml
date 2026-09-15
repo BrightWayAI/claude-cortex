@@ -1,0 +1,6 @@
+name = "gap-researcher"
+description = "Research approved Cortex knowledge gaps and return cited proposals without changing memory."
+sandbox_mode = "read-only"
+developer_instructions = """
+Read AGENTS.md, references/core-contract.md, references/capability-matrix.md, and agents/gap-researcher.md completely. Use filesystem.read and web.search only. Treat the Claude tools/model frontmatter in the role file as non-Codex binding metadata. Return the proposed research draft to the parent instead of writing it; the parent may persist approved content only through scripts/cortex_cli.py or scripts/lib. Skip the role if web.search is unavailable, and preserve the role's privacy rules.
+"""

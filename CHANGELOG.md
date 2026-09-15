@@ -6,6 +6,36 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.15.0] — ChatGPT Work and organization distribution (2026-09-14)
+
+### Added
+- Portable ChatGPT Work MCP bridge with bounded recall/search, confirmed
+  note and section writes, deterministic reindex/hot-cache tools, and a
+  confirmation-gated first-run memory-location setup.
+- Vendor-neutral `scripts/configure_cortex.py` onboarding command. It writes
+  `~/.cortex/config-root`, initializes only missing starter files through the
+  shared Cortex CLI, and preserves existing memory.
+- Repository marketplace and compatibility manifests for direct local installs
+  and ChatGPT workspace GitHub imports.
+- ChatGPT Work and organization-distribution documentation, including clean
+  install, per-user storage, permissions, and update procedures.
+- Release audit, safe archive builder, and an end-to-end MCP smoke test that
+  operate only on the shareable repository surface and temporary memory.
+
+### Changed
+- Shared Agent Skills now wrap the canonical workflows for Claude, ChatGPT
+  Work, and Codex without forking behavior.
+- Plugin version and portable metadata are synchronized across Claude and
+  OpenAI manifests.
+
+### Security
+- Local Slack/user cache files and macOS metadata are excluded from Git.
+- First-run configuration refuses unsafe roots and refuses to replace a
+  different pointer unless the user explicitly confirms the switch.
+- All tests and distribution smoke checks use temporary homes and fixture
+  memory; no real Cortex data is read or written. The suite now contains 156
+  fixture-only unit/integration tests.
+
 ## [4.14.0] — Portability and stabilization refactor (2026-09-14)
 
 Host-neutral core: a canonical storage/workflow contract, a capability

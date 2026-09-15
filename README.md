@@ -1,15 +1,18 @@
-# Cortex v4.14 — Always-On Learning
+# Cortex v4.15 — One Second Brain Across AI Hosts
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/BrightWayAI/claude-cortex/actions/workflows/validate.yml/badge.svg)](https://github.com/BrightWayAI/claude-cortex/actions/workflows/validate.yml)
 
-**Claude gets smarter about you with every conversation.**
+**Give Claude, ChatGPT Work, and Codex one shared second brain.**
 
 Most AI conversations are disposable. Cortex makes them cumulative. It runs silently in the background — observing your preferences, capturing knowledge, learning from corrections — so every conversation builds on the last.
 
-No commands required. Just use Claude normally. It learns.
+Explicit commands provide the reliable capture path; host auto-recall and
+auto-commit behavior is best-effort.
 
-Works on **Cowork** (Claude Desktop) and **Claude Code**.
+Works on **Cowork** (Claude Desktop), **Claude Code**, **ChatGPT Work**, and
+**Codex**. Local surfaces use the user-owned Markdown directly; cloud Work
+reaches it through a private MCP tunnel.
 
 ---
 
@@ -17,22 +20,26 @@ Works on **Cowork** (Claude Desktop) and **Claude Code**.
 
 ### The Always-On Brain
 
-v3 required you to say `/remember`. v4 doesn't wait.
+On Claude hosts, v4 can observe and recall automatically. The OpenAI adapter
+keeps durable commits explicit: use `$remember` or `@Cortex remember` when a
+save matters.
 
 | Behavior | What it does | Platform |
 |----------|-------------|----------|
-| **Auto-recall** | Loads your profile and project context at conversation start | Both |
-| **Passive observation** | Silently learns preferences, corrections, and domain knowledge | Both |
-| **Contextual recall** | Surfaces relevant knowledge when you mention a project/topic mid-conversation | Both |
-| **Auto-commit** | Saves knowledge and observations when the conversation ends | Both |
-| **User profile** | Persistent model of who you are and how you like to work | Both |
-| **Per-project config** | Control capture aggressiveness per project via `.cortex.json` | Both |
+| **Auto-recall** | Loads your profile and project context at conversation start | Claude hosts; bounded SessionStart recall in Codex |
+| **Passive observation** | Learns preferences, corrections, and domain knowledge | Claude hosts |
+| **Contextual recall** | Surfaces relevant knowledge when you mention a project/topic | All hosts when the workflow is active |
+| **Auto-commit** | Saves knowledge and observations when the conversation ends | Claude hosts, best effort |
+| **Explicit commit** | Previews and confirms durable memory changes | All hosts |
+| **User profile** | Persistent model of who you are and how you like to work | All hosts |
+| **Per-project config** | Controls capture behavior via `.cortex.json` when the host loads it | Host-dependent |
 | **Claude Code support** | Drop-in CLAUDE.md instructions + optional hooks | Claude Code |
+| **Codex support** | AGENTS.md + Agent Skills + bounded SessionStart recall | Codex |
 
 ### The Learning Loop
 
 ```
-Conversation starts
+Claude-hosted conversation starts
   → Auto-recall loads your profile + project context
   → Claude adapts to your known preferences
 
@@ -41,7 +48,7 @@ Conversation happens
   → Contextual recall surfaces relevant knowledge on mention
   → Claude adapts in real-time
 
-Conversation ends
+Conversation ends (best effort; explicit /remember is reliable)
   → Auto-commit saves decisions, knowledge, and observations
   → Your profile and project nodes get smarter
 
@@ -60,6 +67,10 @@ Next conversation starts
 3. Select `cortex.zip`
 4. Start talking. Memory activates automatically.
 
+Release maintainers should build the ZIP with
+`python3 scripts/build_release_archive.py --output /tmp/cortex.zip`; never
+archive a raw working directory containing ignored local settings.
+
 ### Claude Code — Full Support (new in v4)
 
 **Minimal setup (no hooks):**
@@ -71,6 +82,83 @@ Next conversation starts
 1. Do the minimal setup above
 2. Add the hooks from `claude-code/hooks.json` to your `~/.claude/settings.json`
 3. Hooks make auto-recall more reliable by feeding data at session init
+
+### Codex — Shared-memory adapter
+
+1. Resolve the existing Cortex root with `python3 hooks/session_start.py --print-root`
+2. Add that exact path to Codex's sandbox writable roots
+3. Enable this repository's portable plugin and trust its SessionStart hook
+4. Invoke `$recall`, `$remember`, `$note`, or any other generated workflow
+
+See `docs/CODEX_SETUP.md` for the permission snippet, supported roles, and
+explicit degradation rules.
+
+### ChatGPT Work — Local or cloud
+
+- **Local Work:** install the portable plugin. Its bundled stdio MCP bridge
+  resolves the same Cortex root and uses the same shared CLI for writes.
+- **Cloud/web Work:** connect that bridge through OpenAI's Secure MCP Tunnel;
+  cloud Work cannot directly read files on your Mac.
+
+See `docs/CHATGPT_WORK_SETUP.md` for the complete trust boundary, one-time
+tunnel setup, tool list, and public-deployment requirements.
+
+#### Install from a shared GitHub checkout
+
+Prerequisites: ChatGPT desktop, `git`, `uv`, and Codex CLI.
+
+```bash
+git clone https://github.com/BrightWayAI/claude-cortex.git
+cd claude-cortex
+codex plugin marketplace add "$PWD"
+codex plugin add cortex@cortex-local
+```
+
+Restart ChatGPT desktop and open a new **Local Work** chat. Type `@Cortex` or
+ask naturally. Plugins with bundled MCP are desktop-only when distributed
+through a GitHub workspace marketplace.
+
+#### Choose the memory location on first run
+
+New users can configure Cortex in either of two equivalent ways:
+
+```bash
+python3 scripts/configure_cortex.py \
+  --config-root "$HOME/Documents/Cortex"
+```
+
+Or, after installing the plugin:
+
+```text
+@Cortex configure my memory at ~/Documents/Cortex. Show me the exact path and
+ask for confirmation before creating anything.
+```
+
+This writes one vendor-neutral pointer file at `~/.cortex/config-root` and
+creates only missing starter files under `<config-root>/memory/`. It never
+overwrites existing memory. If the pointer already targets another location,
+switching requires a separate explicit confirmation.
+
+Existing Claude users normally do **not** configure a second location. Check
+the root Claude already resolves, then install Cortex for Work:
+
+```bash
+python3 hooks/session_start.py --print-root
+```
+
+No additional ChatGPT-specific config file is required. `.cortex.json` is an
+optional project-level behavior override, not the global memory pointer.
+
+#### Share across a ChatGPT organization
+
+A workspace administrator can import this GitHub repository from **Admin →
+Plugins → Add → Import marketplace**. Use the repository URL, leave Path
+blank, and pin a release tag or full commit SHA. The admin then chooses which
+roles may install Cortex. Each member configures a separate local memory root;
+the repository distributes plugin code, never anyone's memory files.
+
+See `docs/ORGANIZATION_DISTRIBUTION.md` for the administrator and member
+checklists.
 
 ---
 
@@ -94,7 +182,10 @@ It never interrupts to capture these. It adapts in real-time and saves at conver
 When you mention a project, person, or topic with memory, Claude surfaces relevant knowledge naturally — "Heads up, Acme's procurement requires 3 vendor quotes" — without dumping a formal recall block.
 
 #### Auto-Commit
-When the conversation ends, Claude silently commits what was learned. No confirmation prompt. If the conversation was trivial, it skips. Corrections and preferences are always saved.
+On supported Claude hosts, Cortex can attempt a silent end-of-session commit.
+Session-end hooks are best effort, so important knowledge should still be
+saved with `/remember`. Codex and ChatGPT Work require an explicit, previewed
+commit; they do not claim guaranteed background saving.
 
 ### The User Profile
 
@@ -131,12 +222,14 @@ All commands from v3 still work. v4 added subagent invocation; v4.2 adds shared-
 
 ### Shared-config commands (v4.2+)
 
-These write to canonical files at `~/Documents/Claude/` that every plugin in the BrightWayAI marketplace reads. Capture once, all plugins benefit.
+These write to canonical files under the resolved `<config-root>` that
+compatible BrightWayAI plugins can read. Capture once, all compatible plugins
+benefit.
 
 | Command | What it does |
 |---------|-------------|
-| `/setup-identity` | Captures name, company, role, primary tools, communication defaults to `~/Documents/Claude/identity.md`. Other plugins skip identity questions in their setups. |
-| `/setup-voice` | Captures voice descriptors, banned phrases, sentence rhythm, hook patterns, sign-off style to `~/Documents/Claude/voice.md`. Drafting plugins read from here. |
+| `/setup-identity` | Captures name, company, role, primary tools, and communication defaults in the resolved config root. |
+| `/setup-voice` | Captures voice descriptors, banned phrases, sentence rhythm, hook patterns, and sign-off style in the resolved config root. |
 
 ### Closing rituals (v4.2+)
 
@@ -251,10 +344,11 @@ See `cortex.config.md` for the full spec.
 
 ## Memory Storage
 
-Memory lives on your computer at `~/Documents/Claude/memory/`. Shared between Cowork and Claude Code.
+Memory lives at `<config-root>/memory/`, resolved through the vendor-neutral
+pointer chain. The same root is shared by Cowork, Claude Code, and Codex.
 
 ```
-~/Documents/Claude/memory/
+<config-root>/memory/
 ├── DASHBOARD.md          ← Master index
 ├── user.md               ← Your profile (NEW in v4)
 ├── archive/              ← Archived nodes
@@ -270,6 +364,21 @@ Memory lives on your computer at `~/Documents/Claude/memory/`. Shared between Co
 ```
 
 All files are plain markdown. Human-readable. Editable. Backupable.
+
+### Config-root precedence
+
+Every host resolves the same location in this order:
+
+1. Project/workflow explicit override (`config_root` in `.cortex.json`)
+2. `CORTEX_CONFIG_ROOT`
+3. `~/.cortex/config-root` — recommended persistent, cross-host pointer
+4. `~/Documents/.claude-plugin-config-root` — legacy Claude pointer
+5. `~/Documents/Claude` — backward-compatible default
+
+For most users, `~/.cortex/config-root` is the only configuration file needed.
+It contains one absolute path on one line. Prefer
+`scripts/configure_cortex.py` over editing it manually because the command
+validates unsafe paths and initializes the directory safely.
 
 ---
 
@@ -294,19 +403,18 @@ Use kebab-case. Organize however fits your work:
 
 ## Platform Comparison
 
-| Feature | Cowork | Claude Code |
-|---------|--------|-------------|
-| Plugin system | Native | Via CLAUDE.md |
-| Auto-recall | Skill auto-fire | CLAUDE.md instructions + hooks |
-| Auto-commit | Skill auto-fire | CLAUDE.md instructions |
-| Passive observation | Always on | Always on |
-| Contextual recall | Always on | Always on |
-| User profile | Shared | Shared |
-| Per-project config | Supported | Supported |
-| Explicit commands | All 26 | 9 mirrored (see `.claude/commands/`); remaining 17 available via natural-language auto-fire per `CLAUDE.md` |
-| Memory files | Shared location | Shared location |
+| Feature | Cowork | Claude Code | Codex |
+|---------|--------|-------------|-------|
+| Plugin system | Native | Via CLAUDE.md | Portable Agent Plugin |
+| Auto-recall | Skill auto-fire | Instructions + hooks | Bounded SessionStart hook |
+| Auto-commit | Best-effort skill | Best-effort instruction | Explicit `$remember` |
+| Passive adaptation | Skill | Instructions | Current-session skill behavior |
+| User profile | Shared | Shared | Shared |
+| Explicit workflows | 29 skills/commands | 9 slash adapters + skills | 29 `$skill` adapters |
+| Memory files | Shared root | Shared root | Shared root |
 
-Both platforms read/write the same memory files. Learn something in Cowork → Claude Code knows it. And vice versa.
+All three hosts can read and write the same memory files. Cross-host writes
+coordinate through the same lock and atomic-write implementation.
 
 ---
 
@@ -314,13 +422,20 @@ Both platforms read/write the same memory files. Learn something in Cowork → C
 
 See `CHANGELOG.md` for the full version-by-version history (this section only tracks major milestones).
 
+### v4.15.0 — ChatGPT Work and organization distribution
+- **One installable plugin**: 29 bundled workflows plus a bounded local MCP bridge
+- **First-run location setup**: a confirmation-gated command writes the shared vendor-neutral pointer and initializes an empty Cortex safely
+- **Organization sharing**: repository marketplace support for ChatGPT workspace GitHub import and direct local installation
+- **Per-user privacy**: plugin code is shared; each person's Markdown memory remains in their own configured folder
+- **Release hardening**: synchronized manifests, private-cache ignores, a shareable-surface privacy audit, and 156 fixture-only tests
+
 ### v4.14.0 — Portability and stabilization refactor
-- **Host-neutral core**: a single canonical storage/workflow contract (`references/core-contract.md`) and capability matrix (`references/capability-matrix.md`), so Claude and a future Codex adapter can share one memory without duplicating behavior
+- **Host-neutral core**: a single canonical storage/workflow contract (`references/core-contract.md`) and capability matrix (`references/capability-matrix.md`), so Claude and Codex share one memory without duplicating behavior
 - **Real locking and atomic writes**: memory mutation now goes through tested code (`scripts/cortex_cli.py` + `scripts/lib/`), not just careful prose — closes a real concurrent-write risk now that memory can be driven by more than one AI session at once
 - **Deterministic index/hot-cache generation**: `/reindex` and the rolling 7-day `hot.md` cache are backed by fixture-tested code, not model-executed algorithms
 - **`.claude/commands/` de-drifted**: mechanically regenerated from the canonical `commands/*.md` files (was hand-duplicated and had silently fallen behind)
-- **`AGENTS.md`**: durable entrypoint for a future Codex session
-- 131 unit/integration tests; `python3 scripts/check_repo.py` is now a much stronger validator (taxonomy drift, broken references, skill/command coverage, adapter freshness, version agreement)
+- **Codex adapter**: `AGENTS.md`, 26 generated Agent Skills, portable `plugin.json`, bounded session-start recall, and four read-only role bindings
+- 135 unit/integration tests; `python3 scripts/check_repo.py` validates taxonomy drift, broken references, skill/command coverage, both adapter families, and version agreement
 
 ### v4.0.0 — Always-On Learning
 - **Passive observation engine**: Claude silently learns about you during every conversation

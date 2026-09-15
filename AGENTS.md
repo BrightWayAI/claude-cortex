@@ -57,27 +57,31 @@ map, not the territory.
   `~/Documents/.claude-plugin-config-root` file → `~/Documents/Claude`
   default. Whoever set up Claude Code already resolves to one of these; use
   the same one rather than inventing a Codex-specific pointer.
+- **First-run configuration.** `scripts/configure_cortex.py` safely writes the
+  vendor-neutral pointer and initializes only missing starter files through the
+  shared CLI. ChatGPT Work exposes the same operation as the confirmation-gated
+  `cortex_configure` MCP tool. Neither path deletes or migrates an old root.
 
-## What does not exist yet — do not assume it does
+## Adapter status and remaining limits
 
-- **No Codex Agent Skills, custom-agent configs, or Agent Plugins manifest
-  exist in this repo.** Building them is explicitly out of scope for the
-  refactor that produced this file (see
-  `docs/PORTABILITY_REFACTOR_PROMPT.md`) — they're future work, not
-  something you should find and are missing due to error.
-- **Most mutating commands are wired to `cortex_cli.py`, not all.**
+- **The OpenAI adapter exists.** `skills/*/SKILL.md` and
+  `.agents/skills/*/SKILL.md` are generated wrappers over `commands/*.md`;
+  `plugin.json` is the portable manifest; `hooks/session_start.py` provides
+  bounded read-only recall; `.codex/agents/` contains the supported role
+  bindings; and `adapters/chatgpt_work/` exposes a bounded MCP bridge for Local
+  and cloud Work. Setup is documented in `docs/CODEX_SETUP.md` and
+  `docs/CHATGPT_WORK_SETUP.md`; workspace sharing is documented in
+  `docs/ORGANIZATION_DISTRIBUTION.md`.
+- **Several mutating commands are wired to `cortex_cli.py`, not all.**
   `/remember`, `/note`, `/forget`, `/cleanup`, `/rehearse`,
   `/relink-memory`, `/sync-linked-entities`, and `/end-day`'s index/hot-cache/
   lock steps use it. Anything not listed there may still describe its
   writes in prose only — check the specific `commands/<name>.md` file
   before assuming a write path is code-backed.
-- **The `agents/*.md` role files (memory-librarian, conversation-miner,
-  activity-miner, transcript-reviewer, gap-researcher) are Claude/Cowork
-  role definitions**, annotated with "Host binding note" callouts pointing
-  at the capability each one needs, but not yet translated into Codex
-  custom-agent config. `conversation-miner` in particular mines Cowork's
-  own session history — there is no Codex equivalent, and it should not be
-  ported.
+- **Four `agents/*.md` roles have read-only Codex bindings**:
+  memory-librarian, activity-miner, transcript-reviewer, and gap-researcher.
+  `conversation-miner` mines Cowork's own session history; Codex has no
+  equivalent and the role is intentionally unavailable.
 - **Model-tier language** (e.g. "a low-cost/fast-tier model, Claude
   adapter: Haiku") appears throughout `commands/*.md` for cost-tiering
   decisions. Substitute Codex's own equivalent cheap/fast model where the
@@ -94,7 +98,7 @@ python3 scripts/check_repo.py
 
 This runs frontmatter validation, the repo-check suite (skill naming,
 broken internal references, taxonomy drift, command/skill coverage,
-version agreement), the `.claude/commands/` freshness check, and the full
+version agreement), the Claude-command and Agent-Skill freshness checks, and the full
 fixture-based test suite under `tests/` (unit tests import
 `scripts/lib/*.py` directly; `tests/test_integration_cli_subprocess.py`
 invokes `scripts/cortex_cli.py` as a real subprocess against fixture memory
@@ -103,12 +107,17 @@ what `/remember` actually does end-to-end). None of this touches real user
 memory; if you add tests, keep it that way — always operate against
 `tempfile.TemporaryDirectory()`.
 
-## If you're about to write a Codex adapter
+## Maintaining the Codex adapter
 
-Come back to `docs/PORTABILITY_READINESS.md`'s Codex-specific mapping table
-and Known gaps section — it was written for exactly this moment, with more
-detail than fits here. The short version: translate capabilities, don't
-copy tool names; make Codex's workflow wrapper as thin as
-`.claude/commands/*.md` is; and do not touch real user memory during
-development — use fixtures, the same discipline this whole refactor was
-built under.
+Invoke workflows as `$remember`, `$recall`, `$note`, and the other skill
+names. Edit `commands/*.md` for workflow behavior or
+`scripts/generate_codex_skills.py` for adapter metadata, then run:
+
+```
+python3 scripts/generate_codex_skills.py --write
+python3 scripts/check_repo.py
+```
+
+Keep capability translation in `references/capability-matrix.md`, not in a
+fork of the workflow, and keep all development tests on fixtures or temporary
+directories.

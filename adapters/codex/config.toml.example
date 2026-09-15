@@ -1,0 +1,8 @@
+# Merge these values into the active Codex config layer. Replace the placeholder
+# with the absolute path printed by `python3 hooks/session_start.py --print-root`.
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[sandbox_workspace_write]
+writable_roots = ["/ABSOLUTE/PATH/TO/CORTEX-CONFIG-ROOT"]
+network_access = false

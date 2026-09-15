@@ -1,20 +1,23 @@
 # Architecture
 
-Cortex is a **markdown-instruction plugin**: there is no runtime binary. Claude reads command and skill files as prompts, then reads and writes files under a single memory directory on disk.
+Cortex is a **markdown-instruction plugin with shared deterministic utilities**. Claude, ChatGPT Work, or Codex reads thin skill adapters and canonical commands, while every memory mutation uses the shared Python CLI/library against one memory directory.
 
 ## High-level flow
 
 ```
-User invokes /remember (or a skill auto-fires)
+User invokes /remember, $remember, or a matching skill
         │
         ▼
-Cowork loads commands/<name>.md  OR  Claude Code loads .claude/commands/<name>.md
+Host adapter loads commands/<name>.md
         │
         ▼
-Claude follows step-by-step instructions (extract state, format entries, write files)
+Host follows the canonical workflow and capability binding
         │
         ▼
-Filesystem: ~/Documents/Claude/memory/
+scripts/cortex_cli.py performs locked, atomic memory mutations
+        │
+        ▼
+Filesystem: <config-root>/memory/
         ├── DASHBOARD.md      ← master index
         ├── <prefix>/         ← e.g. client/, strategy/
         │   └── <node>.md    ← one file per node id
@@ -26,11 +29,41 @@ Filesystem: ~/Documents/Claude/memory/
 | Path | Role |
 |------|------|
 | `commands/*.md` | Cowork slash commands. May reference Cowork-only directory tools. |
-| `skills/*/SKILL.md` | Cowork skills: natural-language triggers that mirror command behavior. |
+| `skills/*/SKILL.md` | Portable generated Agent Skills wrapping canonical workflows. |
+| `.agents/skills/*/SKILL.md` | Generated Codex project-discovery copies of the portable skills. |
+| `plugin.json` | Portable Agent Plugins manifest and Codex hook binding. |
+| `.codex-plugin/plugin.json` | OpenAI compatibility overlay; the portable root remains canonical. |
+| `hooks/session_start.py` | Read-only, bounded Codex session-start recall. |
+| `mcp.json` | Portable local MCP binding for ChatGPT Work and Codex. |
+| `adapters/chatgpt_work/` | Bounded MCP tools; all mutations delegate to the shared CLI. |
+| `scripts/configure_cortex.py` | Confirmation-oriented first-run setup for the shared config-root pointer and minimal memory nucleus. |
+| `.codex/agents/*.toml` | Read-only Codex bindings for supported roles. |
 | `.claude-plugin/plugin.json` | Plugin name, version, description for the Cowork marketplace. |
 | `.claude/commands/*.md` | Optional Claude Code copies of commands (no Cowork MCP calls). |
 
-Every command has a **paired skill** with aligned behavior so “save this” and `/remember` stay consistent.
+Every command has a **generated paired skill** so “save this,” `/remember`, and `$remember` resolve to the same canonical workflow. Host-specific differences live in `references/capability-matrix.md`, not in forked workflow logic.
+
+Cloud ChatGPT Work adds one transport boundary:
+
+```text
+ChatGPT Work / Codex
+        |
+        | Agent Skills + MCP tool calls
+        v
+adapters/chatgpt_work/server.py
+        |
+        | bounded reads or subprocess argv/stdin (never shell=True)
+        v
+scripts/cortex_cli.py + scripts/lib/*
+        |
+        v
+resolved <config-root>/memory
+```
+
+Local Work launches the server over stdio from `mcp.json`. Cloud Work reaches
+the same local process through Secure MCP Tunnel. Public HTTPS deployment is a
+separate production concern because private memory requires per-user OAuth and
+storage isolation.
 
 ## Memory model
 
@@ -42,7 +75,12 @@ Every command has a **paired skill** with aligned behavior so “save this” an
 
 ## Versioning and releases
 
-- **Version** lives in `.claude-plugin/plugin.json` and should match release tags and [CHANGELOG.md](../CHANGELOG.md).
+- **Version** is synchronized across `.claude-plugin/plugin.json`, root
+  `plugin.json`, `.codex-plugin/plugin.json`, and
+  `adapters/chatgpt_work/codex-plugin.json`; it should match release tags and
+  [CHANGELOG.md](../CHANGELOG.md).
+- ChatGPT workspace distribution and release-owner checks are documented in
+  [ORGANIZATION_DISTRIBUTION.md](ORGANIZATION_DISTRIBUTION.md).
 - Pushing to `main` may trigger downstream marketplace notification (see `.github/workflows/notify-marketplace.yml`); coordinate with maintainers before merging release-sensitive changes.
 
 ## Further reading

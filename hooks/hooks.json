@@ -1,0 +1,19 @@
+{
+  "description": "Load bounded Cortex recall context at Codex session start.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/session_start.py\"",
+            "timeout": 10,
+            "statusMessage": "Loading Cortex recall context",
+            "additionalContextLimit": 3500
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "cortex": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "run",
+        "--with",
+        "mcp>=2.2,<3",
+        "python",
+        "${PLUGIN_ROOT}/adapters/chatgpt_work/server.py",
+        "--transport",
+        "stdio"
+      ],
+      "cwd": "${PLUGIN_ROOT}/"
+    }
+  }
+}

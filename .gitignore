@@ -1,2 +1,9 @@
 __pycache__/
 *.pyc
+.venv-chatgpt-work/
+.channels_cache_v2.json
+.users_cache.json
+.DS_Store
+.claude/settings.local.json
+.env
+.env.local
