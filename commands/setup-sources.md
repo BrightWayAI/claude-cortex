@@ -4,7 +4,7 @@ description: Configure the list of note sources cortex's mining layer uses. Walk
 
 # /setup-sources
 
-Sets up the note-source list that powers the v4.3 mining layer. Without at least one source, `transcript-reviewer` has nothing to mine.
+Sets up the note-source list that powers the v4.3 mining layer. Without at least one source, `note-taker` (mode: transcript) has nothing to mine.
 
 This is a standalone command. It does not replace any other setup. It can be re-run anytime to add a new source, disable a source, or change provider config.
 
@@ -203,7 +203,7 @@ _Last updated: 2026-05-12_
 
 ## Step 6 — Offer next step
 
-> "Source list saved. The mining layer will use these on the next `/end-day` run. To test now without waiting, run `transcript-reviewer` directly with a 1-day window — it'll exercise each source's adapter and report what it found."
+> "Source list saved. The mining layer will use these on the next `/end-day` run. To test now without waiting, run `note-taker` directly with `mode: \"transcript\"` and a 1-day window — it'll exercise each source's adapter and report what it found."
 
 ---
 

@@ -130,7 +130,7 @@ Sources, in priority order:
 2. **Transcripts** (Granola/Gemini) — today's meetings. (full mode)
 3. **Email** (Gmail) — today's threads where the user is a participant. (full mode)
 4. **Slack** — configured channels/DMs since yesterday. (full mode)
-5. **CRM** (HubSpot) — today's deal/task/activity changes. (full / activity-miner)
+5. **CRM** (HubSpot) — today's deal/task/activity changes. (full / note-taker mode: activity)
 
 **Cost estimate model.** For each source, estimate `volume × per-unit token cost` and convert to a rough dollar figure, e.g. *"Transcripts: 2 meetings (~14k tokens) ≈ USD 0.05"*, *"Email: 23 threads, ~4 likely-relevant ≈ USD 0.03"*. Show a **running total** at the bottom. Do a fast pre-count (the same counts the quick-mode auto-offer uses) to fill in volumes; if a count is unavailable, show "~" and estimate conservatively.
 
@@ -152,7 +152,7 @@ Tonight's close will review these sources. Estimated cost shown before running.
   [R] Review all   ·   [C] Let me choose (toggle rows)   ·   [G] Go
 ```
 
-- **Quick mode:** only "Today's Brief responses" + "CRM" (activity-miner) are in scope; the card is trivially small. Show it only if there's more than the brief to review — otherwise skip straight to Step 2c.
+- **Quick mode:** only "Today's Brief responses" + "CRM" (note-taker mode: activity) are in scope; the card is trivially small. Show it only if there's more than the brief to review — otherwise skip straight to Step 2c.
 - **Full mode:** show the full card. Default checkbox states come from `<config-root>/plugins/cortex.user-context.md` `end_day.sources:` if set, else all-on except Slack.
 - Respect the **autonomy slider** (`references/autonomy.md`): in `auto` mode, skip the card and review the default-on set; in `suggest`/`confirm`, show it.
 
@@ -193,7 +193,7 @@ Read `<config-root>/plugins/cortex.note-sources.md` to get the configured note-s
 
 If no sources are configured → skip this step with a one-line note: "No note sources configured. Run `/setup-sources` to enable transcript mining." Proceed to Step 2a.
 
-Invoke `transcript-reviewer` with:
+Invoke `note-taker` with `mode: "transcript"`:
 - `time_window: 1 day`
 - `note_sources: [<filtered list>]`
 - `node_inventory`, `node_summaries`, `dashboard_snapshot` (built from `<config-root>/memory/`)
@@ -216,7 +216,7 @@ If the delta is empty ("Nothing missing — all commitments already tracked"), c
 
 ### Learnings stream — DEFERRED to Step 2b unified gate
 
-The `learnings_delta` stream is NOT reviewed here. Hold the proposals; they get merged with `conversation-miner` and `activity-miner` output in Step 2a, then reviewed once in Step 2b. This avoids review-fatigue and lets cross-source dedup happen across miners.
+The `learnings_delta` stream is NOT reviewed here. Hold the proposals; they get merged with `note-taker`'s `mode: conversation` and `mode: activity` output in Step 2a, then reviewed once in Step 2b. This avoids review-fatigue and lets cross-source dedup happen across modes.
 
 ---
 
@@ -224,35 +224,35 @@ The `learnings_delta` stream is NOT reviewed here. Hold the proposals; they get 
 
 **Goal:** mine the day's other Cowork sessions and CRM/email/calendar events for learnings that aren't yet in node content.
 
-Run the following agents **in parallel** via the `subagent.delegate` capability (see `references/capability-matrix.md`) — one chat message, multiple delegation calls:
+Run `note-taker` twice **in parallel**, once per mode, via the `subagent.delegate` capability (see `references/capability-matrix.md`) — one chat message, multiple delegation calls:
 
-1. `conversation-miner` with:
+1. `note-taker` with `mode: "conversation"`:
    - `time_window: 1 day`
    - `current_session_id`: the session running `/end-day` (exclude from mining)
    - `node_inventory`, `node_summaries`, `dashboard_snapshot`
    - `user_email`, `user_local_tz` (from identity.md)
 
-2. `activity-miner` with:
+2. `note-taker` with `mode: "activity"`:
    - `time_window: 1 day`
    - `node_inventory`, `node_summaries`, `dashboard_snapshot`
    - `user_email`, `user_local_tz`
 
 `code-miner` is deferred to a later cortex version (not built in v4.3).
 
-Each miner runs its own cheap-tier triage gate first. Miners that triage-skip return empty and cost ~nothing.
+Each mode runs its own cheap-tier triage gate first. Modes that triage-skip return empty and cost ~nothing.
 
 ### Merge step
 
 Combine three sources of proposals:
 
-- `transcript-reviewer`'s `learnings_delta` from Step 2
-- `conversation-miner`'s `learnings_delta`
-- `activity-miner`'s `learnings_delta`
+- `note-taker`'s (`mode: transcript`) `learnings_delta` from Step 2
+- `note-taker`'s (`mode: conversation`) `learnings_delta`
+- `note-taker`'s (`mode: activity`) `learnings_delta`
 
-Apply cross-miner dedup:
+Apply cross-mode dedup:
 
-- For each proposal in the conversation-miner stream, check against transcript-reviewer's stream — if a proposal on the same target_node has > 70% content overlap, drop the conversation-miner version (transcript is the source of record).
-- For each proposal in activity-miner's stream, do the same against transcript-reviewer.
+- For each proposal in the `mode: conversation` stream, check against `mode: transcript`'s stream — if a proposal on the same target_node has > 70% content overlap, drop the conversation version (transcript is the source of record).
+- For each proposal in `mode: activity`'s stream, do the same against `mode: transcript`.
 - Within each remaining set, dedup against existing node content (n-gram > 70% overlap → drop).
 
 Group surviving proposals by `target_node`. Sort within each group by `confidence DESC, update_type` (corrections first, then decisions/insights, then gotchas/models, then relationship-context).

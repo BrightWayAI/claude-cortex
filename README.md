@@ -236,7 +236,7 @@ benefit.
 | Command | What it does |
 |---------|-------------|
 | `/end-day` | 5-min daily close — recap today, prompt for reflection, commit learnings to memory, optionally pre-stage tomorrow via `plan-tomorrow`. |
-| `/end-week` | 15-min Friday close — runs `transcript-reviewer` for uncaptured commitments, `/cleanup` for memory hygiene, `/review` for synthesis, prompts for weekly reflection, optionally pre-stages Monday's outreach via `weekly-outreach`. |
+| `/end-week` | 15-min Friday close — runs `note-taker` (mode: transcript) for uncaptured commitments, `/cleanup` for memory hygiene, `/review` for synthesis, prompts for weekly reflection, optionally pre-stages Monday's outreach via `weekly-outreach`. |
 
 ### Always-On Skill
 
@@ -268,12 +268,13 @@ Commands also fire from natural language:
 
 ## Subagents (v4.1+)
 
-Cortex ships two specialist subagents that handle heavy memory work off the main conversation thread. Other plugins (or Cortex's own commands) can delegate to them via the Task tool.
+Cortex ships specialist subagents that handle heavy memory work off the main conversation thread. Other plugins (or Cortex's own commands) can delegate to them via the Task tool.
 
 | Subagent | Purpose | Used by |
 |---|---|---|
 | **`memory-librarian`** | Search, synthesize, and deduplicate across all working-memory files for broad / cross-cutting queries. Returns a structured Summary / Source Entries / Open Threads / Confidence response. Read-only. | `/search` (cortex) for broad queries; any other skill that needs cross-node memory synthesis |
-| **`transcript-reviewer`** | Read recent Granola call transcripts and surface commitments the user made that aren't already tracked in CRM tasks or Cortex memory. Returns a delta — only what's missing from existing tracking. | Manual / scheduled weekly run |
+| **`gap-researcher`** | Finds thin, stale, contradictory, or orphaned memory and researches a fill with ≥2 independent sources. | `/research-gaps`, optionally `/end-week` |
+| **`note-taker`** | Mode-dispatched nightly mining agent — `mode: transcript` (configured note-source providers), `mode: conversation` (other Cowork sessions), `mode: activity` (CRM/email/calendar events). Returns a commitments delta and a learnings delta per mode. Merges the former `transcript-reviewer` + `conversation-miner` + `activity-miner` agents (2026-09-15). | `/listen` (nightly), `/end-day` full mode, `/end-week` |
 
 Subagents inherit parent tools at runtime, so they work with whichever connectors (Granola, CRM, etc.) the user has connected. Tool allowlists are kept tight where possible (e.g., memory-librarian uses only Read/Grep/Glob).
 

@@ -63,7 +63,7 @@ Only messages where the user was @mentioned, or messages the user authored, in c
 Files created or modified yesterday in folders the user opted into via `/setup-sources`. Metadata only (file name, path, last modifier).
 
 ### `transcripts/<meeting-id>-<slug>.md`
-One file per transcript. Front-matter with source adapter (Granola / Gemini / Fireflies / Otter / generic-Drive), original ID, meeting title, participants, date. Body is the transcript text. The conversation-miner reads this.
+One file per transcript. Front-matter with source adapter (Granola / Gemini / Fireflies / Otter / generic-Drive), original ID, meeting title, participants, date. Body is the transcript text. note-taker's `mode: conversation` reads this.
 
 ### `_index.md`
 ```markdown

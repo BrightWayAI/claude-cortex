@@ -13,8 +13,9 @@ Codex-specific database or pointer file.
   `SessionStart` hook reads a bounded bundle from `memory/hot.md`,
   `memory/me/user.md`, and `memory/DASHBOARD.md`.
 - `.codex/agents/` maps the portable read-oriented roles to Codex custom
-  agents. `conversation-miner` is deliberately absent because Codex does not
-  expose an equivalent cross-session transcript capability.
+  agents. `note-taker`'s `mode: conversation` is deliberately absent because
+  Codex does not expose an equivalent cross-session transcript capability
+  (`mode: transcript` / `mode: activity` are mapped).
 
 The generated skill wrappers in `skills/` remain compatible with the Claude
 plugin. `commands/*.md` continues to be the only workflow authority.

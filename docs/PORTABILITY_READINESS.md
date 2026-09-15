@@ -46,9 +46,8 @@ Any host integrating Cortex needs to provide, in its own idiom:
    `references/capability-matrix.md` to the host's actual tools/APIs, plus
    documented degrade behavior for optional capabilities.
 6. **Subagent role translation** — the roles described in `agents/*.md`
-   (memory-librarian, conversation-miner, activity-miner, gap-researcher,
-   transcript-reviewer) translated into the host's own sub-agent/role
-   configuration format.
+   (memory-librarian, note-taker, gap-researcher) translated into the host's
+   own sub-agent/role configuration format.
 7. **Plugin packaging** — a manifest in the host's own format, generated
    from or validated against `.claude-plugin/plugin.json` rather than
    hand-maintained separately.
@@ -65,7 +64,7 @@ Any host integrating Cortex needs to provide, in its own idiom:
 | `.claude/commands/*.md` (slash-command adapter) | `$skill-name` or natural language | Use `$remember`, `$recall`, `$note`, etc. Identical slash syntax is neither required nor claimed. |
 | Claude Code hooks | Codex `SessionStart` hook | `hooks/hooks.json` invokes the read-only, bounded `hooks/session_start.py`. No session-end commit hook is installed. |
 | Claude Code filesystem access | Codex sandbox roots | The user adds the resolved `<config-root>` as a readable/writable root; machine-specific absolute paths are not committed. |
-| `agents/*.md` roles | Codex custom agents | Four read-only mappings live in `.codex/agents/`, sourced from `adapters/codex/agents/`. `conversation-miner` is unavailable. |
+| `agents/*.md` roles | Codex custom agents | Read-only mappings live in `.codex/agents/`, sourced from `adapters/codex/agents/`. `note-taker`'s `mode: conversation` is unavailable. |
 | `.claude-plugin/plugin.json` | Portable Agent Plugins manifest | Root `plugin.json` packages the shared skills and the OpenAI hook extension. |
 
 Setup and trust steps are in `docs/CODEX_SETUP.md`.
@@ -144,8 +143,8 @@ canonical workflows:
    — rewritten to name the capability first with the concrete tool as an
    implementation parenthetical) were fixed during this refactor. Added a
    missing `connector.crm.read` capability to the matrix in the process
-   (only `connector.crm.write` existed before, but `activity-miner` reads
-   CRM data). The broader sweep across `references/*.md` (`archive-layout.md`,
+   (only `connector.crm.write` existed before, but `note-taker`'s `mode: activity`
+   reads CRM data). The broader sweep across `references/*.md` (`archive-layout.md`,
    `decay-model.md`, `gap-detection-rules.md`, `node-taxonomy.md`,
    `note-sources.md`) flagged in the Phase 0 audit has not been completed.
 3. **`agents/*.md` still name a concrete model tier (`model: sonnet`) in
@@ -157,7 +156,7 @@ canonical workflows:
 4. **Conversation mining is unavailable on Codex.**
    `connector.session_history.read` is now formalized in the capability matrix,
    but Codex has no supported implementation. The adapter intentionally omits
-   `conversation-miner` instead of scraping host history.
+   `note-taker`'s `mode: conversation` instead of scraping host history.
 5. **External connectors remain installation-specific.** Calendar, mail,
    transcript, Slack, Drive, and CRM reads require separately configured MCP
    servers/apps. Each workflow follows the matrix's skip-and-disclose rule.

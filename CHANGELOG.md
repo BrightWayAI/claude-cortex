@@ -4,6 +4,34 @@ All notable changes to the Cortex Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [4.19.0] — transcript-reviewer + conversation-miner + activity-miner merged into note-taker (2026-09-15)
+
+Nucleus Operating Model Refactor Phase 3 step 3.6.
+
+### Changed
+- New `agents/note-taker.md` replaces the three mining agents, mode-dispatched
+  (`mode: transcript` / `mode: conversation` / `mode: activity`). All three
+  ran at the same pipeline step against the same node inventory — merging
+  them is a packaging change, not a behavior change; each mode's procedure,
+  triage gate, and return shape is preserved verbatim. A shared routing
+  algorithm and shared `learnings_delta` proposal shape are now factored out
+  once instead of duplicated three times.
+- `/listen`, `/end-day`, `/end-week`, `/setup-sources` updated to invoke
+  `note-taker` with an explicit `mode` instead of the three separate agent
+  names.
+- `adapters/codex/agents/note-taker.toml` replaces
+  `adapters/codex/agents/{transcript-reviewer,activity-miner}.toml`.
+  `mode: conversation` remains unavailable on Codex (no
+  `connector.session_history.read` implementation), same as before.
+- Cross-referencing docs updated: `references/note-sources.md`,
+  `references/archive-layout.md`, `references/capability-matrix.md`,
+  `docs/CODEX_SETUP.md`, `docs/PORTABILITY_READINESS.md`,
+  `adapters/codex/README.md`, `AGENTS.md`, `README.md`.
+
+### Removed
+- `agents/transcript-reviewer.md`, `agents/conversation-miner.md`,
+  `agents/activity-miner.md` — content fully preserved in `note-taker.md`.
+
 ## [4.18.6] — Autonomy docs updated for nucleus-router retirement (2026-09-15)
 
 ### Changed

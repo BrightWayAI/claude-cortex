@@ -1,6 +1,6 @@
 # Note sources — config and how to add a provider (v4.3+)
 
-How cortex's mining layer (`transcript-reviewer`) knows where to look for meeting notes.
+How cortex's mining layer (`note-taker`, mode: transcript) knows where to look for meeting notes.
 
 ## Config file
 
@@ -62,7 +62,7 @@ Example:
 
 Multiple project-scoped sources can fire in the same run if multiple projects had activity. Global sources always fire.
 
-## How `transcript-reviewer` uses the file
+## How `note-taker` (mode: transcript) uses the file
 
 At the top of every run:
 
@@ -89,7 +89,7 @@ Add a new section to `agents/lib/note-source-adapters.md` following the existing
 - `fetch(time_window)` logic (how to query the MCP, filter to window, map response fields to the normalized note shape)
 - `health_check()` logic (a small smoke test against the connector)
 
-No agent code changes needed — `transcript-reviewer` reads the adapter file fresh on each run.
+No agent code changes needed — `note-taker` reads the adapter file fresh on each run.
 
 ### Case 2 — Provider has no MCP but writes to Drive or Gmail
 

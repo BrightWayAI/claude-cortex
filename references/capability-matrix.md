@@ -121,11 +121,11 @@ with the concrete tool name pushed into the per-host column here.
 
 | | |
 |---|---|
-| Required or optional | Optional — used by `activity-miner` for deal-stage/lifecycle/task-closure events. |
+| Required or optional | Optional — used by `note-taker` (mode: activity) for deal-stage/lifecycle/task-closure events. |
 | Claude Code / Cowork | Provided by a CRM MCP server if configured (e.g. HubSpot: `search_crm_objects`, `get_crm_objects`, `search_properties`). |
 | Codex | Provided by a configured CRM MCP server or app; otherwise unavailable. |
 | ChatGPT Work | Provided by an installed and authorized CRM plugin/app; otherwise unavailable. |
-| Behavior when unavailable | `activity-miner` skips the CRM source and continues with mail/calendar (see its per-connector triage gate). Never fatal. |
+| Behavior when unavailable | `note-taker` (mode: activity) skips the CRM source and continues with mail/calendar (see its per-connector triage gate). Never fatal. |
 | Reads/writes external state | Reads. |
 | Confirmation policy | One-time authorization at connector setup; no per-run confirmation. |
 
@@ -184,12 +184,12 @@ with the concrete tool name pushed into the per-host column here.
 
 | | |
 |---|---|
-| Required or optional | Optional and role-specific — used only by `conversation-miner` to inspect other host sessions. |
+| Required or optional | Optional and role-specific — used only by `note-taker` (mode: conversation) to inspect other host sessions. |
 | Claude Code | Unavailable; Claude Code has no equivalent cross-session transcript source exposed to Cortex. |
 | Cowork | Cowork session-history tools (`list_sessions` and `read_transcript`) when the host grants them. |
-| Codex | Unavailable. Local Codex history is not a supported Cortex connector and must not be scraped as a substitute. `conversation-miner` is therefore not installed as a Codex custom agent. |
+| Codex | Unavailable. Local Codex history is not a supported Cortex connector and must not be scraped as a substitute. `note-taker`'s `mode: conversation` is therefore not installed as a Codex custom agent (mode: transcript / mode: activity still are). |
 | ChatGPT Work | Unavailable as a Cortex cross-chat connector. Do not scrape ChatGPT-managed history; remember the active conversation explicitly instead. |
-| Behavior when unavailable | Skip `conversation-miner`, return an explicit source-unavailable note, and continue with transcript/activity sources that are configured. Never infer other-session content. |
+| Behavior when unavailable | Skip `note-taker`'s `mode: conversation`, return an explicit source-unavailable note, and continue with transcript/activity sources that are configured. Never infer other-session content. |
 | Reads/writes external state | Reads host-managed session data. |
 | Confirmation policy | Governed by the host's session-history authorization and the role's `[no-mine]` privacy rule. |
 

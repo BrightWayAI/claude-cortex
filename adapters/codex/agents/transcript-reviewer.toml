@@ -1,6 +1,0 @@
-name = "transcript-reviewer"
-description = "Read configured transcript sources and return deduplicated commitment and learning proposals."
-sandbox_mode = "read-only"
-developer_instructions = """
-Read AGENTS.md, references/core-contract.md, references/capability-matrix.md, agents/transcript-reviewer.md, and agents/lib/note-source-adapters.md completely. Use filesystem.read plus only the connector.*.read capabilities actually configured in this Codex session. Skip each unavailable source explicitly. Return two proposal streams to the parent and never write to memory or external systems.
-"""

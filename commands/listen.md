@@ -1,5 +1,5 @@
 ---
-description: Nightly autonomous ingest. Pulls yesterday's calendar / Gmail / Slack / transcripts / Drive activity into immutable `<config-root>/archive/YYYY-MM-DD/`, runs the mining agents (transcript-reviewer, conversation-miner, activity-miner) against the archive, and stages all proposed memory commits as a single draft at `<config-root>/memory/staged/commit-drafts/YYYY-MM-DD.md`. Refreshes `<config-root>/memory/hot.md`. Designed for unattended scheduled execution. Pair with `/morning` to review and merge the draft.
+description: Nightly autonomous ingest. Pulls yesterday's calendar / Gmail / Slack / transcripts / Drive activity into immutable `<config-root>/archive/YYYY-MM-DD/`, runs the note-taker mining agent (modes: transcript, conversation, activity) against the archive, and stages all proposed memory commits as a single draft at `<config-root>/memory/staged/commit-drafts/YYYY-MM-DD.md`. Refreshes `<config-root>/memory/hot.md`. Designed for unattended scheduled execution. Pair with `/morning` to review and merge the draft.
 ---
 
 # /listen
@@ -133,29 +133,29 @@ This file is the canonical "what did /listen accomplish" record.
 
 ---
 
-## Step 3 — Run mining agents against the archive
+## Step 3 — Run note-taker against the archive
 
-Now mine the archive into proposed memory commits. All three agents run **read-only against the archive** and **read-only against active memory** — they propose, they never write to nodes directly.
+Now mine the archive into proposed memory commits. Invoke `note-taker` once per mode — all three modes run **read-only against the archive** and **read-only against active memory**; they propose, they never write to nodes directly.
 
-### Transcript review
-Invoke `transcript-reviewer` agent with:
+### mode: transcript
+Invoke `note-taker` with `mode: "transcript"`:
 - Scope: `<config-root>/archive/<target_date>/transcripts/`
 - Cross-reference: active person pages + open threads on project/client nodes
 - Output: proposed knowledge entries (INSIGHT, MODEL, GOTCHA, LESSON), proposed commitments (to / from others), proposed person-page updates.
 
-### Conversation mining
-Invoke `conversation-miner` agent with:
+### mode: conversation
+Invoke `note-taker` with `mode: "conversation"`:
 - Scope: Cowork session metadata for `target_date` (via session-info MCP if available)
 - Cross-reference: active project nodes
 - Output: proposed knowledge entries, proposed user-observation updates.
 
-### Activity mining
-Invoke `activity-miner` agent with:
+### mode: activity
+Invoke `note-taker` with `mode: "activity"`:
 - Scope: `archive/<target_date>/calendar.md`, `inbox.md`, `slack.md`, `drive.md`
 - Cross-reference: active person + client + topic nodes
 - Output: proposed person-page entries (interactions, status), proposed open-thread updates, proposed commitment captures.
 
-All three agents return structured proposal lists. Aggregate them.
+All three modes return structured proposal lists. Aggregate them.
 
 ---
 
@@ -181,7 +181,7 @@ Total proposals: <N> across <M> nodes.
 
 ### Proposal 1 — <node>: <one-line summary>
 - **Type:** INSIGHT | MODEL | GOTCHA | LESSON | RECIPE | CORRECTION | person-update | thread-update | commitment
-- **From:** transcript-reviewer | conversation-miner | activity-miner
+- **From:** note-taker (mode: transcript) | note-taker (mode: conversation) | note-taker (mode: activity)
 - **Source:** archive/<target_date>/<file> (line <N> or section <X>)
 - **Proposed content:**
   > <verbatim or near-verbatim text to add>

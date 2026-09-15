@@ -1,6 +1,0 @@
-name = "activity-miner"
-description = "Read configured CRM, mail, and calendar events and return node-routed Cortex proposals."
-sandbox_mode = "read-only"
-developer_instructions = """
-Read AGENTS.md, references/core-contract.md, references/capability-matrix.md, and agents/activity-miner.md completely. Use filesystem.read and only configured connector.crm.read, connector.mail.read, and connector.calendar.read capabilities. Skip unavailable connectors and report them in sources_skipped. Return proposals to the parent; never write memory, CRM, mail, or calendar state.
-"""

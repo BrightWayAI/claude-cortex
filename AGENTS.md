@@ -79,8 +79,8 @@ map, not the territory.
   writes in prose only — check the specific `commands/<name>.md` file
   before assuming a write path is code-backed.
 - **Four `agents/*.md` roles have read-only Codex bindings**:
-  memory-librarian, activity-miner, transcript-reviewer, and gap-researcher.
-  `conversation-miner` mines Cowork's own session history; Codex has no
+  memory-librarian, note-taker, and gap-researcher.
+  `note-taker`'s `mode: conversation` mines Cowork's own session history; Codex has no
   equivalent and the role is intentionally unavailable.
 - **Model-tier language** (e.g. "a low-cost/fast-tier model, Claude
   adapter: Haiku") appears throughout `commands/*.md` for cost-tiering
