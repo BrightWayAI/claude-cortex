@@ -4,6 +4,20 @@ All notable changes to the Cortex Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [4.21.2] — claude plugin eval suite (2026-09-15)
+
+Nucleus Operating Model Refactor Phase 4 step 4.2.
+
+### Added
+- `evals/morning-natural-language/` — eval case testing the morning skill's natural-language trigger ("good morning" without typing /morning), with an `llm` grader
+  checking the response acts on the natural-language request directly rather
+  than asking the user to type the explicit command. Run with
+  `claude plugin eval . --case morning-natural-language`; `--ablation with-without`
+  (the default when the plugin resolves) reports the delta between installed
+  and not — a delta near zero means the skill's description isn't matching
+  natural phrasing and needs work.
+- `.gitignore` — excludes `evals/results/` (per-run output, not checked in).
+
 ## [4.21.1] — Fix: /morning should stay model-invocable (2026-09-15)
 
 ### Fixed

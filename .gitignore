@@ -7,3 +7,6 @@ __pycache__/
 .claude/settings.local.json
 .env
 .env.local
+
+# claude plugin eval results (Nucleus Operating Model Refactor Phase 4 step 4.2)
+evals/results/
