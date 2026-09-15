@@ -4,6 +4,37 @@ All notable changes to the Cortex Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [4.21.0] — /start-nucleus gains autonomy acknowledgment, catalog fixed (2026-09-15)
+
+Nucleus Operating Model Refactor Phase 4 step 4.1.
+
+### Added
+- `/start-nucleus` Step 2.5 — autonomy policy acknowledgment. Reads the
+  ALWAYS/ASK FIRST/NEVER tiers from `memory/CLAUDE.md`, presents them
+  plainly, lets the user accept defaults or customize, writes a
+  `.autonomy-acknowledged` marker. Skipped silently on a first-ever run
+  before memory exists (fires on the next re-run instead).
+
+### Changed
+- Step 5's per-plugin setup table and menu example rewritten for the
+  current 9-plugin catalog — was still listing `lead-engine`,
+  `referral-engine`, `client-status`, `project-setup` as separate installs
+  (all retired/merged earlier in this refactor). Now lists `core-ops`,
+  `daily-brief`, `relationships` (natively covers Apollo/signals + referral
+  cooling), `delivery` (covers project setup, status, and deliverable QA),
+  `news-curator`, `time-tracking`, `voice`, `weekly-alignment`.
+- Step 8's closing summary and "Try these" examples updated from
+  `nucleus-router`/`/route` to the `chief-of-staff` agent (`/cos` in
+  core-ops).
+
+### Not done
+- The brief's literal 4.1 also asked for `team/<slug>/` scope creation
+  during onboarding. Skipped per Zach's decision — Phase 2 already chose
+  the simpler `memory/me/` scope with no physical `org/`/`team/` wrapper,
+  since there's no second teammate yet. Revisit when one actually onboards.
+- Connector check is not a new step — `/diagnose` (invoked at Step 6)
+  already covers it.
+
 ## [4.20.1] — Skill auto-invocation audit (2026-09-15)
 
 Nucleus Operating Model Refactor Phase 3 step 3.7. Ritual and side-effecting

@@ -1,10 +1,10 @@
 ---
-description: The foundational onboarding walker. Chains the essential setup commands needed for Nucleus to be productive — identity, voice, note sources, Obsidian vault, per-plugin setups, diagnostics, optional schedule registration. Idempotent. Re-running detects what's already configured and only runs what's missing. The "I just installed Nucleus, now what" command.
+description: The foundational onboarding walker. Chains the essential setup commands needed for Nucleus to be productive — identity, voice, autonomy policy acknowledgment, note sources, Obsidian vault, per-plugin setups, diagnostics (incl. connector check), optional schedule registration. Idempotent. Re-running detects what's already configured and only runs what's missing. The "I just installed Nucleus, now what" command. Target: ≤15 minutes.
 ---
 
 # /start-nucleus
 
-You are running the foundational onboarding walker. The user just typed `/start-nucleus` (or the router routed "start nucleus" / "let's begin" / "onboard me" / "get started" / "set me up" to this command). Your job is to take them from zero to a working Nucleus install in ~15-30 minutes, gating each step so they can skip what doesn't apply.
+You are running the foundational onboarding walker. The user just typed `/start-nucleus` (or core-ops's `chief-of-staff` agent routed "start nucleus" / "let's begin" / "onboard me" / "get started" / "set me up" to this command). Your job is to take them from zero to a working Nucleus install in ~15 minutes, gating each step so they can skip what doesn't apply.
 
 This command never modifies memory or settings without the user's go-ahead. Every step is a chained invocation of an existing setup command — `/start-nucleus` itself doesn't write anything.
 
@@ -82,6 +82,24 @@ On `y`: invoke `/setup-voice`. On `skip`: log and continue. If skipped, the draf
 
 ---
 
+## Step 2.5 — Foundational: autonomy policy acknowledgment (v4.21+)
+
+If `<config-root>/memory/CLAUDE.md` lacks an Autonomy policy section (pre-refactor installs), or the user has never acknowledged it (no `.autonomy-acknowledged` marker):
+
+Read the Autonomy policy from `<config-root>/memory/CLAUDE.md` (ALWAYS / ASK FIRST / NEVER tiers). Present it plainly:
+
+> "One more foundational thing — Nucleus follows an autonomy policy that governs what it can do without asking. By default: it reads memory and stages proposals freely, but it always asks before sending anything, changing CRM records, deleting/archiving a node, registering a schedule, or spending API credits — and it never sends on your behalf without per-message approval, writes memory unattended (only staged drafts), or stores secrets."
+>
+> "This applies to every command, skill, and agent across the whole stack — including the `chief-of-staff` agent (`/cos` in core-ops). Want to customize any of these tiers, or accept the defaults? (accept / customize)"
+
+On `accept`: write a `.autonomy-acknowledged` marker to `<config-root>/memory/` (empty file, just a marker — the policy itself lives in `memory/CLAUDE.md`, this only records that the user has seen it). Continue.
+
+On `customize`: walk each tier's items one at a time, letting the user move an item between ALWAYS/ASK FIRST/NEVER or add a firm-specific rule. Write the customized policy back to `<config-root>/memory/CLAUDE.md`'s Autonomy policy section, then write the marker.
+
+If `<config-root>/memory/CLAUDE.md` doesn't exist yet at all (first-ever run, no cortex memory initialized), skip this step silently — it'll fire on the next `/start-nucleus` re-run once memory exists.
+
+---
+
 ## Step 3 — Foundational: note sources
 
 If `<config-root>/plugins/cortex.user-context.md` lacks a `note_sources` section:
@@ -116,16 +134,13 @@ For each installed plugin that has a setup command but no `<config-root>/plugins
 
 | Plugin | Setup command | Captures |
 |---|---|---|
-| daily-brief | `/setup-brief` + `/setup-plan` | Section toggles, sort defaults, working hours, calendar conventions |
-| lead-engine | `/lead-setup` | Company, ICP, signal preferences, value-adds |
-| relationships | `/setup-relationships` | ICP, tier definitions, voices, time-budget, integrations (auto-imports from peer plugins) |
-| referral-engine | `/setup-referrals` | Connector taxonomy, quiet threshold, ask cadence |
+| core-ops | `/setup-core` | CRM, brand, deliverable conventions |
+| daily-brief | `/setup-brief` + `/setup-plan` | Section toggles, sort defaults, working hours, calendar conventions (also covers next-day planning via `/brief --tomorrow`) |
+| relationships | `/setup-relationships` | ICP, tier definitions, voices, time-budget, Apollo/signal sourcing, referral cooling (natively — absorbs the retired lead-engine + referral-engine plugins) |
+| delivery | `/setup-projects` + `/setup-status` | Offerings catalog, drive layout, communication defaults, status cadence, per-client overrides (also covers deliverable QA via `/review-deliverable`, absorbed from core-ops) |
 | news-curator | `/setup-news` | Topic, audience, sources, post format |
-| client-status | `/setup-status` | Cadence, status template, per-client overrides |
-| project-setup | `/setup-projects` | Offerings catalog, drive layout, communication defaults |
 | time-tracking | `/setup-time` | Clients, billing models, calendar tagging |
 | voice | `/setup-style` | Style file location, learning thresholds |
-| core-ops | `/setup-core` | CRM, brand, deliverable conventions |
 | weekly-alignment | `/setup` (in that plugin's skills) | Slack channels, teams, risk patterns |
 
 Surface them as a single grouped menu:
@@ -133,15 +148,15 @@ Surface them as a single grouped menu:
 ```
 Plugin setups needed:
 
-  [1] /setup-brief + /setup-plan    (daily-brief — ~5 min)
-  [2] /lead-setup                    (lead-engine — ~10 min)
-  [3] /setup-relationships           (relationships — ~3 min for full Nucleus stack; auto-imports from peers)
-  [4] /setup-referrals               (referral-engine — ~5 min)
+  [1] /setup-core                    (core-ops — ~5 min)
+  [2] /setup-brief + /setup-plan     (daily-brief — ~5 min)
+  [3] /setup-relationships           (relationships — ~5 min; covers Apollo/signals + referral cooling natively)
+  [4] /setup-projects + /setup-status (delivery — ~10 min)
   ...
 
 Pick: all / numbered list (e.g., "1,3,4") / skip-all / one-at-a-time
 
-Estimated: ~37 minutes for all.
+Estimated: ~30 minutes for all.
 ```
 
 Walk each chosen setup in order. Between each, offer: "Continue with the next setup or pause here?" Pausing means re-running `/start-nucleus` later will resume from where they left off (since the marker files persist).
@@ -182,22 +197,23 @@ Nucleus onboarding complete.
 Foundation:
   ✓ Identity captured
   ✓ Voice captured
+  ✓ Autonomy policy acknowledged
   ✓ Note sources connected (Granola, Gemini)
-  ✓ Obsidian vault scaffolded — open ~/Documents/Claude/ in Obsidian
+  ✓ Obsidian vault scaffolded — open <config-root> in Obsidian
 
 Per-plugin (configured today):
+  ✓ core-ops
   ✓ daily-brief
-  ✓ lead-engine
   ✓ relationships
 
 Schedules:
   ✓ Registered with Cowork (nightly /listen, daily /end-day, ...)
 
 Try these:
-  • Say "what's on my plate today" → router suggests /brief
+  • Say "what's on my plate today" → chief-of-staff (/cos in core-ops) suggests /brief
   • Say "I just met Sarah at the AI Summit" → /remember + person page
   • Tonight: /listen runs on cron; tomorrow morning say "good morning" → /morning
-  • Anytime: /route prints the full cheat sheet of capabilities
+  • Anytime: /cos describes what it can route to, based on what's installed
 
 You're set up. Run /diagnose any time to check stack health.
 ```
