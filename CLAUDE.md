@@ -257,8 +257,8 @@ If `.claude/commands/` is present, these slash commands are available:
 |---------|---------|
 | `/remember` | End-of-session commit — extracts state + knowledge + observations |
 | `/recall [target]` | Load context for a project, person, topic, or full dashboard |
-| `/learn [node] [type?] [content]` | Capture standalone knowledge entry |
-| `/note [node] [content]` | Quick one-liner to changelog |
+| `/learn [node] [type?] [content]` | Alias for `/remember --knowledge <type>` |
+| `/note [node] [content]` | Alias for `/remember --quick` |
 | `/search [query]` | Cross-project search across all memory |
 | `/review [--since] [--until]` | Synthesized weekly digest |
 | `/timeline [project?] [--since] [--until]` | Chronological activity log |

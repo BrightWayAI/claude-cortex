@@ -1,5 +1,5 @@
 ---
-description: Surface working memory into the current conversation. Runs automatically at conversation start to load the user profile and surface attention items. Also runs explicitly via /recall [project] to load full context for a specific project, or /recall alone for the full dashboard.
+description: Surface working memory into the current conversation. Runs automatically at conversation start to load the user profile and surface attention items. Also runs explicitly via /recall [project] to load full context for a specific project, or /recall alone for the full dashboard. Default load for a project is frontmatter + Current state + Open loops only (v4.16+, Nucleus Operating Model Refactor Phase 2 step 2.2) — pass `--full` to also load the node's Record (full knowledge base, changelog, people, history).
 ---
 
 # /recall $ARGUMENTS
@@ -77,8 +77,14 @@ If the memory directory doesn't exist or is empty, tell the user and offer to he
 
 ## If a project was specified (e.g. `/recall client:acme`, `/recall strategy:q2-growth`)
 
-1. Read the node file from the memory directory
-2. Pull: SUMMARY, recent LOGs, all knowledge entries (INSIGHT/LESSON/MODEL/GOTCHA/RECIPE/CORRECTION), PEOPLE, SIGNALs
+**Default load boundary (v4.16+).** Read the node file, but only load: frontmatter, `## Current state` (or the legacy `## Summary` on nodes not yet restructured), and `## Open loops` (or legacy `## Next Actions` P0/P1 + `## Open Threads`). Stop at a `---` divider followed by `## Record` — do not read past it. If the node's Record lives in a sibling `<node>.record.md` file (nodes over 40KB at restructure time, e.g. `client/aurora-labs.record.md`, `studio.record.md`), do not open that file at all in default mode.
+
+**`/recall <node> --full`** loads everything: the full Record section (or sibling `.record.md` file) in addition to Current state — the full knowledge base (INSIGHT/LESSON/MODEL/GOTCHA/RECIPE/CORRECTION), PEOPLE, Changelog, full Open Threads/Next Actions, SIGNALs. Use this when you need history, not just current status.
+
+**Nodes not yet restructured** (no `## Current state` / no Record divider) behave exactly as before — full-file load, no behavior change. This only applies once a node has been split.
+
+1. Read the node file from the memory directory (respecting the load boundary above)
+2. Pull (in `--full` mode): SUMMARY, recent LOGs, all knowledge entries (INSIGHT/LESSON/MODEL/GOTCHA/RECIPE/CORRECTION), PEOPLE, SIGNALs
 
 3. Compute staleness:
    - **Active**: within 7 days
@@ -141,6 +147,8 @@ Insights:
 **Signals from other projects**
 [cross-project flags, or "None"]
 ```
+
+**In default (non `--full`) mode on a restructured node:** `What We Know`, `Key People`, `Recent Sessions`, and `Signals from other projects` will be thin or empty since that content lives in the unloaded Record — render `Current State` (from `## Current state`) and `Open Threads`/`Next Actions` (from `## Open loops`) as the substance, and note once: "Full history in Record — run `/recall <node> --full` for it." Don't render empty sections with apologetic placeholder text; just omit them.
 
 5. Flag [STALE] threads with a warning.
 6. End with: **"What are we working on today?"**

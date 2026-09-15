@@ -212,8 +212,8 @@ All commands from v3 still work. v4 added subagent invocation; v4.2 adds shared-
 |---------|-------------|
 | `/remember` | Full session commit with confirmation |
 | `/recall [project?]` | Dashboard (no arg) or specific project context |
-| `/learn [node] [type?] [content]` | Quick knowledge capture |
-| `/note [node] [content]` | One-liner fact |
+| `/learn [node] [type?] [content]` | Alias for `/remember --knowledge <type>` |
+| `/note [node] [content]` | Alias for `/remember --quick` |
 | `/search [query]` | Cross-project search (delegates to `memory-librarian` for broad queries) |
 | `/review` | Weekly synthesis digest |
 | `/timeline [project?]` | Chronological activity |

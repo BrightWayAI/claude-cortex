@@ -1,28 +1,114 @@
 ---
-description: Commit this conversation to working memory. Extracts knowledge, decisions, insights, open threads, and next actions — then writes a living summary and changelog entry for the detected project node. Also flushes any observations accumulated by the passive learning engine. Can run in full mode (user-triggered) or silent mode (auto-triggered at conversation end).
+description: Commit this conversation to working memory. Default (full extraction) pulls knowledge, decisions, insights, open threads, and next actions from the whole conversation. `--quick [node] [content]` skips extraction for a one-line changelog note. `--knowledge <type> [node] [content]` skips extraction for a single typed knowledge entry. Also flushes any observations accumulated by the passive learning engine. Full mode can run user-triggered or silent (auto-triggered at conversation end).
 ---
 
 # /remember $ARGUMENTS
 
-You are committing this conversation to Claude's working memory. Work through the following steps precisely.
+You are committing something to Claude's working memory. Work through the mode that matches the invocation.
 
 ---
 
 ## Mode Detection
 
-This command runs in one of two modes:
+This command runs in one of four modes:
 
-### Full mode (default — user triggered /remember explicitly)
-- Complete extraction with all steps below
+### Full mode (default — user triggered `/remember` explicitly, no flag)
+- Complete extraction with all steps below (Step 0 onward)
 - Confirmation output at the end
 - User sees what was committed
 
 ### Silent mode (auto-triggered at conversation end)
-- Same extraction logic, but NO confirmation output
+- Same extraction logic as full mode, but NO confirmation output
 - Triggered when the conversation is ending (farewell signals detected)
 - Skip if the conversation was trivial (no decisions, no knowledge, no meaningful observations)
 - Exception: if creating a NEW node, briefly mention: "Noted — started tracking [node-id]."
 - Always commit user observations (corrections, preferences) even from trivial conversations — these are never wasted
+
+### Quick mode (`/remember --quick [node] [content]`)
+- Absolute minimum friction: one line, no extraction, no continuity check. Replaces the retired `/note` command (2026-09-15) — same behavior, same usage.
+- Skip Steps 0 onward entirely. Go straight to "Quick mode workflow" below.
+
+### Knowledge mode (`/remember --knowledge <type> [node] [content]`)
+- Single typed knowledge entry, no full-conversation extraction, no changelog entry. Replaces the retired `/learn` command (2026-09-15) — same behavior, same usage.
+- Skip Steps 0 onward entirely. Go straight to "Knowledge mode workflow" below.
+
+---
+
+## Quick mode workflow
+
+Usage patterns:
+```
+/remember --quick client:acme Kim confirmed the March 15 deadline
+/remember --quick bizdev Had intro call with Stripe partnership team — they're interested
+/remember --quick hiring Sent offer letter to Jordan for the ops manager role
+/remember --quick strategy:pricing Competitor just dropped their entry tier to $29/mo
+```
+
+1. **Parse.** Extract **node** (required — infer from conversation context or ask if missing/ambiguous) and **content** (everything after the node).
+2. **Resolve `<config-root>`** per `references/core-contract.md` §1 (respects the legacy pointer, the `~/.cortex/config-root` pointer, and the `~/Documents/Claude` default — never hardcode a path). Cowork: `mcp__cowork__request_cowork_directory(path=<config-root>)`, wait for approval. Claude Code: direct filesystem access. If inaccessible, explain memory can't persist without it and stop.
+3. **Write.** Determine the node's relative file path from the node ID (`references/core-contract.md` §3; legacy `client:acme-corp` colon syntax and `client/acme-corp` slash syntax map to the same file). Build the entry `[node-id] LOG YYYY-MM-DD — Note: [content]` and write via the shared locking/atomic-write utility — do not hand-edit the file:
+   ```
+   python3 scripts/cortex_cli.py prepend-section \
+     --memory-root <config-root>/memory \
+     "<node-relative-path>" "## Changelog" "[node-id] LOG YYYY-MM-DD — Note: [content]"
+   ```
+   This inserts newest-first in `## Changelog`, creates the section/file from the standard template if absent, and handles locking/atomicity internally.
+4. **Update `DASHBOARD.md`'s "Last updated" timestamp.** Only update the dashboard summary if the note represents a significant state change; don't touch the living summary otherwise.
+5. **Confirm** with exactly one line: `Noted in [node-id]: [content]`. No analysis, no follow-up questions.
+
+If the content looks like it should be a knowledge entry (gotcha, lesson, model) instead, suggest: "This sounds like a [type] — want me to `/remember --knowledge [type]` it instead so it's easier to find later?" Multiple quick-mode calls in a row are handled independently.
+
+---
+
+## Knowledge mode workflow
+
+Usage patterns:
+```
+/remember --knowledge gotcha client:acme Their procurement team requires 3 vendor quotes even for renewals — build in 2 weeks lead time
+/remember --knowledge model bizdev:partnerships Channel partners want co-marketing commitments before signing — lead with the joint campaign plan, not the rev share
+/remember --knowledge lesson strategy:pricing Tried usage-based pricing with mid-market — too unpredictable for their budgets. Flat tiers with overage charges landed better.
+/remember --knowledge recipe domain:healthcare-compliance For HIPAA BAAs: use our template, get their legal to redline first, then negotiate — saves 2 rounds of back-and-forth
+/remember --knowledge insight learning:sales-ops The bottleneck isn't lead gen — it's the handoff from SDR to AE. Leads go cold in the 48-hour gap.
+/remember --knowledge that the API rate limit resets hourly not daily
+```
+
+1. **Parse.** Extract **node** (required), **type** (one of the seven canonical types below — infer from content if omitted), **content**. If given as bare natural language with no explicit type/node, infer both from conversation context (ask if genuinely ambiguous).
+
+2. **Infer type if not specified**, against the canonical seven-type taxonomy (see Step 3's Knowledge Taxonomy note below):
+
+   | If the content sounds like... | Assign type |
+   |-------------------------------|-------------|
+   | "X works by..." / "Their process is..." / "The way X actually works is..." | MODEL |
+   | "Watch out for..." / "Don't assume X" / "They require Y even though..." | GOTCHA |
+   | "Tried X, it [worked/failed] because..." / "What worked was..." | LESSON |
+   | "I was wrong about X — actually it's Y" / "Turns out..." | CORRECTION |
+   | "For [situation], do [steps]" / "The playbook for X is..." | RECIPE |
+   | A forward-looking commitment with a clear trigger to revisit | DECISION |
+   | General realization or connection that doesn't fit the above | INSIGHT |
+
+3. **Resolve `<config-root>`** the same way as Quick mode (never the legacy hardcoded `~/Documents/Claude/memory/` path).
+
+4. **Write.** Determine the node file path per `references/core-contract.md` §3. Read the node file if it exists. Append the entry to the matching section (`### Insights`, `### Lessons`, `### Models`, `### Gotchas`, `### Recipes`, `### Corrections`, `### Decisions` — see the Node File Format in Step 4 below for the canonical section list) using the shared locking/atomic-write utility (`cortex_cli.py prepend-section`), never a hand-edit. If the node file doesn't exist, create it from the standard template first.
+
+   ```
+   [node-id] TYPE (YYYY-MM-DD): [content, compressed but precise]
+   ```
+
+   A DECISION entry follows the required-fields format in Step 3 §B below (Why / Affected / Revisit when / Status), not the bare one-liner.
+
+5. **Concept-drift check.** Does this new knowledge invalidate or reinforce an existing entry in the same section? Invalidates → update/remove the old entry, note the correction (or write a CORRECTION entry if the old entry is worth preserving as a superseded marker). Reinforces → no file change, mention it in the confirmation. Skip this check for RECIPE entries (additive techniques, not competing facts) — same rule as full mode.
+
+6. **Update `DASHBOARD.md`** — add/update the node's Active Nodes summary if new, add to Recent Knowledge, add to Global Gotchas if the entry is a broadly-applicable GOTCHA. Update the living summary only if this knowledge materially changes the node's current state.
+
+7. **Confirm:**
+   ```
+   Committed to [node-id]:
+   [TYPE]: [content]
+
+   [If applicable: "This updates/replaces a previous [TYPE] entry from [date]."]
+   ```
+
+If the knowledge clearly spans multiple nodes, write to each. Multiple knowledge-mode calls in one session are independent.
 
 ---
 

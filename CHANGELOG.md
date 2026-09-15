@@ -4,6 +4,33 @@ All notable changes to the Cortex Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [4.20.0] — /note and /learn folded into /remember (2026-09-15)
+
+Nucleus Operating Model Refactor Phase 3 step 3.5.
+
+### Added
+- `/remember --quick [node] [content]` — one-line changelog capture, no
+  extraction. Same behavior as the former `/note`.
+- `/remember --knowledge <type> [node] [content]` — single typed knowledge
+  entry, no full-conversation extraction. Same behavior as the former
+  `/learn`, now against the canonical seven-type taxonomy (Insight / Lesson /
+  Model / Gotcha / Recipe / Correction / Decision) instead of `/learn`'s
+  stale six-type table.
+- Fixed a pre-existing bug while folding `/learn` in: it still resolved
+  memory at the hardcoded `~/Documents/Claude/memory/` path, predating the
+  `<config-root>` convention entirely. Now resolves via
+  `references/core-contract.md` §1 like every other command.
+
+### Changed
+- `commands/note.md`, `commands/learn.md` — reduced to thin redirects
+  documenting the equivalent `/remember` invocation. Kept as separate
+  registered commands (not deleted) so existing muscle memory, scheduled
+  tasks, and router intent mappings that reference `/note`/`/learn`/`$note`/
+  `$learn` keep working. `skills/note/`, `skills/learn/` already delegate to
+  their command file as canonical — no change needed there.
+- `README.md`, `CLAUDE.md`, `claude-code/INSTRUCTIONS.md` command tables
+  updated to describe `/note`/`/learn` as aliases.
+
 ## [4.19.0] — transcript-reviewer + conversation-miner + activity-miner merged into note-taker (2026-09-15)
 
 Nucleus Operating Model Refactor Phase 3 step 3.6.

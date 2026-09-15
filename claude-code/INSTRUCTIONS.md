@@ -179,8 +179,8 @@ These work in Claude Code when the user types them:
 | `/remember` | Full session commit with confirmation |
 | `/recall` | Full dashboard or project recall |
 | `/recall [project]` | Load specific project context |
-| `/learn [node] [type?] [content]` | Quick knowledge capture |
-| `/note [node] [content]` | One-liner fact capture |
+| `/learn [node] [type?] [content]` | Alias for `/remember --knowledge <type>` |
+| `/note [node] [content]` | Alias for `/remember --quick` |
 | `/search [query]` | Cross-project knowledge search |
 | `/review` | Weekly synthesis digest |
 | `/timeline` | Chronological activity view |

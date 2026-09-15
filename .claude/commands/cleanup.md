@@ -345,6 +345,18 @@ This section closes the dogfooding gap surfaced 2026-05-28: DASHBOARD accumulate
 
 ---
 
+### M. Cap violations (v4.16+, Nucleus Operating Model Refactor Phase 2 step 2.3)
+
+```
+python3 scripts/cortex_cli.py check-caps --memory-root <config-root>/memory
+```
+
+Read-only, deterministic (`scripts/lib/cap_check.py` — same check `/reindex` Step 2.5 runs). Warns at 150 / fails at 200 lines for any node's `## Current state` section (nodes not yet restructured are skipped — no `## Current state` heading, no cap applies); warns at 200 lines for always-loaded files (`hot.md`, `CLAUDE.md`, `user.md`).
+
+This is the only section that **fails loudly** rather than proposing an action — cap violations aren't a maintenance suggestion, they're a broken invariant `/recall`'s default load boundary depends on. Include the raw output in the Memory Health Report under "Cap violations" verbatim (or "Cap violations: none" when clean, so `/diagnose` can key off a stable line). This section does not offer a menu action in Step 3 — a FAIL is reported and the user decides how to trim it (there's no safe automatic edit for "make this summary shorter" without losing meaning).
+
+---
+
 ## Step 3 — Propose actions (autonomy-aware in v4.7.2+)
 
 **Consult autonomy mode** per `references/autonomy.md`. Default for `/cleanup`: `suggest`.
