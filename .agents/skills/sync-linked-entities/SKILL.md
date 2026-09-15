@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: sync-linked-entities
 description: Synchronize approved summaries and metadata across linked Cortex entities.
 metadata:

@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: relink-memory
 description: Audit and improve Cortex wikilinks and entity relationships with confirmation.
 metadata:

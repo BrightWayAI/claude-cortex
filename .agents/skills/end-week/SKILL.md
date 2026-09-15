@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: end-week
 description: Run Cortex's end-of-week cleanup, review, rehearsal, and reflection sequence.
 metadata:

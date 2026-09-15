@@ -1,22 +1,22 @@
 ---
 disable-model-invocation: true
-name: setup-sources
-description: Configure the note and activity sources Cortex may read.
+name: migrate-scopes-v2
+description: Preview and perform Cortex's private memory-scope migration idempotently.
 metadata:
-  cortex-canonical: commands/setup-sources.md
+  cortex-canonical: commands/migrate-scopes-v2.md
   codex-status: partial
   chatgpt-work-status: partial
 ---
 
-# Cortex: setup-sources
+# Cortex: migrate-scopes-v2
 
-This is a thin host adapter. Starting from this loaded `SKILL.md` file, walk upward to the nearest directory containing `AGENTS.md`, `commands/setup-sources.md`, and `scripts/cortex_cli.py`; call it `<cortex-repo-root>`. Do not assume the current working directory is the Cortex repository. If no such root is readable, stop.
+This is a thin host adapter. Starting from this loaded `SKILL.md` file, walk upward to the nearest directory containing `AGENTS.md`, `commands/migrate-scopes-v2.md`, and `scripts/cortex_cli.py`; call it `<cortex-repo-root>`. Do not assume the current working directory is the Cortex repository. If no such root is readable, stop.
 
-Read `<cortex-repo-root>/AGENTS.md`, `<cortex-repo-root>/commands/setup-sources.md`, `<cortex-repo-root>/references/core-contract.md`, and the current host's column (Claude Code, Cowork, Codex, or ChatGPT Work) in `<cortex-repo-root>/references/capability-matrix.md` completely before acting. The command file is the workflow authority. If those sources conflict, stop and report the conflict instead of inventing behavior.
+Read `<cortex-repo-root>/AGENTS.md`, `<cortex-repo-root>/commands/migrate-scopes-v2.md`, `<cortex-repo-root>/references/core-contract.md`, and the current host's column (Claude Code, Cowork, Codex, or ChatGPT Work) in `<cortex-repo-root>/references/capability-matrix.md` completely before acting. The command file is the workflow authority. If those sources conflict, stop and report the conflict instead of inventing behavior.
 
 ## Invocation
 
-On Claude, use the text following `/setup-sources`; on Codex, use the text following `$setup-sources`; in ChatGPT Work, use the user's text after selecting Cortex or this skill with `@`. Natural-language activation is also allowed when the request clearly matches the description.
+On Claude, use the text following `/migrate-scopes-v2`; on Codex, use the text following `$migrate-scopes-v2`; in ChatGPT Work, use the user's text after selecting Cortex or this skill with `@`. Natural-language activation is also allowed when the request clearly matches the description.
 
 ## Host binding
 
@@ -33,6 +33,6 @@ If the canonical step has no deterministic CLI/library path, show a proposed cha
 
 ## Adapter status: partial
 
-This adapter is intentionally partial. Never imply that its unavailable steps completed. Connector authorization is host-specific and config writes require the shared atomic-write library. In ChatGPT Work, preview or skip any step for which the bounded MCP bridge has no mutation tool.
+This adapter is intentionally partial. Never imply that its unavailable steps completed. The migration moves and deletes files and updates git state; preview every affected path and obtain explicit confirmation before applying it. In ChatGPT Work, preview or skip any step for which the bounded MCP bridge has no mutation tool.
 
 End with a concise account of what was read, what changed, which optional capabilities were unavailable, and which partial steps were left unapplied.

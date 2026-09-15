@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: migrate-staged-substrates
 description: Preview and perform Cortex's staged-substrate layout migration idempotently.
 metadata:

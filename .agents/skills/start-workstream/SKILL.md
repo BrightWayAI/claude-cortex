@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: start-workstream
 description: Create a Cortex workstream node and link it to relevant entities.
 metadata:

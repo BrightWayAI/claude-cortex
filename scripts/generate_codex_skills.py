@@ -40,6 +40,31 @@ WORK_SUPPORTED = frozenset(
 )
 
 
+MODEL_INVOCATION_DISABLED = frozenset(
+    {
+        "cleanup",
+        "end-day",
+        "end-week",
+        "forget",
+        "listen",
+        "merge-research-draft",
+        "migrate-scopes-v2",
+        "migrate-staged-substrates",
+        "rehearse",
+        "reindex",
+        "relink-memory",
+        "research-gaps",
+        "setup-identity",
+        "setup-obsidian",
+        "setup-sources",
+        "setup-voice",
+        "start-nucleus",
+        "start-workstream",
+        "sync-linked-entities",
+    }
+)
+
+
 SPECS: dict[str, SkillSpec] = {
     "cleanup": SkillSpec("Audit and maintain Cortex memory health, then apply only approved cleanup actions.", "supported", "Approved memory changes are explicitly wired through cortex_cli.py."),
     "end-day": SkillSpec("Run Cortex's end-of-day review, capture, reflection, and next-day preparation workflow.", "partial", "Only the cortex_cli.py-backed steps are deterministic; connector, sibling-plugin, and remaining prose-only writes must degrade or be previewed."),
@@ -48,6 +73,7 @@ SPECS: dict[str, SkillSpec] = {
     "learn": SkillSpec("Capture durable knowledge in Cortex using its seven-type knowledge taxonomy.", "partial", "The canonical workflow still describes its writes in prose; produce a proposal unless every write is expressed through the shared CLI."),
     "listen": SkillSpec("Ingest configured daily sources into Cortex archives and refresh the hot cache.", "partial", "Connectors are optional and archive writes remain partly prose-only; skip unavailable sources and never invent records."),
     "merge-research-draft": SkillSpec("Review a staged Cortex research draft and merge approved findings into active memory.", "partial", "Review is available, but canonical merge mutations are not yet fully wired through cortex_cli.py."),
+    "migrate-scopes-v2": SkillSpec("Preview and perform Cortex's private memory-scope migration idempotently.", "partial", "The migration moves and deletes files and updates git state; preview every affected path and obtain explicit confirmation before applying it."),
     "migrate-staged-substrates": SkillSpec("Preview and perform Cortex's staged-substrate layout migration idempotently.", "partial", "The canonical migration is prose-specified and lacks a complete deterministic CLI path."),
     "morning": SkillSpec("Load Cortex's morning context, priorities, people, and relevant hot memory.", "partial", "Recall and cache refresh are available; optional sources and any prose-only writes degrade."),
     "note": SkillSpec("Append a short timestamped note to an existing Cortex node.", "supported", "The memory mutation is explicitly wired through cortex_cli.py."),
@@ -90,8 +116,11 @@ def render(name: str, spec: SkillSpec) -> str:
         if work_status == "supported"
         else "In ChatGPT Work, preview or skip any step for which the bounded MCP bridge has no mutation tool."
     )
+    invocation_gate = (
+        "disable-model-invocation: true\n" if name in MODEL_INVOCATION_DISABLED else ""
+    )
     return f"""---
-name: {name}
+{invocation_gate}name: {name}
 description: {spec.description}
 metadata:
   cortex-canonical: commands/{name}.md

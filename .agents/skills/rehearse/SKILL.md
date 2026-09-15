@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: rehearse
 description: Review aging Cortex knowledge and confirm, demote, archive, or connect selected entries.
 metadata:

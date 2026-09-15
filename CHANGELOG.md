@@ -4,6 +4,13 @@ All notable changes to the Cortex Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [4.21.3] — Codex adapter synchronization (2026-09-15)
+
+### Fixed
+- Synchronized the portable and Codex manifests with the current Cortex version.
+- Added generated Agent Skill coverage for `/migrate-scopes-v2`.
+- Preserved `disable-model-invocation` gates in both portable and Codex-discovery skill wrappers so regeneration cannot re-enable ritual or destructive workflows.
+
 ## [4.21.2] — claude plugin eval suite (2026-09-15)
 
 Nucleus Operating Model Refactor Phase 4 step 4.2.

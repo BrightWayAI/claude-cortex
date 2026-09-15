@@ -1,6 +1,6 @@
 {
   "name": "cortex",
-  "version": "4.15.0",
+  "version": "4.21.3",
   "description": "A host-portable Markdown second brain shared by Claude, ChatGPT Work, and Codex.",
   "author": {
     "name": "BrightWay AI",
@@ -9,14 +9,21 @@
   "license": "MIT",
   "homepage": "https://github.com/BrightWayAI/claude-cortex",
   "repository": "https://github.com/BrightWayAI/claude-cortex",
-  "keywords": ["memory", "knowledge-management", "second-brain"],
+  "keywords": [
+    "memory",
+    "knowledge-management",
+    "second-brain"
+  ],
   "interface": {
     "displayName": "Cortex",
     "shortDescription": "One second brain for Claude, ChatGPT Work, and Codex",
     "longDescription": "Recall, search, and explicitly commit to one user-owned Cortex memory store from Claude, ChatGPT Work, or Codex.",
     "developerName": "BrightWay AI",
     "category": "Productivity",
-    "capabilities": ["Read", "Write"],
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
     "defaultPrompt": [
       "Set up my Cortex memory location and show me exactly what will change before writing anything.",
       "Search Cortex for what we know about this topic.",

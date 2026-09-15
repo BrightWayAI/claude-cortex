@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: start-nucleus
 description: Create the initial Cortex memory nucleus from approved source material.
 metadata:

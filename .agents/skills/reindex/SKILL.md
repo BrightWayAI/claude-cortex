@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: reindex
 description: Regenerate Cortex's deterministic memory index from current node files.
 metadata:
