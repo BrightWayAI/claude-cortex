@@ -6,6 +6,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.18.5] — writing-style renamed to voice (2026-09-15)
+
+### Changed
+- References to the `writing-style` plugin updated to `voice` in
+  `commands/setup-voice.md` and `commands/start-nucleus.md` (Nucleus Operating
+  Model Refactor Phase 3 step 3.4). `/setup-voice` itself stays in cortex.
+
 ## [4.18.4] — /morning runs the Friday rehearsal batch (2026-09-15)
 
 Nucleus Operating Model Refactor, Phase 2 step 2.5. Same rationale as

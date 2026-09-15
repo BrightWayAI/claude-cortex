@@ -1,5 +1,5 @@
 ---
-description: Capture your writing voice once (descriptors, banned phrases, sentence-length preference, hook patterns, sign-off style) in one canonical voice.md. All drafting plugins (relationships, lead-engine, news-curator, post-assembler, client-status, referral-engine, writing-style) read from this file so your voice stays consistent and you only update it in one place. Honors `~/Documents/.claude-plugin-config-root` if set; otherwise writes to `~/Documents/Claude/voice.md` by default. Re-run anytime to refine.
+description: Capture your writing voice once (descriptors, banned phrases, sentence-length preference, hook patterns, sign-off style) in one canonical voice.md. All drafting plugins (relationships, lead-engine, news-curator, post-assembler, client-status, referral-engine, voice) read from this file so your voice stays consistent and you only update it in one place. Honors `~/Documents/.claude-plugin-config-root` if set; otherwise writes to `~/Documents/Claude/voice.md` by default. Re-run anytime to refine.
 ---
 
 # /setup-voice
@@ -176,7 +176,7 @@ No user gate. Best-effort — if user.md doesn't exist or the write fails, log a
 
 Summarize what was saved (one short paragraph). Then offer:
 
-> "Voice saved to `<voice-path>`. All drafting plugins (relationships, lead-engine, news-curator/post-assembler, client-status, referral-engine, writing-style) will read this automatically — your voice stays consistent across every channel. Update anytime by re-running `/setup-voice` or editing `<voice-path>` directly."
+> "Voice saved to `<voice-path>`. All drafting plugins (relationships, lead-engine, news-curator/post-assembler, client-status, referral-engine, voice) will read this automatically — your voice stays consistent across every channel. Update anytime by re-running `/setup-voice` or editing `<voice-path>` directly."
 
 ---
 

@@ -74,7 +74,7 @@ If `identity.md` exists: skip to Step 2 silently.
 
 If `voice.md` is missing:
 
-> "Next, your voice. I'll have you paste 2 sample emails or messages you've written — I'll extract your tone, vocabulary, sentence rhythm, and banned phrases. All drafting plugins (lead-engine, relationships, news-curator, client-status, referral-engine, writing-style) read from here. ~5 minutes."
+> "Next, your voice. I'll have you paste 2 sample emails or messages you've written — I'll extract your tone, vocabulary, sentence rhythm, and banned phrases. All drafting plugins (lead-engine, relationships, news-curator, client-status, referral-engine, voice) read from here. ~5 minutes."
 >
 > "Skip if you don't plan to draft anything in your voice. Run `/setup-voice` now? (y / skip)"
 
@@ -124,7 +124,7 @@ For each installed plugin that has a setup command but no `<config-root>/plugins
 | client-status | `/setup-status` | Cadence, status template, per-client overrides |
 | project-setup | `/setup-projects` | Offerings catalog, drive layout, communication defaults |
 | time-tracking | `/setup-time` | Clients, billing models, calendar tagging |
-| writing-style | `/setup-style` | Style file location, learning thresholds |
+| voice | `/setup-style` | Style file location, learning thresholds |
 | core-ops | `/setup-core` | CRM, brand, deliverable conventions |
 | weekly-alignment | `/setup` (in that plugin's skills) | Slack channels, teams, risk patterns |
 
