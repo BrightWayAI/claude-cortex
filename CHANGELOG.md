@@ -6,6 +6,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.18.3] — /morning commits + pushes memory-as-git (2026-09-15)
+
+Closes a real gap: `/end-day` Step 5.8's commit-and-push logic never ran
+automatically because `/end-day` is now optional (v4.16+) and `/morning`
+— the required daily touch — never committed or pushed anything.
+
+### Added
+- `/morning` Step 4.7 — same commit + optional push logic as `/end-day`
+  Step 5.8, condensed. Idempotent alongside `/end-day` (empty commits are a
+  no-op, so running both on the same day doesn't double-push).
+
+### Changed
+- `/end-day` Step 5.8's push line now reads the remote name from
+  `memory_as_git.remote_name` (default `origin`) instead of hardcoding
+  `origin` — needed since a user's remote may be named anything (e.g.
+  `nucleus-memory`).
+
 ## [4.18.2] — Follow-up path/privacy fixes (2026-09-15)
 
 Caught in a second sweep after v4.18.0/4.18.1 shipped.

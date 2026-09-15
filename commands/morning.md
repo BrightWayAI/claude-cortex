@@ -243,6 +243,21 @@ Finally, ask once: **"Anything else for today?"** — free-form capture, appende
 
 ---
 
+## Step 4.7 — Memory-as-git commit + push (v4.18.3+)
+
+Since `/end-day` is optional (v4.16+) and `/morning` is the required daily touch, the daily commit-and-push that used to live only in `/end-day` Step 5.8 runs here too — otherwise a user who only runs `/morning` never gets their memory committed or pushed at all.
+
+Same logic as `/end-day` Step 5.8, condensed:
+
+1. Skip entirely if `<config-root>/memory/.git/` doesn't exist (memory-as-git not enabled).
+2. Acquire the write-lock (`scripts/cortex_cli.py lock-acquire`), commit any dirty state (`git add . && git commit`), release the lock. Empty commits are a no-op — safe to run even if `/end-day` already committed today.
+3. **Optional push:** if `cortex.user-context.md` has `memory_as_git.remote: <url>` and `memory_as_git.push_on_close: true`, run `git push <memory_as_git.remote_name, default "origin"> main`. Default (no remote configured): local-only, no push.
+4. Failure mode: log the error, don't block the rest of `/morning` — this is a maintenance step, not the point of the command.
+
+Note in Step 5's report if a commit/push happened: `Memory: committed · pushed to <remote_name>` or `Memory: committed (local-only)`.
+
+---
+
 ## Step 5 — Report and offer brief handoff
 
 ```

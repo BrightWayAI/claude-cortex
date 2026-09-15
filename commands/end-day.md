@@ -770,8 +770,9 @@ python3 scripts/cortex_cli.py lock-release --memory-root <config-root>/memory
 Run this on every exit path from Step 5.8 — success or failure — same as the old prose said, but now backed by real ownership-checked release logic instead of an unconditional `rm` (which could otherwise delete a different process's lock if this one's had already gone stale and been reclaimed).
 
 **Optional push:**
-- If `cortex.user-context.md` has `memory_as_git.remote: <url>` AND `memory_as_git.push_on_close: true`, run `git push origin main` after commit.
+- If `cortex.user-context.md` has `memory_as_git.remote: <url>` AND `memory_as_git.push_on_close: true`, run `git push <memory_as_git.remote_name, default "origin"> main` after commit.
 - Default: no remote configured; commits are local-only.
+- As of v4.18.3, `/morning` also runs this same commit+push (Step 4.7) since it's the required daily touch and `/end-day` is optional — see that command for the canonical logic. This copy stays for users who still run `/end-day` in full mode on a day `/morning` was skipped.
 
 **Failure mode:** if commit fails (rare — usually merge conflict from external edits or git config error), log the error and continue to Step 6. Don't block the close on a maintenance task. Surface to user: "Memory-as-git commit failed — investigate `<config-root>/memory/.git` state."
 
