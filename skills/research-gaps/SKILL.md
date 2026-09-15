@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: research-gaps
 description: Detect Cortex knowledge gaps, research approved items, and stage cited proposals.
 metadata:

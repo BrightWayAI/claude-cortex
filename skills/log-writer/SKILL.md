@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: log-writer
 description: Internal Cortex primitive for a locked, atomic operations-log append.
 metadata:

@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: setup-voice
 description: Configure Cortex voice and writing-style preferences.
 metadata:

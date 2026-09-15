@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: cleanup
 description: Audit and maintain Cortex memory health, then apply only approved cleanup actions.
 metadata:

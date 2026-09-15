@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: morning
 description: Load Cortex's morning context, priorities, people, and relevant hot memory.
 metadata:

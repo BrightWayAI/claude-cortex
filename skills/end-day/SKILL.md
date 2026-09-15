@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: end-day
 description: Run Cortex's end-of-day review, capture, reflection, and next-day preparation workflow.
 metadata:

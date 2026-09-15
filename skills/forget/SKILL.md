@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: forget
 description: Remove, archive, or correct Cortex memories after showing impact and obtaining confirmation.
 metadata:

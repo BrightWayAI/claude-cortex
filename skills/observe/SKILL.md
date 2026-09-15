@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: observe
 description: Adapt to explicit user preferences and corrections during the current session.
 metadata:

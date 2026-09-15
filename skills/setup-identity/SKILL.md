@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: setup-identity
 description: Configure the identity and working-context information Cortex uses.
 metadata:

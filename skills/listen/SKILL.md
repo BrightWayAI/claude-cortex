@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: listen
 description: Ingest configured daily sources into Cortex archives and refresh the hot cache.
 metadata:

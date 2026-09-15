@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: setup-sources
 description: Configure the note and activity sources Cortex may read.
 metadata:

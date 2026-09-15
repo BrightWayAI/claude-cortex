@@ -4,6 +4,19 @@ All notable changes to the Cortex Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [4.20.1] — Skill auto-invocation audit (2026-09-15)
+
+Nucleus Operating Model Refactor Phase 3 step 3.7. Ritual and side-effecting
+skills marked `disable-model-invocation: true` so they only run on explicit
+invocation, not loose natural-language matching — the model can still be
+asked to run them by name. Read-mostly, low-stakes, or high-frequency
+conversational skills are left auto-invocable. Marketplace-wide this brings
+model-invocable skills from ~81 to 27, under the ≤30 target audited with
+`/skill-doctor`.
+
+### Changed
+- Marked `disable-model-invocation: true` on: `cleanup`, `end-day`, `end-week`, `forget`, `indexer`, `listen`, `log-writer`, `merge-research-draft`, `migrate-staged-substrates`, `morning`, `observe`, `rehearse`, `reindex`, `relink-memory`, `research-gaps`, `setup-identity`, `setup-obsidian`, `setup-sources`, `setup-voice`, `start-nucleus`, `start-workstream`, `sync-linked-entities`.
+
 ## [4.20.0] — /note and /learn folded into /remember (2026-09-15)
 
 Nucleus Operating Model Refactor Phase 3 step 3.5.

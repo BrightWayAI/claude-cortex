@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: indexer
 description: Internal Cortex alias that regenerates the deterministic memory index.
 metadata:

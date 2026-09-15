@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: merge-research-draft
 description: Review a staged Cortex research draft and merge approved findings into active memory.
 metadata:
