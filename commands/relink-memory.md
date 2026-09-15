@@ -61,7 +61,7 @@ Detection: if DASHBOARD.md has fewer than 5 wikilinks AND has ≥ 3 `### `-style
 Regeneration procedure:
 1. Read existing DASHBOARD.md.
 2. Parse the "Active Nodes" section (headers + their summary content).
-3. For each node ID found as a section header, determine its actual file path under `memory/` (e.g., `client:new-leaders` → `memory/client/new-leaders.md`; `brightway-profile` → `memory/brightway-profile.md`).
+3. For each node ID found as a section header, determine its actual file path under `memory/` (e.g., `client:acme-corp` → `memory/client/acme-corp.md`; `brightway-profile` → `memory/brightway-profile.md`).
 4. Rewrite DASHBOARD using the wikilink-emitting template from `commands/remember.md` "Dashboard File Format" section:
    - Convert `### brightway-profile` → `### [[brightway-profile]]`
    - Convert any plain `[node-id]` token to `[[node-id]]`

@@ -60,7 +60,7 @@ All maintenance is **deterministic and zero-LLM**. The cache is a re-render of e
 `/recall`'s auto-fire at conversation start now does:
 
 1. Read `<config-root>/memory/hot.md` first (one file, cached in working memory).
-2. Read `<config-root>/memory/user.md` (existing behavior).
+2. Read `<config-root>/memory/me/user.md` (existing behavior).
 3. Read `<config-root>/memory/DASHBOARD.md` (existing behavior).
 4. Apply contextual matching against the user's first message — if they mention a person, project, or topic, *additionally* load that node's file.
 

@@ -265,11 +265,11 @@ Step 6. **Optional remote configuration** (only if user said `y` AND autonomy is
 
 ## Step 3.7 — Wire identity into user.md graph (v4.12.0+)
 
-After identity.md is written, ensure `<config-root>/memory/user.md` has a wikilink to `[[identity]]` in its Canonical Files section. Without this link, identity.md is an orphan in the Obsidian graph view.
+After identity.md is written, ensure `<config-root>/memory/me/user.md` has a wikilink to `[[identity]]` in its Canonical Files section. Without this link, identity.md is an orphan in the Obsidian graph view.
 
 Logic:
-1. Check whether `<config-root>/memory/user.md` exists. If not, skip — cortex's first `/remember` will create it with proper canonical-file references.
-2. Read `<config-root>/memory/user.md`.
+1. Check whether `<config-root>/memory/me/user.md` exists. If not, skip — cortex's first `/remember` will create it with proper canonical-file references.
+2. Read `<config-root>/memory/me/user.md`.
 3. Check whether `[[identity]]` is already present anywhere in the file. If yes, skip (idempotent).
 4. Look for a `## Canonical Files` section header in user.md.
    - **If found**: append `- [[identity]] — user profile (name, company, tools, working hours)` as a bullet under it.

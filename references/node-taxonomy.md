@@ -8,13 +8,13 @@ The goal: every piece of content has one obvious node type. New users (and minin
 
 | Node type | Path | When to use | Example |
 |---|---|---|---|
-| **user** | `memory/user.md` | The user themselves — preferences, corrections, patterns, profile | The one and only user node |
+| **user** | `memory/me/user.md` | The user themselves — preferences, corrections, patterns, profile | The one and only user node |
 | **client** | `memory/client/<slug>.md` | A specific client engagement — active contract, deliverables, billing relationship | `client/acme`, `client/aurora-labs` |
 | **person** | `memory/person/<slug>.md` | A relationship with a specific person worth tracking individually (graduated; not every name mention) | `person/sarah-chen` |
 | **company** | `memory/company/<slug>.md` | A company as an entity (not as a current engagement) — partner, vendor, target market | `company/anthropic`, `company/hubspot` |
 | **topic** | `memory/topic/<slug>.md` | A subject area / body of knowledge — what you've learned about something | `topic/ai-governance`, `topic/cohort-pricing` |
 | **workstream** | `memory/workstream/<slug>.md` | Ongoing initiative pipeline spanning multiple clients/people/topics (v4.9+) | `workstream/q3-outbound`, `workstream/product-strategy-2026` |
-| **bizdev** | `memory/bizdev/<slug>.md` | A prospect / opportunity not yet a client — outreach in progress, deal in discovery | `bizdev/six-red-marbles`, `bizdev/jennifer-ives` |
+| **bizdev** | `memory/bizdev/<slug>.md` | A prospect / opportunity not yet a client — outreach in progress, deal in discovery | `bizdev/atlas-ventures`, `bizdev/jordan-cole` |
 | **domain** (root) | `memory/<name>.md` | A persistent area of work that isn't an engagement — operations, infrastructure, finance, profile | `company-ops.md`, `brightway-profile.md`, `studio.md` |
 
 Two reserved subdirectories that aren't node types per se:
@@ -53,7 +53,7 @@ If none match cleanly, use `topic/<slug>` as the default. Don't create new top-l
 - **Person slugs are firstname-lastname.** Name-collision rule (per cortex CLAUDE.md): append a company hint if needed — `sarah-chen-acme`, `sarah-chen-globex`.
 - **Client slugs are the company name** (kebab-case) unless multiple engagements with the same client; then append a project label — `acme-platform-rebuild`, `acme-data-strategy`.
 - **Workstream slugs are descriptive of the initiative**, not the company — `q3-outbound`, `product-strategy-2026`, `ops-platform-eval`.
-- **Bizdev slugs match the prospect company OR the contact person** depending on which is more identifying — `six-red-marbles`, `jennifer-ives`.
+- **Bizdev slugs match the prospect company OR the contact person** depending on which is more identifying — `atlas-ventures`, `jordan-cole`.
 
 ## How /remember Step 1 uses this
 

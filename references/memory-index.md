@@ -87,7 +87,7 @@ Each line: wikilink, descriptor, decay state, last confirmation date. Demoted/ar
    - Files with no extension or non-`.md` extensions
 
 2. **Classify each file by directory:**
-   - `memory/user.md` → User profile
+   - `memory/me/user.md` → User profile
    - `memory/client/*.md` → Clients
    - `memory/person/*.md` → People (excluding `person/archive/`)
    - `memory/company/*.md` → Companies

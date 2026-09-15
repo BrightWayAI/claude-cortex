@@ -6,6 +6,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.18.2] — Follow-up path/privacy fixes (2026-09-15)
+
+Caught in a second sweep after v4.18.0/4.18.1 shipped.
+
+### Fixed
+- Missed `memory/user.md` / `memory/reflections.md` / `memory/surfacing-prefs.md`
+  references (bare, without the `<config-root>` prefix pattern the first pass
+  searched for) in `references/hot-cache.md`, `commands/setup-identity.md`,
+  `commands/setup-voice.md`, `commands/end-day.md`, `references/memory-index.md`,
+  `docs/CODEX_SETUP.md` — updated to `memory/me/...`.
+- `references/node-taxonomy.md` — two more real BrightWay entity names used
+  as examples (`bizdev/jennifer-ives`, `bizdev/six-red-marbles`), genericized.
+- `.claude/commands/remember.md` + `commands/remember.md` — real bizdev name
+  ("trinity-education-group") in a worked example, genericized.
+- `commands/relink-memory.md` — real client name ("new-leaders") in a worked
+  example, genericized.
+
 ## [4.18.1] — /migrate-scopes-v2 command (2026-09-15)
 
 ### Added

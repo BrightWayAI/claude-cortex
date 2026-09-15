@@ -11,7 +11,7 @@ Codex-specific database or pointer file.
   on; natural-language activation also works.
 - `plugin.json` is the portable Agent Plugins manifest. Its trusted
   `SessionStart` hook reads a bounded bundle from `memory/hot.md`,
-  `memory/user.md`, and `memory/DASHBOARD.md`.
+  `memory/me/user.md`, and `memory/DASHBOARD.md`.
 - `.codex/agents/` maps the portable read-oriented roles to Codex custom
   agents. `conversation-miner` is deliberately absent because Codex does not
   expose an equivalent cross-session transcript capability.

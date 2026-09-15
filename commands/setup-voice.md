@@ -149,11 +149,11 @@ _Created by /setup-voice (cortex plugin)_
 
 ## Step 3.5 — Wire voice into user.md graph (v4.12.0+)
 
-After voice.md is written, ensure `<config-root>/memory/user.md` has a wikilink to `[[voice]]` in its Canonical Files section. Without this link, voice.md is an orphan in the Obsidian graph view.
+After voice.md is written, ensure `<config-root>/memory/me/user.md` has a wikilink to `[[voice]]` in its Canonical Files section. Without this link, voice.md is an orphan in the Obsidian graph view.
 
 Logic:
-1. Check whether `<config-root>/memory/user.md` exists. If not, skip — cortex's first `/remember` will create it with proper canonical-file references.
-2. Read `<config-root>/memory/user.md`.
+1. Check whether `<config-root>/memory/me/user.md` exists. If not, skip — cortex's first `/remember` will create it with proper canonical-file references.
+2. Read `<config-root>/memory/me/user.md`.
 3. Check whether `[[voice]]` is already present anywhere in the file. If yes, skip (idempotent).
 4. Look for a `## Canonical Files` section header in user.md.
    - **If found**: append `- [[voice]] — writing voice descriptors, banned phrases, sign-off, hook patterns` as a bullet under it.

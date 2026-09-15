@@ -344,7 +344,7 @@ retry once before asking the user (`auto` autonomy) or asking immediately
    - Add any new knowledge entries to Recent Knowledge (keep last 7 days only)
    - Update the "Last updated" timestamp
 6. **Line provenance (v4.12.0+):** every line written or modified in DASHBOARD must carry an HTML comment immediately after with `<!-- by:<command> @ <YYYY-MM-DD> -->`. This makes drift detection trivial for `/cleanup` (which surfaces stale lines whose owning command hasn't refreshed them in N days).
-   - Example: `- [P0] [[bizdev:trinity-education-group]]: studio.co intro angle — see if it fits <!-- by:/listen @ 2026-05-28 -->`
+   - Example: `- [P0] [[bizdev:harbor-education-group]]: studio.co intro angle — see if it fits <!-- by:/listen @ 2026-05-28 -->`
    - Format: `<!-- by:<command-with-slash> @ <ISO-date> -->`
    - The comment is HTML-comment syntax so it renders invisibly in Markdown previews and Obsidian — humans see clean lines.
    - When a line is refreshed by the same command on a later run, update the date. When a different command refreshes it, replace the by-value too.

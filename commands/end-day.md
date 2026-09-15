@@ -359,7 +359,7 @@ If the brief task list itself is unavailable (no markdown, no seed), only then s
 
 ### Step 2c.1 — Write back task actions (per surfacing-prefs taxonomy)
 
-For each entry in `tasks`, apply the action's write-back (taxonomy is canonical in `<config-root>/memory/surfacing-prefs.md` "Action taxonomy"):
+For each entry in `tasks`, apply the action's write-back (taxonomy is canonical in `<config-root>/memory/me/surfacing-prefs.md` "Action taxonomy"):
 
 | Action | Write-back |
 |---|---|
@@ -533,7 +533,7 @@ If `<config-root>/briefs/<today_local>.md` doesn't exist (user ran `/end-day` wi
 
 ### Step 4.2 — Append to the longitudinal reflection store (B.7 — v4.13+)
 
-In addition to the per-day `## Reflection` in the brief markdown, append today's reflection to the rolling **`<config-root>/memory/reflections.md`** so reflections become a longitudinal, queryable record ("what have my biggest wins been this month," "what keeps blocking me"). This store is itself an input to `/end-week` / `/review` and to future surfacing decisions.
+In addition to the per-day `## Reflection` in the brief markdown, append today's reflection to the rolling **`<config-root>/memory/me/reflections.md`** so reflections become a longitudinal, queryable record ("what have my biggest wins been this month," "what keeps blocking me"). This store is itself an input to `/end-week` / `/review` and to future surfacing decisions.
 
 Create the file from `references/reflections-template.md` if missing (header + "newest first" convention). Append one dated block at the top of the log:
 
