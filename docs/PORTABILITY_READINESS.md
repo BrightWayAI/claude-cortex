@@ -70,6 +70,11 @@ Any host integrating Cortex needs to provide, in its own idiom:
 
 Setup and trust steps are in `docs/CODEX_SETUP.md`.
 
+For legacy user config roots, `memory/CLAUDE.md` is not renamed or duplicated.
+The shared configurator creates a short `memory/AGENTS.md` forwarding shim only
+when an imported Codex global instruction expects that path. This compatibility
+file is distinct from the plugin repository's root `AGENTS.md`.
+
 ## Implemented ChatGPT Work mapping
 
 | Cortex concept | ChatGPT Work mechanism | Implementation |

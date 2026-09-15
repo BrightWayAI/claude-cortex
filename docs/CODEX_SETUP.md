@@ -43,6 +43,24 @@ replace a pointer that targets a different root unless `--force-pointer` is
 supplied after the user has confirmed that switch. It never moves or deletes
 the old root.
 
+### Imported Claude global instructions
+
+Codex can import a user's global Claude instructions. An importer may
+mechanically change a reference from `memory/CLAUDE.md` to
+`memory/AGENTS.md`, even though the former is a legacy, user-owned file inside
+the shared config root rather than the plugin's repository entrypoint.
+
+Re-running `configure_cortex.py` handles that case idempotently: when
+`memory/CLAUDE.md` exists and `memory/AGENTS.md` does not, it creates a short
+`memory/AGENTS.md` forwarding shim. It never copies, renames, edits, or
+replaces the legacy instructions. New config roots without legacy
+`memory/CLAUDE.md` receive neither file; the installed plugin's root
+`AGENTS.md` remains the Codex instruction entrypoint.
+
+Review imported global instructions and keep the vendor-neutral pointer
+`~/.cortex/config-root`. A `.Codex-plugin-config-root` pointer is not part of
+the Cortex resolution chain.
+
 Inspect the result without reading memory content:
 
 ```bash

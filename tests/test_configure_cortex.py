@@ -59,6 +59,41 @@ class ConfigureCortexTests(unittest.TestCase):
         self.assertFalse(result.pointer_changed)
         self.assertIn("private fixture preference", user_path.read_text(encoding="utf-8"))
 
+    def test_legacy_claude_memory_instructions_get_a_codex_forwarding_shim(self) -> None:
+        memory_root = self.target / "memory"
+        memory_root.mkdir(parents=True)
+        legacy = memory_root / "CLAUDE.md"
+        legacy.write_text("# Private fixture instructions\n", encoding="utf-8")
+
+        result = configure_cortex(
+            home=self.home,
+            config_root=str(self.target),
+            environ={},
+            repo_root=ROOT,
+        )
+
+        shim = memory_root / "AGENTS.md"
+        self.assertTrue(shim.is_file())
+        self.assertIn("Read `CLAUDE.md`", shim.read_text(encoding="utf-8"))
+        self.assertEqual("# Private fixture instructions\n", legacy.read_text(encoding="utf-8"))
+        self.assertIn("AGENTS.md", result.initialized_files)
+
+    def test_existing_memory_agents_file_is_never_replaced(self) -> None:
+        memory_root = self.target / "memory"
+        memory_root.mkdir(parents=True)
+        (memory_root / "CLAUDE.md").write_text("legacy\n", encoding="utf-8")
+        agents = memory_root / "AGENTS.md"
+        agents.write_text("user-owned Codex instructions\n", encoding="utf-8")
+
+        configure_cortex(
+            home=self.home,
+            config_root=str(self.target),
+            environ={},
+            repo_root=ROOT,
+        )
+
+        self.assertEqual("user-owned Codex instructions\n", agents.read_text(encoding="utf-8"))
+
     def test_refuses_to_replace_a_different_pointer_without_force(self) -> None:
         other = self.base / "other"
         pointer = self.home / ".cortex" / "config-root"

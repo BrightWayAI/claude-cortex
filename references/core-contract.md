@@ -258,6 +258,10 @@ a payload sent to `web.search` or `subagent.delegate`).
 - Legacy four-type knowledge entries remain readable (§4).
 - The legacy `~/Documents/.claude-plugin-config-root` pointer continues to
   work indefinitely (§1).
+- A legacy, user-owned `memory/CLAUDE.md` may remain the canonical
+  memory-specific instruction file. Setup may create a short
+  `memory/AGENTS.md` forwarding shim when Codex import tooling expects that
+  filename; it must not copy, rename, or rewrite the legacy file.
 - The `~/Documents/Claude` default continues to resolve for installations
   with no pointer at all (§1).
 - No existing node identifier changes the file it maps to as a result of

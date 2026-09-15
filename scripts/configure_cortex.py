@@ -23,6 +23,13 @@ from scripts.lib.config_root import ConfigRootError, resolve_config_root  # noqa
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+CODEX_MEMORY_SHIM = (
+    "# Codex memory entrypoint\n\n"
+    "This config root predates the Codex adapter. Read `CLAUDE.md` in this "
+    "directory as the canonical memory-specific instructions. Do not copy or "
+    "rename it. Repository-level Cortex behavior remains governed by the "
+    "installed plugin's root `AGENTS.md` and `references/core-contract.md`.\n"
+)
 
 
 class ConfigureError(RuntimeError):
@@ -108,6 +115,18 @@ def configure_cortex(
                 continue
             _run_cortex_cli(repo_root, memory_root, "write-file", relative, payload=content)
             initialized.append(relative)
+        # Claude's instruction importer may mechanically rewrite a legacy
+        # memory/CLAUDE.md reference to memory/AGENTS.md. Preserve the legacy
+        # file as the single source of truth and add only a forwarding shim.
+        if (memory_root / "CLAUDE.md").is_file() and not (memory_root / "AGENTS.md").exists():
+            _run_cortex_cli(
+                repo_root,
+                memory_root,
+                "write-file",
+                "AGENTS.md",
+                payload=CODEX_MEMORY_SHIM,
+            )
+            initialized.append("AGENTS.md")
         derived_missing = {
             name for name in ("index.md", "hot.md") if not (memory_root / name).exists()
         }
