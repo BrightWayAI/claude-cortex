@@ -70,6 +70,16 @@ Each migration has:
 - **Status:** **new in v4.8.1.** Detect-and-move logic is gentle: if both old and new paths exist (user manually pre-created), do nothing and warn.
 - **Rerun:** N/A — once moved, files are at the new path and there's nothing to re-migrate.
 
+### `scopes-v2` (v4.18+)
+
+- **What:** Moves personal facts (`identity.md`, `voice.md`, `user.md`, `reflections.md`, `surfacing-prefs.md`, `style-eval-guide.md`) into a private `<config-root>/memory/me/` scope, excluded from the shared remote via `.gitignore`. Deliberately does NOT create a physical `memory/org/` wrapper — `client/`, `bizdev/`, `person/`, `workstream/`, `infra/` stay at `memory/` root, since moving them would ripple through every plugin's node-path resolution logic for no privacy benefit.
+- **Marker:** `<config-root>/memory/.migration-scopes-v2-done`
+- **Command:** `/migrate-scopes-v2` (or `--rerun` to re-check).
+- **First introduced:** cortex v4.18.0, as part of the Nucleus Operating Model Refactor Phase 2 step 2.4. Shipped alongside a marketplace-wide path update (every plugin that read `<config-root>/identity.md`/`voice.md` directly was updated to `<config-root>/memory/me/...` in the same release cycle, to avoid a broken intermediate state).
+- **Status:** new in v4.18.0.
+- **Failure mode:** if a duplicate `identity.md`/`voice.md` exists at both config-root and `memory/` (a legacy artifact), the migration diffs them and treats the `memory/` copy as canonical before deleting the stale root duplicate. If they differ in a way that isn't a clean "one is older," it should surface the diff and ask rather than guess.
+- **Rerun:** `/migrate-scopes-v2 --rerun` is safe anytime — no-op if the six files are already in `me/`.
+
 ### `hot-cache-first-generation` (v4.7+)
 
 - **What:** Generates `<config-root>/memory/hot.md` for the first time on a v4.7+ install.

@@ -6,6 +6,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.18.1] — /migrate-scopes-v2 command (2026-09-15)
+
+### Added
+- `commands/migrate-scopes-v2.md` + `references/migrations.md` entry — the
+  idempotent, marker-gated command that performs the v4.18.0 file move
+  (identity.md/voice.md/user.md/reflections.md/surfacing-prefs.md/
+  style-eval-guide.md → `memory/me/`) for any install that hasn't run it yet.
+  Handles the identity.md/voice.md root-vs-memory/ duplicate cleanly if
+  present. Deliberately does not create `memory/org/`.
+
 ## [4.18.0] — identity.md/voice.md move to memory/me/ (2026-09-15)
 
 Nucleus Operating Model Refactor, Phase 2 step 2.4. `identity.md` and
