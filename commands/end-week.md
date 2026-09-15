@@ -62,6 +62,8 @@ Invoke `/rehearse` (its full workflow lives in `commands/rehearse.md`). The skil
 
 This is the active retention loop — the explicit consolidation pass that converts dormancy into either re-confirmation or removal. Different from Step 2's `/cleanup` (which audits memory health broadly) — `/rehearse` is per-entry, deliberate, and small-batch.
 
+**v4.18.4+:** `/morning` Step 4.65 now runs this same small batch every Friday automatically, since `/end-week` is a separate optional ritual most users don't run weekly. This step is idempotent alongside that one — handled entries are removed from the queue, so there's nothing left to double-process if both run the same day.
+
 If the candidate pool is empty ("memory is fresh"), the skill exits cleanly and the user sees a one-line confirmation. Don't pad.
 
 ---

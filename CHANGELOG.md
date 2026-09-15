@@ -6,6 +6,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.18.4] — /morning runs the Friday rehearsal batch (2026-09-15)
+
+Nucleus Operating Model Refactor, Phase 2 step 2.5. Same rationale as
+v4.18.3: `/end-week` (which used to be the only place `/rehearse` ran
+weekly) is a separate optional ritual most users don't run every week.
+
+### Added
+- `/morning` Step 4.65 — on Fridays, runs `/rehearse --batch 5`
+  automatically. Idempotent alongside `/end-week` Step 3.5 if the user
+  still runs both the same day.
+
+### Changed
+- Drained the 87-entry rehearse backlog once via cluster review with Zach
+  (83 confirmed, 4 archived as superseded/dead-plugin references).
+
 ## [4.18.3] — /morning commits + pushes memory-as-git (2026-09-15)
 
 Closes a real gap: `/end-day` Step 5.8's commit-and-push logic never ran

@@ -243,6 +243,17 @@ Finally, ask once: **"Anything else for today?"** — free-form capture, appende
 
 ---
 
+## Step 4.65 — Friday rehearsal batch (v4.18.4+)
+
+If `today_local` is a Friday, run a small `/rehearse` batch (`rehearse_batch_size: 5`, i.e. `/rehearse --batch 5`) here instead of relying on `/end-week` Step 5.5 as the only place this happens. `/end-week` is a separate, optional Friday ritual most users don't run every week; folding a small batch into `/morning` — the required daily touch — means the active-retention loop actually runs weekly instead of whenever someone remembers to run `/end-week`.
+
+- Skip silently on any other day.
+- Skip silently if `<config-root>/memory/staged/queues/rehearse.md` has no candidates.
+- If the user still runs `/end-week` the same week, its own Step 5.5 `/rehearse` call is idempotent against this — whatever this step already handled won't re-surface (handled entries are removed from the queue per `/rehearse` Step 5).
+- Note the count in Step 5's report: `Rehearsal: <N> entries reviewed` (omit the line if it's not Friday or nothing was queued).
+
+---
+
 ## Step 4.7 — Memory-as-git commit + push (v4.18.3+)
 
 Since `/end-day` is optional (v4.16+) and `/morning` is the required daily touch, the daily commit-and-push that used to live only in `/end-day` Step 5.8 runs here too — otherwise a user who only runs `/morning` never gets their memory committed or pushed at all.
