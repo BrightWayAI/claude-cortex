@@ -37,9 +37,9 @@ The user can invoke this command in three ways:
 ### A. Explicit arg
 
 ```
-/sync-linked-entities person/rob-buelow
-/sync-linked-entities bizdev:vector-solutions
-/sync-linked-entities client/holt-riptoes
+/sync-linked-entities person/alex-rivera
+/sync-linked-entities bizdev:nova-solutions
+/sync-linked-entities client/aurora-labs
 ```
 
 Resolve the path: `memory/<prefix>/<slug>.md`. If the file doesn't exist, surface "Source node not found" and exit.
@@ -62,7 +62,7 @@ Read the source node. Find its `## Linked Entities` section (or `## Linked entit
 
 - `[[person/sarah-chen]]`
 - `[[client/acme]]`
-- `[[bizdev/vector-solutions]]`
+- `[[bizdev/nova-solutions]]`
 - `[[workstream/q3-outbound]]`
 - `[[topic/ai-governance]]`
 - `[[brightway-profile]]` (root-level node)
@@ -95,7 +95,7 @@ Lightweight heuristic — false-positives are fine; this surfaces candidates, do
 
 Scan linked node's Open Threads / Next Actions sections for items referencing the source node. If the source has resolved them (the source's own open threads no longer contain them, or the source's status indicates the issue is closed), flag those linked open threads as candidates to close.
 
-Example: source `person/rob-buelow.md` Open Threads no longer has "Vector proposal — pending option selection," but `bizdev/vector-solutions.md` Next Actions still has "Wait for Rob's option selection." Flag for closure.
+Example: source `person/alex-rivera.md` Open Threads no longer has "Nova proposal — pending option selection," but `bizdev/nova-solutions.md` Next Actions still has "Wait for Alex's option selection." Flag for closure.
 
 ### Check 4 — Frontmatter intent / tier compatibility
 
@@ -118,10 +118,10 @@ For each linked node mentioned in DASHBOARD active-state section, check the DASH
 Render a structured report. For each linked node with drift candidates, group findings together. Then offer per-candidate actions.
 
 ```
-DRIFT SCAN — source: [[person/rob-buelow]] (modified 2026-05-28)
+DRIFT SCAN — source: [[person/alex-rivera]] (modified 2026-05-28)
 ═══════════════════════════════════════════════════════════════
 
-[[bizdev/vector-solutions]] — 3 drift candidates
+[[bizdev/nova-solutions]] — 3 drift candidates
   1. Status contradiction
      Source: tier=strategic + intent=content_share (closed-lost reframe)
      Linked: Summary says "Three engagement options at $175/hr blended... Today 5/12 11AM Teams call"
@@ -140,13 +140,13 @@ DRIFT SCAN — source: [[person/rob-buelow]] (modified 2026-05-28)
      → P1 is no longer relevant
      Action: (r)emove / (k)eep / (s)kip
 
-[[bizdev/jacquie-moen]] — 1 drift candidate
+[[bizdev/morgan-reyes]] — 1 drift candidate
   1. Stale summary
      Source modified 2026-05-28; linked Summary last touched 2026-04-13 (45 days)
-     Source is jacquie's network referral target → linked may need a "Vector closed-lost; network reference still warm" note
+     Source is morgan's network referral target → linked may need a "Nova closed-lost; network reference still warm" note
      Action: (u)pdate-summary / (k)eep / (s)kip
 
-[[client:holt-riptoes]] — no drift detected
+[[client:aurora-labs]] — no drift detected
 
 ═══════════════════════════════════════════════════════════════
 SUMMARY: 4 drift candidates across 2 linked nodes (1 no-drift).

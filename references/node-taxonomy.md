@@ -9,7 +9,7 @@ The goal: every piece of content has one obvious node type. New users (and minin
 | Node type | Path | When to use | Example |
 |---|---|---|---|
 | **user** | `memory/user.md` | The user themselves — preferences, corrections, patterns, profile | The one and only user node |
-| **client** | `memory/client/<slug>.md` | A specific client engagement — active contract, deliverables, billing relationship | `client/acme`, `client/holt-riptoes` |
+| **client** | `memory/client/<slug>.md` | A specific client engagement — active contract, deliverables, billing relationship | `client/acme`, `client/aurora-labs` |
 | **person** | `memory/person/<slug>.md` | A relationship with a specific person worth tracking individually (graduated; not every name mention) | `person/sarah-chen` |
 | **company** | `memory/company/<slug>.md` | A company as an entity (not as a current engagement) — partner, vendor, target market | `company/anthropic`, `company/hubspot` |
 | **topic** | `memory/topic/<slug>.md` | A subject area / body of knowledge — what you've learned about something | `topic/ai-governance`, `topic/cohort-pricing` |

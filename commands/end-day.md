@@ -584,9 +584,9 @@ If connected, ask the single open question above. Then:
 3. **Confirm before writing.** Present a single batch table of the intended HubSpot writes (object, action, key fields) and get one approval:
    ```
    Log to HubSpot:
-     · Note → deal "Barker & Scott" : "Sent phased plan; Common Cause ~July 1 creates pull"
-     · Task → contact "Javier (Globant)" : "Confirm FIFA App ID" due tomorrow
-     · Stage → deal "Gaggle diagnostic" : Qualified → Proposal
+     · Note → deal "Acme Corp" : "Sent phased plan; Fairview Fund ~July 1 creates pull"
+     · Task → contact "Priya (VendorCo)" : "Confirm project ID" due tomorrow
+     · Stage → deal "Beacon Analytics diagnostic" : Qualified → Proposal
 
    [Y]es to all · [N]o to all · [E]dit (toggle per row)
    ```

@@ -31,7 +31,7 @@ Build a status report:
 Nucleus onboarding — status:
 
   Foundational:
-    [✓] Identity captured (Zach Wagner, BrightWay AI)
+    [✓] Identity captured (Jane Doe, Acme Consulting)
     [✗] Voice not yet captured  ← will run next
     [✗] Note sources not configured
     [✗] Obsidian vault not scaffolded

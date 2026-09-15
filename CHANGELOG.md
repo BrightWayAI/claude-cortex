@@ -6,6 +6,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.17.1] — Genericize hardcoded proprietary examples (2026-09-15)
+
+Nucleus Operating Model Refactor privacy audit, prompted by Zach: confirmed
+plugin source is MIT-licensed/public, so any real client/personal data
+hardcoded as an "example" in command docs ships to every Nucleus user.
+
+### Fixed
+- `references/node-taxonomy.md`, `commands/sync-linked-entities.md` — example
+  slugs/entities (`client/holt-riptoes`, `person/rob-buelow`,
+  `bizdev:vector-solutions`, `bizdev/jacquie-moen`) replaced with fictional
+  placeholders (`client/aurora-labs`, `person/alex-rivera`,
+  `bizdev:nova-solutions`, `bizdev/morgan-reyes`).
+- `commands/start-nucleus.md` — example onboarding checklist no longer
+  hardcodes "Zach Wagner, BrightWay AI"; uses "Jane Doe, Acme Consulting."
+- `commands/end-day.md` — example HubSpot batch-write table no longer names
+  real deals/contacts ("Barker & Scott," "Common Cause," "Javier (Globant),"
+  "Gaggle diagnostic") — replaced with fictional equivalents.
+
 ## [4.17.0] — /recall load boundary + cap enforcement (2026-09-15)
 
 Nucleus Operating Model Refactor, Phase 2 steps 2.2/2.3. Companion to the

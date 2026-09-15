@@ -77,7 +77,7 @@ If the memory directory doesn't exist or is empty, tell the user and offer to he
 
 ## If a project was specified (e.g. `/recall client:acme`, `/recall strategy:q2-growth`)
 
-**Default load boundary (v4.16+).** Read the node file, but only load: frontmatter, `## Current state` (or the legacy `## Summary` on nodes not yet restructured), and `## Open loops` (or legacy `## Next Actions` P0/P1 + `## Open Threads`). Stop at a `---` divider followed by `## Record` — do not read past it. If the node's Record lives in a sibling `<node>.record.md` file (nodes over 40KB at restructure time, e.g. `client/holt-riptoes.record.md`, `studio.record.md`), do not open that file at all in default mode.
+**Default load boundary (v4.16+).** Read the node file, but only load: frontmatter, `## Current state` (or the legacy `## Summary` on nodes not yet restructured), and `## Open loops` (or legacy `## Next Actions` P0/P1 + `## Open Threads`). Stop at a `---` divider followed by `## Record` — do not read past it. If the node's Record lives in a sibling `<node>.record.md` file (nodes over 40KB at restructure time, e.g. `client/aurora-labs.record.md`, `studio.record.md`), do not open that file at all in default mode.
 
 **`/recall <node> --full`** loads everything: the full Record section (or sibling `.record.md` file) in addition to Current state — the full knowledge base (INSIGHT/LESSON/MODEL/GOTCHA/RECIPE/CORRECTION), PEOPLE, Changelog, full Open Threads/Next Actions, SIGNALs. Use this when you need history, not just current status.
 
