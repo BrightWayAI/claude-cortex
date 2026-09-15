@@ -18,8 +18,8 @@ Detect current state by checking for marker files:
 
 | Marker | Indicates |
 |---|---|
-| `<config-root>/identity.md` exists | `/setup-identity` has been run |
-| `<config-root>/voice.md` exists | `/setup-voice` has been run |
+| `<config-root>/memory/me/identity.md` exists | `/setup-identity` has been run |
+| `<config-root>/memory/me/voice.md` exists | `/setup-voice` has been run |
 | `<config-root>/plugins/cortex.user-context.md` exists with `note_sources` section | `/setup-sources` has been run |
 | `<config-root>/.obsidian/` exists | `/setup-obsidian` has been run |
 | `<config-root>/plugins/<plugin>.user-context.md` exists | that plugin's setup has been run |

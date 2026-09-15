@@ -6,6 +6,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.18.0] — identity.md/voice.md move to memory/me/ (2026-09-15)
+
+Nucleus Operating Model Refactor, Phase 2 step 2.4. `identity.md` and
+`voice.md` are personal facts (this user's name/role/tools, this user's
+writing voice), not org-shared BrightWay facts — they belong in the private
+`me/` scope alongside `user.md`, not at the shared config-root root. This is
+a breaking config-layout change: any script or note referencing
+`<config-root>/identity.md` directly needs the new path.
+
+### Changed
+- `commands/setup-identity.md`, `commands/setup-voice.md`,
+  `commands/setup-obsidian.md`, `commands/start-nucleus.md`,
+  `commands/end-day.md` — all path references updated to
+  `<config-root>/memory/me/identity.md` / `<config-root>/memory/me/voice.md`.
+- Every other plugin in the marketplace that reads identity/voice was updated
+  in the same pass (tracked per-plugin in their own changelogs) so the whole
+  marketplace moves together — a partial migration would have broken any
+  plugin still reading the old path.
+- The actual file move (existing `identity.md`/`voice.md` content into
+  `<config-root>/memory/me/`) happens via the new `/migrate-scopes-v2`
+  migration (see that command's own changelog entry), not this doc change
+  alone — read-path and file-location updates ship together in this session
+  so there's no broken intermediate state.
+
 ## [4.17.1] — Genericize hardcoded proprietary examples (2026-09-15)
 
 Nucleus Operating Model Refactor privacy audit, prompted by Zach: confirmed

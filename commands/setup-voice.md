@@ -34,7 +34,7 @@ Once the user provides the path:
 3. Write the absolute path to `~/Documents/.claude-plugin-config-root`.
 4. Confirm: "Saved. All marketplace plugin configs will live under `<path>` from now on. You can change this later by editing `~/Documents/.claude-plugin-config-root` directly."
 
-For the rest of this document, **`<voice-path>`** refers to `<config-root>/voice.md`.
+For the rest of this document, **`<voice-path>`** refers to `<config-root>/memory/me/voice.md`.
 
 ---
 

@@ -28,7 +28,7 @@ If `<config-root>` doesn't exist, say so and ask the user to run `/setup-identit
 
 ## Step 1 — Read identity for personalization
 
-Read `<config-root>/identity.md` and extract:
+Read `<config-root>/memory/me/identity.md` and extract:
 - `name` (for the VAULT.md title and template substitution)
 - `time_zone` (for resolving "today")
 
