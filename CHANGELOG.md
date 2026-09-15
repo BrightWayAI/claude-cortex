@@ -4,6 +4,12 @@ All notable changes to the Cortex Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [4.25.0] — Phase 3 consistency fixes (2026-09-15)
+
+### Fixed
+- `scripts/configure_cortex.py` now writes the legacy pointer `~/Documents/.claude-plugin-config-root` alongside the primary `~/.cortex/config-root` on first-time setup (previously only the primary pointer was written, silently starving hosts/plugins that still resolve the legacy path first-run). Also creates `memory/me/` and `plugins/` directories if missing.
+- `commands/setup-identity.md` Step 0 now documents the legacy-pointer mirroring and directory creation performed by the configurator.
+
 ## [4.24.0] — `/setup-voice` moved to Comms Desk (2026-09-15)
 
 ### Removed

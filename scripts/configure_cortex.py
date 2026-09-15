@@ -70,6 +70,7 @@ def configure_cortex(
         raise ConfigureError(str(exc)) from exc
 
     pointer_path = home / ".cortex" / "config-root"
+    legacy_pointer_path = home / "Documents" / ".claude-plugin-config-root"
     pointer_changed = True
     if pointer_path.exists():
         try:
@@ -97,6 +98,14 @@ def configure_cortex(
     if initialize:
         memory_root = target / "memory"
         memory_root.mkdir(parents=True, exist_ok=True)
+        me_root = memory_root / "me"
+        if not me_root.exists():
+            me_root.mkdir(parents=True, exist_ok=True)
+            initialized.append("memory/me/")
+        plugins_root = target / "plugins"
+        if not plugins_root.exists():
+            plugins_root.mkdir(parents=True, exist_ok=True)
+            initialized.append("plugins/")
         seeds = {
             "DASHBOARD.md": (
                 "# Working Memory Dashboard\n\n"
@@ -138,6 +147,11 @@ def configure_cortex(
     # setup cannot leave the host resolving to a partial memory root.
     if pointer_changed:
         atomic_write(pointer_path, f"{target}\n")
+        # Also write the legacy fallback pointer for older hosts/plugins that
+        # have not yet migrated to the vendor-neutral ~/.cortex/config-root
+        # path. ~/.cortex/config-root remains primary in the resolution chain.
+        legacy_pointer_path.parent.mkdir(parents=True, exist_ok=True)
+        atomic_write(legacy_pointer_path, f"{target}\n")
 
     env_root = (environ or {}).get("CORTEX_CONFIG_ROOT")
     warning = None

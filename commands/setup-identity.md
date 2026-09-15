@@ -32,7 +32,10 @@ Once the user provides the path:
 1. Ensure access to `<path>`. If running in Cowork and the folder isn't already mounted in this session, call `request_cowork_directory(<path>)`. If running in Claude Code or another environment with direct filesystem access, no mount call is needed — proceed to read or write the file.
 2. Invoke the bundled deterministic configurator:
    `python3 scripts/configure_cortex.py --config-root <path>`. It creates the
-   vendor-neutral pointer atomically and seeds only missing foundation files.
+   vendor-neutral pointer (`~/.cortex/config-root`, primary) atomically, mirrors it
+   to the legacy pointer (`~/Documents/.claude-plugin-config-root`, fallback for
+   hosts/plugins that haven't migrated), creates `memory/me/` and `plugins/` if
+   missing, and seeds only missing foundation files.
 3. If the configurator refuses because the pointer resolves elsewhere, show both
    resolved paths and request a second explicit confirmation. Only after that
    confirmation may it be rerun with `--force-pointer`.
