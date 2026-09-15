@@ -57,8 +57,6 @@ Each entry: one H2 line with `[YYYY-MM-DD HH:MM]` prefix, then operation name, t
 | `/note` | ❌ | Too noisy; the node's own changelog captures it |
 | `/learn` | ❌ | Same as `/note` |
 | `/search` | ❌ | Read-only; no state change |
-| `/timeline` | ❌ | Read-only |
-| `/review` | Optional — opt-in | Read-mostly |
 
 ## Append-only contract
 

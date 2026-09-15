@@ -23,8 +23,8 @@ autonomy:
   # Memory observation and lookup — auto
   /recall: auto
   /search: auto
-  /timeline: auto
   /reindex: auto
+  # /timeline moved to briefing (2026-09-15); see that plugin's own autonomy defaults.
 
   # Memory writes — suggest (default user intent verification)
   /note: auto                # one-liner; trust it
@@ -46,7 +46,7 @@ autonomy:
 
   # Setup — confirm (one-time, but each writes to disk)
   /setup-identity: confirm
-  /setup-voice: confirm
+  /setup-voice: confirm       # Comms Desk plugin
   /setup-sources: confirm
   /setup-obsidian: confirm
 
@@ -153,6 +153,6 @@ The autonomy slider is consulted at three levels:
    - `/remember` Step 5 is a summary, not a gate — autonomy doesn't apply naturally. Could add verbose-vs-terse output preference in future.
    - `/morning` and `/merge-research-draft` walk proposals one-by-one with per-item gates; auto-mode there would be dangerous and is intentionally not implemented.
    - `/rehearse` per-entry gates — same reasoning.
-   - `/setup-identity`, `/setup-voice`, `/setup-sources` are interactive interview-style; autonomy=auto would mean "skip the interview and use defaults" which is structurally different from confirmation skipping. Not wired.
+   - `/setup-identity`, `/setup-sources`, and Comms Desk's `/setup-voice` are interactive interview-style; autonomy=auto would mean "skip the interview and use defaults" which is structurally different from confirmation skipping. Not wired.
 
 If a user sets a command to `auto` but the command's gates aren't wired (e.g., `/morning: auto`), the router still skips its prompt — but the command will still walk its internal gates. This is intentional: protect destructive proposal-merging from runaway autonomy.

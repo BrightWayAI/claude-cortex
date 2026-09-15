@@ -186,10 +186,10 @@ These work in Claude Code when the user types them:
 | `/learn [node] [type?] [content]` | Alias for `/remember --knowledge <type>` |
 | `/note [node] [content]` | Alias for `/remember --quick` |
 | `/search [query]` | Cross-project knowledge search |
-| `/review` | Weekly synthesis digest |
-| `/timeline` | Chronological activity view |
 | `/forget [node]` | Archive a project node |
 | `/cleanup` | Memory health audit |
+
+`/review` and `/timeline` moved to the `briefing` plugin (Today's Brief) on 2026-09-15.
 
 For full command documentation, see the Cortex plugin's `commands/` directory.
 

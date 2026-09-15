@@ -23,9 +23,7 @@ COMMAND_ADAPTER_NAMES = (
     "note",
     "recall",
     "remember",
-    "review",
     "search",
-    "timeline",
 )
 
 

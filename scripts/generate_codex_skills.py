@@ -33,9 +33,7 @@ WORK_SUPPORTED = frozenset(
         "recall",
         "reindex",
         "remember",
-        "review",
         "search",
-        "timeline",
     }
 )
 
@@ -57,7 +55,6 @@ MODEL_INVOCATION_DISABLED = frozenset(
         "setup-identity",
         "setup-obsidian",
         "setup-sources",
-        "setup-voice",
         "start-nucleus",
         "start-workstream",
         "sync-linked-entities",
@@ -83,16 +80,13 @@ SPECS: dict[str, SkillSpec] = {
     "relink-memory": SkillSpec("Audit and improve Cortex wikilinks and entity relationships with confirmation.", "supported", "Approved memory changes are explicitly wired through cortex_cli.py."),
     "remember": SkillSpec("Commit conversation decisions, knowledge, open threads, and observations to Cortex memory.", "supported", "Memory mutations are explicitly wired through cortex_cli.py; model extraction remains non-deterministic and must be reviewed in full mode."),
     "research-gaps": SkillSpec("Detect Cortex knowledge gaps, research approved items, and stage cited proposals.", "partial", "Web search and delegation are optional, while draft and merge writes are not yet completely CLI-wired."),
-    "review": SkillSpec("Produce Cortex's synthesized weekly or cross-node memory review.", "supported", "Core synthesis is read-only; unavailable optional sources are omitted explicitly."),
     "search": SkillSpec("Search across Cortex memory and return deduplicated answers with file citations.", "supported", "Read-only workflow with an inline fallback when subagent delegation is unavailable."),
     "setup-identity": SkillSpec("Configure the identity and working-context information Cortex uses.", "partial", "Non-memory config writes are prose-specified; preview them unless performed with the shared atomic-write library."),
     "setup-obsidian": SkillSpec("Configure Cortex memory as an Obsidian-readable vault and graph.", "partial", "External application setup and non-memory config writes require explicit host support and confirmation."),
     "setup-sources": SkillSpec("Configure the note and activity sources Cortex may read.", "partial", "Connector authorization is host-specific and config writes require the shared atomic-write library."),
-    "setup-voice": SkillSpec("Configure Cortex voice and writing-style preferences.", "partial", "Non-memory config writes are prose-specified; preview them unless performed with the shared atomic-write library."),
     "start-nucleus": SkillSpec("Create the initial Cortex memory nucleus from approved source material.", "partial", "Source access is host-specific and canonical bulk writes are not fully CLI-wired."),
     "start-workstream": SkillSpec("Create a Cortex workstream node and link it to relevant entities.", "partial", "Canonical node creation and link updates are not yet completely CLI-wired."),
     "sync-linked-entities": SkillSpec("Synchronize approved summaries and metadata across linked Cortex entities.", "supported", "Approved memory changes are explicitly wired through cortex_cli.py."),
-    "timeline": SkillSpec("Build a chronological view of decisions and activity from Cortex memory.", "supported", "Core workflow is read-only; source citations must identify memory files."),
 }
 
 

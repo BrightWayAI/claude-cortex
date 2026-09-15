@@ -1,5 +1,5 @@
 ---
-description: Close out the work week. Runs note-taker (mode: transcript) to surface uncaptured commitments, runs cortex's /cleanup to maintain memory health, runs /review for synthesized weekly digest, prompts for weekly reflection, and optionally pre-stages Monday's growth brief. The Friday afternoon ritual that makes Mondays sharper.
+description: Close out the work week. Runs note-taker (mode: transcript) to surface uncaptured commitments, runs cortex's /cleanup to maintain memory health, runs briefing's /review for synthesized weekly digest (skipped if briefing isn't installed), prompts for weekly reflection, and optionally pre-stages Monday's growth brief. The Friday afternoon ritual that makes Mondays sharper.
 ---
 
 # /end-week
@@ -39,9 +39,13 @@ Report any findings briefly. Don't auto-archive anything — surface for the use
 
 ---
 
-## Step 3 — Run cortex /review
+## Step 3 — Run briefing /review
 
-Invoke `/review` to generate the synthesized weekly digest:
+`/review` moved to the `briefing` plugin (2026-09-15) as part of the "Today's Brief owns every what's-going-on surface" consolidation.
+
+**If briefing is not installed:** skip this step. Note in the final output that the weekly digest wasn't available.
+
+Otherwise invoke `briefing:review` to generate the synthesized weekly digest:
 
 - What moved forward
 - What was learned (knowledge entries committed this week)

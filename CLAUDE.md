@@ -235,8 +235,8 @@ When you detect these patterns, run the corresponding command automatically. **C
 | "TIL", "gotcha:", "the trick is...", "I was wrong about X" | Run `/learn` — capture standalone knowledge |
 | "note that", "jot down", "quick note" | Run `/note` — one-liner capture |
 | "any gotchas with", "what's blocked", "what are my P0s" | Run `/search` — cross-project search |
-| "weekly review", "summarize my week" | Run `/review` — synthesized digest |
-| "what have I been working on", "timeline of X" | Run `/timeline` — chronological view |
+| "weekly review", "summarize my week" | Run briefing's `/review` — synthesized digest (moved from cortex 2026-09-15) |
+| "what have I been working on", "timeline of X" | Run briefing's `/timeline` — chronological view (moved from cortex 2026-09-15) |
 | "archive X", "close out X" | Run `/forget` — archive or remove node |
 | "clean up memory", "what's stale" | Run `/cleanup` — maintenance audit |
 | "is this still true", "rehearse my memory", "what should I confirm or forget" | Run `/rehearse` — aging-knowledge triage (v4.4+) |
@@ -260,8 +260,6 @@ If `.claude/commands/` is present, these slash commands are available:
 | `/learn [node] [type?] [content]` | Alias for `/remember --knowledge <type>` |
 | `/note [node] [content]` | Alias for `/remember --quick` |
 | `/search [query]` | Cross-project search across all memory |
-| `/review [--since] [--until]` | Synthesized weekly digest |
-| `/timeline [project?] [--since] [--until]` | Chronological activity log |
 | `/forget [node] [--archive\|--merge target]` | Archive, merge, or remove a node |
 | `/cleanup` | Memory health audit and maintenance |
 | `/rehearse` | Aging-knowledge triage — surfaces 3-5 stale entries and asks "still true? still useful?" (v4.4+) |

@@ -215,10 +215,10 @@ All commands from v3 still work. v4 added subagent invocation; v4.2 adds shared-
 | `/learn [node] [type?] [content]` | Alias for `/remember --knowledge <type>` |
 | `/note [node] [content]` | Alias for `/remember --quick` |
 | `/search [query]` | Cross-project search (delegates to `memory-librarian` for broad queries) |
-| `/review` | Weekly synthesis digest |
-| `/timeline [project?]` | Chronological activity |
 | `/forget [node]` | Archive a project |
 | `/cleanup` | Memory health audit |
+
+`/review` (weekly synthesis digest) and `/timeline` (chronological activity) moved to the `briefing` plugin (Today's Brief) on 2026-09-15, as part of consolidating every "what's going on" surface into one plugin.
 
 ### Shared-config commands (v4.2+)
 
@@ -229,14 +229,17 @@ benefit.
 | Command | What it does |
 |---------|-------------|
 | `/setup-identity` | Captures name, company, role, primary tools, and communication defaults in the resolved config root. |
-| `/setup-voice` | Captures voice descriptors, banned phrases, sentence rhythm, hook patterns, and sign-off style in the resolved config root. |
+
+Voice capture lives in Comms Desk's `/setup-voice` — the interview writes to the
+same Cortex-owned canonical file (`<config-root>/memory/me/voice.md`), but the
+command itself is owned and shipped by the Comms Desk plugin.
 
 ### Closing rituals (v4.2+)
 
 | Command | What it does |
 |---------|-------------|
 | `/end-day` | 5-min daily close — recap today, prompt for reflection, commit learnings to memory, optionally pre-stage tomorrow via `plan-tomorrow`. |
-| `/end-week` | 15-min Friday close — runs `note-taker` (mode: transcript) for uncaptured commitments, `/cleanup` for memory hygiene, `/review` for synthesis, prompts for weekly reflection, optionally pre-stages Monday's outreach via `weekly-outreach`. |
+| `/end-week` | 15-min Friday close — runs `note-taker` (mode: transcript) for uncaptured commitments, `/cleanup` for memory hygiene, briefing's `/review` for synthesis (skipped if briefing isn't installed), prompts for weekly reflection, optionally pre-stages Monday's outreach via `weekly-outreach`. |
 
 ### Always-On Skill
 
@@ -255,12 +258,10 @@ Commands also fire from natural language:
 | "TIL", "gotcha:", "the trick is...", "I was wrong about" | `learn` |
 | "note that", "jot down", "quick note" | `note` |
 | "any gotchas with", "what's blocked", "how does X work" | `search` |
-| "weekly review", "summarize my week" | `review` |
 | "we're done with X", "archive X" | `forget` |
-| "what have I been working on" | `timeline` |
 | "clean up memory", "what's stale" | `cleanup` |
 | "set up my identity", "configure my profile across plugins" | `setup-identity` |
-| "set up my voice", "update my writing voice" | `setup-voice` |
+| "set up my voice", "update my writing voice" | Comms Desk's `setup-voice` |
 | "wrapping up", "calling it a day", "end of day" | `end-day` |
 | "Friday wrap-up", "close out the week", "end of week" | `end-week` |
 

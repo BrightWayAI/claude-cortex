@@ -4,6 +4,26 @@ All notable changes to the Cortex Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [4.24.0] — `/setup-voice` moved to Comms Desk (2026-09-15)
+
+### Removed
+- `commands/setup-voice.md` and its `skills/setup-voice/` (+ `.agents/skills/setup-voice/`) wrapper moved to the `comms` plugin (Comms Desk), which becomes a third Nucleus starter plugin alongside cortex and ops. The one-time voice-capture interview is now owned and shipped by Comms Desk. Removed `setup-voice` from `scripts/generate_codex_skills.py`'s command list and spec table.
+
+### Changed
+- `<config-root>/memory/me/voice.md` remains a Cortex-owned canonical file location/contract — only the interview command moved, not the data file.
+- `/start-nucleus` Step 2 now offers `comms:setup-voice` instead of a local command, and degrades with an explicit "voice setup isn't available without Comms Desk" message (matching the existing "not installed" degraded-mode convention) if Comms Desk isn't installed. Step 5 (renamed "Ops and Comms Desk starter verification") and the frontmatter description now name Comms Desk alongside Cortex and Ops as the minimum supported bundle.
+- Updated all internal references (`README.md`, `references/gitignore-template.md`, `references/autonomy.md`, `commands/migrate-scopes-v2.md`, `commands/setup-identity.md`) to attribute `/setup-voice` to Comms Desk rather than Cortex.
+
+## [4.23.0] — `/review` and `/timeline` moved to briefing (2026-09-15)
+
+### Removed
+- `/review` (weekly synthesis digest) and `/timeline` (chronological activity view) moved to the `briefing` plugin (Today's Brief), along with their skills. Cortex no longer owns any periodic "what's going on" synthesis surface — that's now consolidated in `briefing` per the "Today's Brief is every what's-going-on surface at any cadence" container rule. `/diagnose` and `/status` stay in `ops`.
+
+### Changed
+- `/end-week` Step 3 now invokes `briefing:review` instead of an in-plugin `/review`; the step is skipped with a message (matching the existing "not installed" degraded-mode convention) if `briefing` isn't installed.
+- Updated all internal references (`README.md`, `CLAUDE.md`, `SECURITY.md`, `claude-code/INSTRUCTIONS.md`, `references/autonomy.md`, `references/log-chronicle.md`, `references/reflections-template.md`, `commands/end-day.md`) to point at `briefing`'s `/review`/`/timeline` instead of cortex's own.
+- Removed `review`/`timeline` from the Codex/Claude adapter generators (`scripts/generate_codex_skills.py`, `scripts/lib/command_sync.py`) and deleted their generated `.agents/skills/` and `.claude/commands/` mirrors.
+
 ## [4.22.0] — local dir rename + cross-plugin reference sync (2026-09-15)
 
 ### Changed

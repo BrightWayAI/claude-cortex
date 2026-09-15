@@ -11,7 +11,7 @@ issue (see below).
 Cortex has two tiers of behavior:
 
 - **Core memory workflows** (`/remember`, `/recall`, `/note`, `/learn`,
-  `/search`, `/timeline`, `/review`, `/forget`, `/cleanup`, `/reindex`) —
+  `/search`, `/forget`, `/cleanup`, `/reindex`) —
   read and write **only** plain-text Markdown files under `<config-root>/`
   (default `~/Documents/Claude/`; see `references/core-contract.md` §1 for
   full resolution rules, including your own `~/Documents/ClaudeCortex/`

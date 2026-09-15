@@ -535,7 +535,7 @@ If `<config-root>/briefs/<today_local>.md` doesn't exist (user ran `/end-day` wi
 
 ### Step 4.2 — Append to the longitudinal reflection store (B.7 — v4.13+)
 
-In addition to the per-day `## Reflection` in the brief markdown, append today's reflection to the rolling **`<config-root>/memory/me/reflections.md`** so reflections become a longitudinal, queryable record ("what have my biggest wins been this month," "what keeps blocking me"). This store is itself an input to `/end-week` / `/review` and to future surfacing decisions.
+In addition to the per-day `## Reflection` in the brief markdown, append today's reflection to the rolling **`<config-root>/memory/me/reflections.md`** so reflections become a longitudinal, queryable record ("what have my biggest wins been this month," "what keeps blocking me"). This store is itself an input to `/end-week` / briefing's `/review` and to future surfacing decisions.
 
 Create the file from `references/reflections-template.md` if missing (header + "newest first" convention). Append one dated block at the top of the log:
 
@@ -823,7 +823,7 @@ The chain should never block. If the user is engaged, gates pause for input. If 
 ## What this command is NOT for
 
 - **Mid-day check-ins.** Use `/recall [node]` or `/search`.
-- **Long retrospectives.** Use `/end-week` or `/review`.
+- **Long retrospectives.** Use `/end-week` or briefing's `/review`.
 - **Session memory dumps.** That's `/remember`. `/end-day` is the *day's* rhythm.
 - **Tomorrow's calendar blocking.** That's `plan-tomorrow`'s job (different verb, different output). If you want both this chain AND calendar blocks for tomorrow, run `/end-day` then `/plan-tomorrow` — there's no automatic chain between them in v1.
 
