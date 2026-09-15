@@ -27,6 +27,9 @@ Emit this EXACT content; do not re-format. The blank line below the opening fenc
 # Operational state (changes every tick; would dirty every diff)
 .state.json
 
+# Private current-user scope — never part of the shareable memory repository
+me/
+
 # Lock marker (v4.12.2+) — flags an in-progress memory mutation; see scripts/lib/locking.py
 .lock
 
@@ -67,6 +70,7 @@ Emit this EXACT content. Adds exclusions for PII-dense files that the local-only
 
 # === Everything from the local-only variant ===
 .state.json
+me/
 .lock
 log.md
 staged/
@@ -107,7 +111,8 @@ dismissed-proposals.log
 
 After this gitignore applies, the committed surface is:
 
-- `user.md` — user profile
+- `me/` does not stay in the shared memory repository; identity, voice, personal
+  preferences, reflections, and autonomy acknowledgment remain local/private
 - `DASHBOARD.md` — active-state overview
 - `.decay-config.md` — decay thresholds (user-edited, semantically meaningful)
 - All node directories with their content:

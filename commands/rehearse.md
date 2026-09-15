@@ -12,7 +12,8 @@ Designed to be a 2-5 minute ritual once a week. Not a sweep, not a cleanup audit
 
 ## Step 0 — Resolve config root + load decay thresholds
 
-Resolve `<config-root>` via `~/Documents/.claude-plugin-config-root` (platform-aware Step 0 — see any setup command for the pattern).
+Resolve `<config-root>` through the canonical precedence chain in
+`references/core-contract.md` §1.
 
 Read `<config-root>/memory/.decay-config.md`. If missing, create with documented defaults from `references/decay-model.md` and continue. Extract:
 

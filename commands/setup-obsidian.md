@@ -19,7 +19,8 @@ This command is **idempotent and non-destructive.** Existing `.obsidian/` files 
 ## Step 0 — Resolve config root
 
 Standard pattern:
-- Read `~/Documents/.claude-plugin-config-root`.
+- Resolve `<config-root>` through the canonical precedence chain in
+  `references/core-contract.md` §1.
 - Cowork: `mcp__cowork__request_cowork_directory(path=<config-root>)`. Claude Code: direct.
 
 If `<config-root>` doesn't exist, say so and ask the user to run `/setup-identity` first. Stop.

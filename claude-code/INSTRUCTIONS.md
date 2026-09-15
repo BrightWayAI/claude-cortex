@@ -7,9 +7,13 @@
 
 ## Memory Location
 
-Memory is stored at `~/Documents/Claude/memory/`. This directory is shared between Cowork and Claude Code — both platforms read and write to the same memory files. What you learn in Cowork carries over to Claude Code and vice versa.
+Resolve `<config-root>` through the Nucleus precedence chain: explicit override,
+`CORTEX_CONFIG_ROOT`, `~/.cortex/config-root`, legacy pointer, then the
+backward-compatible `~/Documents/Claude` default. Memory lives at
+`<config-root>/memory/` and is shared between Cowork and Claude Code.
 
-If the directory doesn't exist, create it with `mkdir -p ~/Documents/Claude/memory` on first write. For reliable setup, users should create this directory manually during initial setup.
+If the directory doesn't exist, run Cortex setup or the bundled
+`scripts/configure_cortex.py` rather than inventing a second host-specific root.
 
 ---
 
@@ -21,12 +25,12 @@ These behaviors run automatically in EVERY conversation. No commands needed.
 
 At the start of every conversation:
 
-1. **Read `~/Documents/Claude/memory/user.md`** if it exists. Apply preferences silently:
+1. **Read `<config-root>/memory/me/user.md`** if it exists. Apply preferences silently:
    - Communication style (terse vs. detailed, options vs. decisions)
    - Tool preferences
    - Known corrections (things to avoid)
    - Working style patterns
-2. **Read `~/Documents/Claude/memory/DASHBOARD.md`** if it exists. Check for:
+2. **Read `<config-root>/memory/DASHBOARD.md`** if it exists. Check for:
    - Overdue P0 actions (3+ days past due)
    - Stale threads (3+ sessions without progress)
    - Recent activity (what was last worked on)
@@ -79,7 +83,7 @@ When the conversation is ending (user says thanks, goodbye, signs off, or the ta
    - Just write to the appropriate node files and update DASHBOARD.md
    - Exception: if creating a NEW node, briefly mention it
 
-3. **User observations** go to `~/Documents/Claude/memory/user.md`
+3. **User observations** go to `<config-root>/memory/me/user.md`
 4. **Project knowledge** goes to the appropriate node file
 5. **Dashboard** gets updated with timestamps and any new P0 actions
 
@@ -87,7 +91,7 @@ When the conversation is ending (user says thanks, goodbye, signs off, or the ta
 
 ## Memory File Formats
 
-### User Profile (`~/Documents/Claude/memory/user.md`)
+### User Profile (`<config-root>/memory/me/user.md`)
 
 ```markdown
 # user
@@ -112,7 +116,7 @@ When the conversation is ending (user says thanks, goodbye, signs off, or the ta
 [user] PREFERENCE (date): [tool/platform preference]
 ```
 
-### Project Nodes (`~/Documents/Claude/memory/{prefix}/{slug}.md`)
+### Project Nodes (`<config-root>/memory/{prefix}/{slug}.md`)
 
 ```markdown
 # {node-id}
@@ -160,7 +164,7 @@ When the conversation is ending (user says thanks, goodbye, signs off, or the ta
 [node] SIGNAL from [other-node] (date): [implication]
 ```
 
-### Dashboard (`~/Documents/Claude/memory/DASHBOARD.md`)
+### Dashboard (`<config-root>/memory/DASHBOARD.md`)
 
 The master index. Updated after every write. Contains:
 - One-line living summary per active node

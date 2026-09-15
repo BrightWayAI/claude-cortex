@@ -86,7 +86,7 @@ Usage patterns:
    | A forward-looking commitment with a clear trigger to revisit | DECISION |
    | General realization or connection that doesn't fit the above | INSIGHT |
 
-3. **Resolve `<config-root>`** the same way as Quick mode (never the legacy hardcoded `~/Documents/Claude/memory/` path).
+3. **Resolve `<config-root>`** the same way as Quick mode; never bypass the resolver with a hardcoded default path.
 
 4. **Write.** Determine the node file path per `references/core-contract.md` §3. Read the node file if it exists. Append the entry to the matching section (`### Insights`, `### Lessons`, `### Models`, `### Gotchas`, `### Recipes`, `### Corrections`, `### Decisions` — see the Node File Format in Step 4 below for the canonical section list) using the shared locking/atomic-write utility (`cortex_cli.py prepend-section`), never a hand-edit. If the node file doesn't exist, create it from the standard template first.
 
@@ -386,10 +386,11 @@ These observations are ALWAYS extracted, even in silent mode. They go to the `us
 
 ### Storage Location
 
-Memory is stored in `~/Documents/Claude/memory/`.
+Memory is stored in `<config-root>/memory/` after resolving the root per
+`references/core-contract.md` §1.
 
-**Before writing**: Check if `~/Documents/Claude/memory/` is accessible.
-- **Cowork**: Use `mcp__cowork__request_cowork_directory(path="~/Documents/Claude")` to request access. Wait for the user to approve.
+**Before writing**: Check if `<config-root>/memory/` is accessible.
+- **Cowork**: Use `mcp__cowork__request_cowork_directory(path=<config-root>)` to request access. Wait for the user to approve.
 - **Claude Code**: The directory is accessible directly via the filesystem. Create it with `mkdir -p` if it doesn't exist.
 
 If the directory cannot be accessed, explain that memory cannot be persisted without this folder and stop.
@@ -544,7 +545,7 @@ are still read; new writes use the sections above.)
 
 **Before writing project data**, flush observations to the user profile node:
 
-1. File path: `~/Documents/Claude/memory/user.md`
+1. File path: `<config-root>/memory/me/user.md`
 2. If it doesn't exist, create it with this template:
 
 ```markdown
@@ -603,12 +604,12 @@ For significant, reusable knowledge, write dedicated entries. These persist long
 
 #### C.0 Entry metadata convention (v4.3+)
 
-Every knowledge entry carries three timestamps. The first is the original date the entry was committed. The second is the date the entry was last meaningfully touched (re-affirmed, edited, or referenced as evidence in a downstream commit). The third is the date the entry was last surfaced via `/recall` or returned by `memory-librarian`.
+Every knowledge entry carries three timestamps plus stable actor provenance. The first is the original date the entry was committed. The second is the date the entry was last meaningfully touched (re-affirmed, edited, or referenced as evidence in a downstream commit). The third is the date the entry was last surfaced via `/recall` or returned by `memory-librarian`.
 
 Encoded inline using key:value tags at the end of the entry line:
 
 ```
-[node-id] <TYPE> (YYYY-MM-DD): <entry body>  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+[node-id] <TYPE> (YYYY-MM-DD): <entry body>  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD] [by:<actor-id>]
 ```
 
 - The leading `(YYYY-MM-DD)` is the **original commit date** — set once at creation, never changed.
@@ -617,35 +618,38 @@ Encoded inline using key:value tags at the end of the entry line:
   - A new commit explicitly reinforces this entry (e.g., new evidence for an existing INSIGHT)
   - The user re-confirms via a future v4.4 rehearsal prompt
 - `[recalled:YYYY-MM-DD]` is the **last-surfaced-at** timestamp — updated whenever `memory-librarian` returns this entry in a Source Entries list or `/recall` renders it in a project view.
+- `[by:<actor-id>]` is immutable authorship from
+  `<config-root>/memory/me/identity.md`. It identifies the person whose approved
+  workflow committed the entry, not the host or model that drafted it.
 
 Both tags default to the original commit date if no later event has touched them.
 
 These tags are the substrate for v4.4's forgetting/decay layer. **In v4.3 we write and maintain them but do not yet decay or demote based on them.** v4.4 reads these timestamps and decides which entries to demote, surface for rehearsal, or auto-archive.
 
-Existing pre-v4.3 entries without tags are treated as if `confirmed:` and `recalled:` both equal the original commit date. No migration step needed — the absence of a tag is itself a legible default.
+Existing entries without `by:` remain valid as `legacy-unknown`; do not rewrite history merely to add authorship.
 
 #### C.1 Entry formats (seven canonical types — see `CLAUDE.md` Knowledge Taxonomy)
 
 ```
-[node-id] INSIGHT (YYYY-MM-DD): [the insight, compressed but precise]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+[node-id] INSIGHT (YYYY-MM-DD): [the insight, compressed but precise]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD] [by:<actor-id>]
 ```
 ```
-[node-id] LESSON (YYYY-MM-DD): [what was tried] → [what happened] → [takeaway]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+[node-id] LESSON (YYYY-MM-DD): [what was tried] → [what happened] → [takeaway]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD] [by:<actor-id>]
 ```
 ```
-[node-id] MODEL (YYYY-MM-DD): [how something works, 1-3 sentences]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+[node-id] MODEL (YYYY-MM-DD): [how something works, 1-3 sentences]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD] [by:<actor-id>]
 ```
 ```
-[node-id] RECIPE (YYYY-MM-DD): [technique name] — [when to use] → [how to do it]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+[node-id] RECIPE (YYYY-MM-DD): [technique name] — [when to use] → [how to do it]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD] [by:<actor-id>]
 ```
 ```
-[node-id] DECISION (YYYY-MM-DD): [the choice] (see DECISION required fields in §B above)  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+[node-id] DECISION (YYYY-MM-DD): [the choice] (see DECISION required fields in §B above)  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD] [by:<actor-id>]
 ```
 ```
-[node-id] GOTCHA (YYYY-MM-DD): [the trap and how to avoid it — an actionable warning]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+[node-id] GOTCHA (YYYY-MM-DD): [the trap and how to avoid it — an actionable warning]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD] [by:<actor-id>]
 ```
 ```
-[node-id] CORRECTION (YYYY-MM-DD): [old belief] → [corrected understanding]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+[node-id] CORRECTION (YYYY-MM-DD): [old belief] → [corrected understanding]  [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD] [by:<actor-id>]
 ```
 
 - On new commit, both `confirmed` and `recalled` are set to the commit date.

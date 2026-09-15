@@ -47,8 +47,10 @@ class RenderIndexTests(unittest.TestCase):
         self.assertIn("## People", output)
         self.assertIn("[[person/sarah-chen]]", output)
 
-    def test_excludes_staged_and_archive_and_system_files(self) -> None:
+    def test_excludes_private_proposals_staged_archive_and_system_files(self) -> None:
         _write(self.memory_root, "staged/commit-drafts/draft.md", "# draft\nshould not appear\n")
+        _write(self.memory_root, "proposals/alice/2026-06-01/p1.md", "# proposal\nshould not appear\n")
+        _write(self.memory_root, "me/user.md", "# private profile\nshould not appear\n")
         _write(self.memory_root, "archive/old-node.md", "# old\nshould not appear\n")
         _write(self.memory_root, "person/archive/gone.md", "# gone\nshould not appear\n")
         _write(self.memory_root, "DASHBOARD.md", "# Working World Dashboard\n")
@@ -56,6 +58,8 @@ class RenderIndexTests(unittest.TestCase):
 
         output = render_index(self.memory_root, self.today, self.now)
         self.assertNotIn("draft", output)
+        self.assertNotIn("proposal", output)
+        self.assertNotIn("private profile", output)
         self.assertNotIn("old-node", output)
         self.assertNotIn("gone", output)
         self.assertIn("client/acme", output)

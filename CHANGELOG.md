@@ -4,6 +4,17 @@ All notable changes to the Cortex Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [4.21.4] — operating-model architecture hardening (2026-09-15)
+
+### Added
+- Versioned autonomy-policy acknowledgment with actor and host provenance.
+- Shared-memory proposal and merge contract for safe future multi-writer use.
+- Stable actor provenance on new knowledge entries and deterministic exclusion of private/proposal state from index and hot-cache generation.
+
+### Changed
+- `/start-nucleus` now makes an honest ≤15-minute foundation promise and defers specialist interviews.
+- Identity and voice setup use the vendor-neutral config-root resolver.
+
 ## [4.21.3] — Codex adapter synchronization (2026-09-15)
 
 ### Fixed

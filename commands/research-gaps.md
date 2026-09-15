@@ -13,7 +13,8 @@ Two phases: **scan** (deterministic + cheap-tier classifier) and **research** (w
 ## Step 0 — Resolve config root
 
 Standard platform-aware Step 0:
-- Read `~/Documents/.claude-plugin-config-root`.
+- Resolve `<config-root>` through the canonical precedence chain in
+  `references/core-contract.md` §1.
 - Cowork: `mcp__cowork__request_cowork_directory(path=<config-root>)`. Claude Code: direct.
 
 ---

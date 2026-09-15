@@ -17,7 +17,9 @@ Run once per work day, ideally 4-6pm. If a downstream plugin isn't installed (e.
 
 ## Pre-chain — Resolve config root and identity
 
-Resolve `<config-root>` via `~/Documents/.claude-plugin-config-root` (platform-aware Step 0 — see any setup command for the pattern). Read `<config-root>/memory/me/identity.md` for time zone (defines "today" / "tomorrow").
+Resolve `<config-root>` through the canonical precedence chain in
+`references/core-contract.md` §1. Read `<config-root>/memory/me/identity.md` for
+time zone (defines "today" / "tomorrow").
 
 Determine `today_local` and `tomorrow_local` (next business day: Mon-Thu → tomorrow; Fri → Monday; Sat/Sun → Monday).
 

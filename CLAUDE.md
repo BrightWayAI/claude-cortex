@@ -1,13 +1,13 @@
 # Cortex v4 — Always-On Learning
 
-You have a persistent memory system stored as markdown files at `<config-root>/memory/` (default `~/Documents/Claude/memory/`; see `references/core-contract.md` §1 for the full resolution precedence, including the legacy `~/Documents/.claude-plugin-config-root` pointer). It learns about the user with every conversation.
+You have a persistent memory system stored as markdown files at `<config-root>/memory/` (see `references/core-contract.md` §1 for the full resolution precedence and backward-compatible default). It learns about the user with every conversation.
 
 **This file is the Claude adapter.** The canonical, host-neutral definition of storage layout, node schema, knowledge taxonomy, locking, and capability contracts lives in `references/core-contract.md`. If anything below conflicts with that file, the contract wins — treat the conflict as a bug in this file.
 
 ## Storage Layout
 
 ```
-~/Documents/Claude/
+<config-root>/
 ├── archive/              # Immutable nightly source archive (v4.7+) — calendar, inbox, slack, transcripts, drive activity per day
 │   ├── YYYY-MM-DD/
 │   │   ├── calendar.md
@@ -136,7 +136,7 @@ Bare-bracket notation in cortex docs (`[Name]`, `[role]`, `[context]`) is **temp
 
 ### Decay model (v4.4+)
 
-Every knowledge entry carries `[confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]` tags. `confirmed` updates when the entry is re-affirmed; `recalled` updates when `/recall` surfaces it. Entries pass through four states based on the age of `confirmed:`:
+Every new knowledge entry carries `[confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD] [by:<actor-id>]` tags. `confirmed` updates when the entry is re-affirmed; `recalled` updates when `/recall` surfaces it; `by` is immutable authorship from the active private identity. Existing entries without `by` remain valid as `legacy-unknown`. Entries pass through four states based on the age of `confirmed:`:
 
 - **Fresh** — within `threshold_fresh` days (default 60)
 - **Stale** — `threshold_fresh` to `threshold_dormant` (60-180 default); `/recall` flags `[stale-confidence]`
@@ -157,7 +157,7 @@ Format:
 ```markdown
 ## Demoted knowledge
 
-[node-id] INSIGHT (YYYY-MM-DD): [body] [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD]
+[node-id] INSIGHT (YYYY-MM-DD): [body] [confirmed:YYYY-MM-DD] [recalled:YYYY-MM-DD] [by:<actor-id>]
   ↳ demoted YYYY-MM-DD by [user-action | supersede], reason: [...]
   ↳ superseded by: [reference to new entry, if applicable]
 ```

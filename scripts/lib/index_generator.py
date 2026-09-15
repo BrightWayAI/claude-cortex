@@ -23,7 +23,7 @@ from scripts.lib.decay import (
     parse_decay_config,
 )
 
-SKIP_DIR_NAMES = {"staged", "archive"}
+SKIP_DIR_NAMES = {"staged", "archive", "proposals", "me"}
 SYSTEM_FILES = {"DASHBOARD.md", ".decay-config.md"}
 SKIP_ROOT_FILES = {"index.md", "hot.md", "log.md", "triage-log.md"}
 

@@ -3,6 +3,7 @@ name: memory-librarian
 description: Search and synthesize across Cortex working-memory files in `<config-root>/memory/` when a parent skill needs cross-node context and a raw grep would return too much. Returns a deduplicated summary with source citations, open threads, and a confidence rating. Read-only. Not for single-node loads (use /recall directly), not for writing memory (use /remember, /learn, /note).
 tools: Read, Grep, Glob
 model: sonnet
+reasoning_tier: standard
 ---
 
 > **Host binding note:** `tools:`/`model:` above are this role's Claude/Cowork agent binding. The logical capability this role needs is `filesystem.read` only (see `references/capability-matrix.md`) — a future host adapter maps its own tool/model choice to that capability without changing the role description below.

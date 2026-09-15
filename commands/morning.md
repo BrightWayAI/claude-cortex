@@ -160,7 +160,7 @@ For each proposal:
 
 ### `accept`
 - Apply the proposal to the target node per its `Type`:
-  - **Knowledge entry** → append to the appropriate `## Knowledge → ### Insights / Models / Gotchas / Lessons / Recipes / Corrections` section with `[confirmed:today]` tag.
+  - **Knowledge entry** → append to the appropriate `## Knowledge → ### Insights / Models / Gotchas / Lessons / Recipes / Corrections` section with `[confirmed:today] [recalled:today] [by:<actor-id>]`, where actor ID comes from the active private identity.
   - **Person-update** → append to `## Recent interactions` or `## Notes` on the person page; create page if needed (graduate the contact per v4.2 rules).
   - **Commitment** → append to `## Open threads` (for ones the user owes) or `## Waiting on` (for ones others owe the user).
   - **Thread-update** → modify the named open thread (status change, append note, or close).

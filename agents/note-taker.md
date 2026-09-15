@@ -2,6 +2,7 @@
 name: note-taker
 description: Mines the day's raw material into two output streams — a commitments delta and a learnings delta — for /listen's nightly ingest and /end-day's mining chain. Mode-dispatched across three sources. `mode: transcript` mines configured note-source providers (Granola, Gemini, Fireflies, Otter, Notion, etc.). `mode: conversation` mines other Cowork sessions in the time window. `mode: activity` mines CRM events, sent email, and calendar metadata. The parent skill invokes each mode it needs and merges the results. Read-only across all sources. Merges the former transcript-reviewer, conversation-miner, and activity-miner agents (2026-09-15) — same jobs, one home, since all three already run together at the same pipeline step against the same node inventory.
 model: sonnet
+reasoning_tier: standard
 ---
 
 > **Host binding note:** `model:` above is this role's Claude/Cowork agent binding. Each mode's source connectors map to specific capabilities in `references/capability-matrix.md` — see that mode's section below. All are optional; every mode degrades per-source rather than requiring full connector coverage.

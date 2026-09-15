@@ -3,6 +3,7 @@ name: gap-researcher
 description: Research a list of detected memory gaps against the open web. Returns proposed updates with source citations as a draft for user review. Read-only against cortex memory; writes only to `<config-root>/memory/staged/research-drafts/`. Invoked by `/research-gaps`. Honors privacy rules for person research (no speculative / private claims).
 tools: WebSearch, WebFetch, Read, Grep, Glob, Write
 model: sonnet
+reasoning_tier: standard
 ---
 
 > **Host binding note:** `tools:`/`model:` above are this role's Claude/Cowork agent binding. The capabilities this role needs are `web.search` (for the search/fetch steps below), `filesystem.read` (cortex memory), and `filesystem.write`/`filesystem.atomic_replace` scoped only to `<config-root>/memory/staged/research-drafts/` (see `references/capability-matrix.md`). A host without `web.search` should skip this role's invocation entirely rather than attempt a partial run.

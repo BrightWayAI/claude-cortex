@@ -90,7 +90,9 @@ If `relationships` is installed (v0.2.0+), offer:
 If yes → invoke `/relationships`. The user can iterate before committing.
 If no → skip; user can run Monday morning.
 
-**Legacy fallback:** if `weekly-outreach` is still installed (retired plugin, kept for migration), offer to run `/weekly-outreach` instead. New users should be on `relationships`.
+**Legacy fallback:** if `weekly-outreach` is still installed (retired plugin, kept
+only for migration), offer to run it instead. New users should be on Relationships.
+<!-- LEGACY_COMPAT -->
 
 ---
 

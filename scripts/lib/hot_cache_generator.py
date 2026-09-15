@@ -100,7 +100,7 @@ def render_hot_cache(memory_root: Path, today: date, now: datetime, trigger: str
     for path in sorted(memory_root.rglob("*.md")):
         rel = path.relative_to(memory_root)
         parts = rel.parts
-        if parts[0] in {"staged", "archive"}:
+        if parts[0] in {"staged", "archive", "proposals", "me"}:
             continue
         if "archive" in parts[:-1]:
             continue

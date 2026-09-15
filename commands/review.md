@@ -10,13 +10,14 @@ Generate a weekly (or custom period) review that synthesizes project activity an
 
 ### Data Source
 
-**Before reviewing**: Check if `~/Documents/Claude/memory/` is accessible.
-- **Cowork**: Use `mcp__cowork__request_cowork_directory(path="~/Documents/Claude")` to request access. Wait for the user to approve.
+Resolve `<config-root>` per `references/core-contract.md` §1, then check whether
+`<config-root>/memory/` is accessible.
+- **Cowork**: Use `mcp__cowork__request_cowork_directory(path=<config-root>)` to request access. Wait for the user to approve.
 - **Claude Code**: The directory is accessible directly via the filesystem.
 
 If the directory cannot be accessed, explain that the review cannot be generated without this folder and stop.
 
-1. Read `~/Documents/Claude/memory/DASHBOARD.md` for the overview
+1. Read `<config-root>/memory/DASHBOARD.md` for the overview
 2. Read node files for any nodes updated within the review period
 3. Focus on: new knowledge entries, decisions in changelogs, changes in P0/P1 actions, resolved vs. new threads
 

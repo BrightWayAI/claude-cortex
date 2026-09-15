@@ -1,5 +1,5 @@
 ---
-description: Capture user identity (name, company, role, what you do, time zone, primary tools) once, in one canonical identity.md. Other plugins in the this marketplace read from this file during their own setup interviews so identity isn't asked across multiple setups. Honors `~/Documents/.claude-plugin-config-root` if set; otherwise writes to `~/Documents/Claude/identity.md` by default. Re-run anytime to update.
+description: Capture user identity (stable actor ID, name, company, role, time zone, and primary tools) once in `<config-root>/memory/me/identity.md`. Uses the vendor-neutral config-root resolver so every host and plugin reads the same file. Re-run anytime to update.
 ---
 
 # /setup-identity
@@ -12,27 +12,31 @@ After this runs, every plugin's `/setup-*` command reads identity from this file
 
 ## Step 0 — Resolve plugin config root
 
-Per-plugin config in this marketplace lives under a user-chosen folder, recorded at `~/Documents/.claude-plugin-config-root` (a single-line text file in the user's home directory containing the absolute path of the chosen folder).
+Resolve `<config-root>` through the canonical chain in
+`references/core-contract.md`: explicit override, `CORTEX_CONFIG_ROOT`,
+`~/.cortex/config-root`, legacy pointer, then default. A malformed higher-priority
+pointer is an error, not permission to fall through. Request filesystem access only
+for the resolved directory.
 
-### A — Try the pointer
+If an intentional root already resolves, continue to Step 1. Otherwise continue to
+first-time bootstrap.
 
-Ensure access to `~/Documents`. In Cowork, call `request_cowork_directory(~/Documents)` once if not already granted. In Claude Code (or any environment with direct filesystem access), no mount is needed. Then read `~/Documents/.claude-plugin-config-root`.
-
-- **Pointer exists**: read line 1 → that's the config root path. Ensure access to `<config-root>`. If running in Cowork and the folder isn't already mounted in this session, call `request_cowork_directory(<config-root>)`. If running in Claude Code or another environment with direct filesystem access, no mount call is needed. Skip to Step 1.
-- **Pointer missing**: continue to section B.
-
-### B — First-time bootstrap
+### First-time bootstrap
 
 The pointer doesn't exist, so this is the user's first plugin setup of any kind. Prompt:
 
-> "First-time plugin setup. Where should I store your plugin config — identity, voice, and per-plugin settings? Pick a folder you control (e.g., `~/Documents/Claude/`, `~/Documents/PluginConfig/`, or any path you prefer). The folder will hold `identity.md`, `voice.md`, and a `plugins/` subdirectory with one file per plugin."
+> "First-time Nucleus setup. Where should the shared config root live? Pick a folder you control (for example `~/Documents/Cortex/`). It will contain private identity/voice files under `memory/me/`, shared memory nodes, and a `plugins/` settings directory."
 
 Once the user provides the path:
 
 1. Ensure access to `<path>`. If running in Cowork and the folder isn't already mounted in this session, call `request_cowork_directory(<path>)`. If running in Claude Code or another environment with direct filesystem access, no mount call is needed — proceed to read or write the file.
-2. Create `<path>/plugins/` if it doesn't exist.
-3. Write the absolute path to `~/Documents/.claude-plugin-config-root`.
-4. Confirm: "Saved. All marketplace plugin configs will live under `<path>` from now on. You can change this later by editing `~/Documents/.claude-plugin-config-root` directly."
+2. Invoke the bundled deterministic configurator:
+   `python3 scripts/configure_cortex.py --config-root <path>`. It creates the
+   vendor-neutral pointer atomically and seeds only missing foundation files.
+3. If the configurator refuses because the pointer resolves elsewhere, show both
+   resolved paths and request a second explicit confirmation. Only after that
+   confirmation may it be rerun with `--force-pointer`.
+4. Confirm: "Saved. All Nucleus hosts and plugins will resolve `<path>` from the vendor-neutral Cortex pointer."
 
 For the rest of this document, **`<identity-path>`** refers to `<config-root>/memory/me/identity.md`.
 
@@ -56,6 +60,8 @@ One section at a time. Confirm before moving on.
 ### Section 1 — Person
 
 - Full name
+- Stable actor ID (default: slugified full name, e.g. `zach-wagner`; confirm it
+  because collaborative provenance uses it and it should not change casually)
 - Title / role (founder, principal, VP marketing, etc.)
 - Email address (primary work)
 - Time zone (IANA format, e.g., `America/New_York`)
@@ -99,6 +105,7 @@ _Last updated: [today]_
 _Created by /setup-identity (cortex plugin)_
 
 ## Person
+- **Actor ID:** ...
 - **Name:** ...
 - **Title / role:** ...
 - **Email:** ...
@@ -280,9 +287,11 @@ Logic:
      ```
 5. Write user.md back.
 
-Symmetric note: `/setup-voice` Step 3.5 does the same for `[[voice]]`. Both are idempotent. The end state: `user.md` Canonical Files section links to every root-level canonical file so Obsidian's graph view shows the connections.
+Symmetric note: `/setup-voice` Step 3.5 does the same for `[[voice]]`. Both are idempotent. The end state: `user.md` Canonical Files section links to the canonical private profile files so Obsidian's graph view shows the connections.
 
-**Why this matters:** voice.md and identity.md are the most-referenced canonical files in the vault but they live at `<config-root>/` root, NOT inside `memory/`. `/relink-memory` scans only `memory/` so it can never auto-fix this. The setup commands are the only place where the link can be reliably written.
+**Why this matters:** `voice.md` and `identity.md` live under the private
+`memory/me/` scope, which the shared-memory index and relinker intentionally
+exclude. The setup commands are therefore responsible for wiring their links.
 
 No user gate. Best-effort — if user.md doesn't exist or the write fails, log and continue.
 
@@ -292,7 +301,7 @@ No user gate. Best-effort — if user.md doesn't exist or the write fails, log a
 
 Summarize what was captured (one short paragraph). Then offer:
 
-> "Identity saved to `<identity-path>`. Other plugins (lead-engine, relationships, daily-brief, etc.) will read this automatically — you won't be asked these questions again. To configure a specific plugin's domain settings (CRM properties, ICP, voice, offerings catalog, etc.), run that plugin's setup command — those interviews skip identity questions and only ask plugin-specific things."
+> "Identity saved to `<identity-path>`. Other plugins (Relationships, Delivery, Daily Brief, etc.) will read this automatically — you won't be asked these questions again. To configure a specific plugin's domain settings (CRM properties, ICP, voice, offerings catalog, etc.), run that plugin's setup command — those interviews skip identity questions and only ask plugin-specific things."
 
 ---
 
@@ -307,4 +316,6 @@ Summarize what was captured (one short paragraph). Then offer:
 ## What this is NOT for
 
 - Plugin-specific configuration (CRM custom properties, ICP, voice rules, offerings catalog) — those go in each plugin's per-plugin config at `<config-root>/plugins/<plugin>.user-context.md` via that plugin's setup.
-- Capturing observations / preferences — that's what cortex's passive observation does, written to `~/Documents/Claude/memory/user.md` (cortex memory stays at its existing location regardless of config-root choice).
+- Capturing observations / preferences — that's what Cortex's passive observation
+  does in shared memory nodes under `<config-root>/memory/`; private profile facts
+  belong under `<config-root>/memory/me/`.

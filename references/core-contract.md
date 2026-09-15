@@ -61,7 +61,12 @@ Resolution rules:
     ├── index.md             # auto-maintained catalog, zero-LLM, deterministic
     ├── hot.md               # rolling 7-day context cache
     ├── DASHBOARD.md         # master index, living summaries, P0 list
-    ├── user.md              # the one user node
+    ├── me/                  # private current-user scope; never shared remotely
+    │   ├── identity.md
+    │   ├── voice.md
+    │   ├── user.md
+    │   ├── reflections.md
+    │   └── autonomy-acknowledgment.json
     ├── log.md               # unified append-only operation chronicle
     ├── triage-log.md        # append-only commit-triage log
     ├── .decay-config.md     # decay thresholds
@@ -72,6 +77,8 @@ Resolution rules:
     ├── workstream/<slug>.md
     ├── bizdev/<slug>.md
     ├── infra/<slug>.md
+    ├── team/<slug>.md       # internal team entity nodes, not private profiles
+    ├── proposals/<actor-id>/# sanitized, append-only shared-write intake
     ├── archive/<slug>.md    # archived nodes (memory-level; distinct from <config-root>/archive/)
     ├── <name>.md            # unprefixed root-domain nodes
     └── staged/
@@ -84,6 +91,12 @@ Resolution rules:
 
 Full node-type decision rules live in `references/node-taxonomy.md`; this
 contract does not duplicate them.
+
+Everything under `me/` is private to the current actor. Existing client,
+person, workstream, bizdev, team, and domain nodes remain directly under
+`memory/`; there is deliberately no physical `memory/org/` wrapper. Everything
+outside `me/`, derived caches, and explicitly ignored operational state is
+potentially shareable and must follow §11A before multiple people write.
 
 ## 3. Node identifiers and file mapping
 
@@ -222,6 +235,26 @@ binding on any implementation:
   substitute for this — it must be enforced by deterministic code once
   that code exists.
 
+## 11A. Authorship and collaborative writes
+
+Single-actor installs may continue writing approved changes through the shared
+CLI under the memory lock. Every new durable knowledge entry includes a stable
+`[by:<actor-id>]` tag, where `actor-id` comes from
+`memory/me/identity.md`. Existing untagged entries remain valid.
+
+Once more than one actor writes to the same shared memory remote, model-driven
+work must not edit shared nodes directly. Each actor first writes a sanitized,
+cited, append-only proposal beneath
+`memory/proposals/<actor-id>/<YYYY-MM-DD>/<proposal-id>.md`. A designated merge
+workflow validates provenance and base revision, acquires the shared memory lock,
+applies an accepted proposal atomically, and records acceptance or conflict without
+rewriting the proposal. Raw connector payloads and private `me/` content never enter
+the shared proposal tree.
+
+Conflict and supersession behavior, proposal schema, privacy rules, and the
+single-writer-to-multi-writer transition are defined in
+`references/shared-memory-writes.md`.
+
 ## 12. Conflict and concept-drift behavior
 
 Before writing a new `INSIGHT`, `LESSON`, `MODEL`, or `GOTCHA` entry, check
@@ -236,7 +269,8 @@ and skip the check. Full procedure: `commands/remember.md` §C.2.
 Two tiers:
 
 - **Sensitive** — `<config-root>/archive/` (raw calendar/inbox/Slack/drive/
-  transcript content), everything under `memory/staged/` (drafts not yet
+  transcript content), everything under `memory/me/`, everything under
+  `memory/staged/` (drafts not yet
   reviewed), and any node content that itself contains PII (emails, phone
   numbers, addresses) copied from a sensitive source. This tier should
   never be assumed safe to sync to a third-party service, paste into an
@@ -256,6 +290,8 @@ a payload sent to `web.search` or `subagent.delegate`).
 - Legacy colon-prefixed node references resolve identically to slash-path
   references (§3).
 - Legacy four-type knowledge entries remain readable (§4).
+- Knowledge entries without `[by:<actor-id>]` remain readable and are attributed
+  to `legacy-unknown`; no retroactive rewrite is required.
 - The legacy `~/Documents/.claude-plugin-config-root` pointer continues to
   work indefinitely (§1).
 - A legacy, user-owned `memory/CLAUDE.md` may remain the canonical

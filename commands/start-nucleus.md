@@ -1,249 +1,175 @@
 ---
-description: The foundational onboarding walker. Chains the essential setup commands needed for Nucleus to be productive — identity, voice, autonomy policy acknowledgment, note sources, Obsidian vault, per-plugin setups, diagnostics (incl. connector check), optional schedule registration. Idempotent. Re-running detects what's already configured and only runs what's missing. The "I just installed Nucleus, now what" command. Target: ≤15 minutes.
+description: Complete the ≤15-minute Nucleus foundation: resolve one shared config root, capture identity and voice, acknowledge the versioned autonomy policy, configure optional note sources, and verify Cortex plus Core Ops. Specialist-plugin setup is a separate, resumable follow-up rather than part of the 15-minute promise.
 ---
 
 # /start-nucleus
 
-You are running the foundational onboarding walker. The user just typed `/start-nucleus` (or core-ops's `chief-of-staff` agent routed "start nucleus" / "let's begin" / "onboard me" / "get started" / "set me up" to this command). Your job is to take them from zero to a working Nucleus install in ~15 minutes, gating each step so they can skip what doesn't apply.
+This is the foundational onboarding walker. Its success condition is a useful Cortex
+plus Core Ops installation in 15 minutes or less. It does not include every specialist
+plugin interview in that time budget.
 
-This command never modifies memory or settings without the user's go-ahead. Every step is a chained invocation of an existing setup command — `/start-nucleus` itself doesn't write anything.
+Each mutating step previews its change and uses the owning setup workflow. If the host
+cannot programmatically invoke another skill, follow that workflow inline under the
+same capability and mutation boundaries; never claim a chained invocation happened.
 
----
+## Step 0 — Resolve root, host, and state
 
-## Step 0 — Resolve config root + detect state
+Resolve `<config-root>` through explicit override → `CORTEX_CONFIG_ROOT` →
+`~/.cortex/config-root` → legacy pointer → default, using the shared resolver. A
+malformed higher-priority pointer is an error. Request access only to the resolved
+directory.
 
-Standard config-root pattern. Read `~/Documents/.claude-plugin-config-root`. If missing, the first step (`/setup-identity`) will create it.
+Detect installed plugins through the host's manifest/plugin API when available:
 
-Detect current state by checking for marker files:
+- Cowork / Claude Code — installed plugin catalog or visible plugin manifests.
+- Codex — loaded Agent Plugin/skill catalog.
+- ChatGPT desktop — enabled plugin/app catalog.
+- Any host without discovery — report detection unavailable and ask only about the
+  specific dependency needed for the next step.
 
-| Marker | Indicates |
+Check these foundation markers:
+
+| State | Canonical path |
 |---|---|
-| `<config-root>/memory/me/identity.md` exists | `/setup-identity` has been run |
-| `<config-root>/memory/me/voice.md` exists | `/setup-voice` has been run |
-| `<config-root>/plugins/cortex.user-context.md` exists with `note_sources` section | `/setup-sources` has been run |
-| `<config-root>/.obsidian/` exists | `/setup-obsidian` has been run |
-| `<config-root>/plugins/<plugin>.user-context.md` exists | that plugin's setup has been run |
-| `<config-root>/memory/log.md` contains a `setup-identity` entry | first-run was done at some point |
+| Identity | `<config-root>/memory/me/identity.md` |
+| Voice | `<config-root>/memory/me/voice.md` |
+| Autonomy acknowledgment | `<config-root>/memory/me/autonomy-acknowledgment.json` |
+| Cortex settings | `<config-root>/plugins/cortex.user-context.md` |
+| Obsidian settings | `<config-root>/.obsidian/` |
+| Core Ops settings | `<config-root>/plugins/core-ops.user-context.md` |
 
-Build a status report:
+Show only missing or stale foundation items, the active host, and an honest time
+estimate. If the foundation is current, offer `/diagnose` and specialist setup.
 
-```
-Nucleus onboarding — status:
+## Step 1 — Identity (~4 minutes)
 
-  Foundational:
-    [✓] Identity captured (Jane Doe, Acme Consulting)
-    [✗] Voice not yet captured  ← will run next
-    [✗] Note sources not configured
-    [✗] Obsidian vault not scaffolded
+If identity is missing, preview and invoke `/setup-identity`. It captures a stable
+actor ID, name, role, company, time zone, and tool stack. If skipped, explain which
+later steps will be thinner; do not fabricate identity values.
 
-  Per-plugin:
-    [✓] daily-brief configured
-    [✗] lead-engine installed but not configured
-    [✗] relationships installed but not configured
-    [—] news-curator not installed
-    ...
+## Step 2 — Voice (~4 minutes)
 
-  Schedules:
-    [✗] Not registered yet
+If voice is missing, offer `/setup-voice` using two representative writing samples.
+Explain that Cortex owns the canonical voice file while the Voice plugin applies and
+learns medium-specific patterns. If skipped, drafting remains available but generic.
 
-Estimated remaining: ~12 minutes if you don't skip anything.
+## Step 3 — Versioned autonomy acknowledgment (~2 minutes)
 
-Want to keep going? (y / n / skip-to <step-name>)
-```
+Read the Autonomy policy section from `<config-root>/memory/CLAUDE.md` (or the
+forwarded memory instructions). If none exists, offer to install the versioned
+default from `references/autonomy-policy.md`; do not write it without confirmation.
+Normalize the section to LF line endings, strip
+trailing whitespace per line, preserve line order, and compute SHA-256.
 
-If everything is already configured, surface a one-line "Nucleus is fully set up. Want me to run `/diagnose` to verify, or no?" and exit on user confirmation either way.
+The acknowledgment is valid only when all of these match:
 
----
+- `schema_version` is supported;
+- `policy_version` equals the current declared policy version. A pre-versioning
+  custom policy is labeled `legacy-unversioned`; its hash still controls validity;
+- `policy_sha256` equals the current normalized section hash;
+- `actor_id` matches the active identity.
 
-## Step 1 — Foundational: identity
+Record this personal, host-visible state at
+`<config-root>/memory/me/autonomy-acknowledgment.json`:
 
-If `identity.md` is missing:
-
-> "First, who are you? I'll capture name, role, company, time zone, working hours, and tool stack. Other plugins read this so they don't ask the same questions again. ~5 minutes."
->
-> "Want to proceed with `/setup-identity` now? (y / skip)"
-
-On `y`: invoke `/setup-identity`. Let it run to completion. Return here on completion.
-On `skip`: log "skipped identity" and warn that downstream steps may not work (`/setup-voice`, `/setup-obsidian`, plugins all assume identity exists).
-
-If `identity.md` exists: skip to Step 2 silently.
-
----
-
-## Step 2 — Foundational: voice
-
-If `voice.md` is missing:
-
-> "Next, your voice. I'll have you paste 2 sample emails or messages you've written — I'll extract your tone, vocabulary, sentence rhythm, and banned phrases. All drafting plugins (lead-engine, relationships, news-curator, client-status, referral-engine, voice) read from here. ~5 minutes."
->
-> "Skip if you don't plan to draft anything in your voice. Run `/setup-voice` now? (y / skip)"
-
-On `y`: invoke `/setup-voice`. On `skip`: log and continue. If skipped, the drafting plugins will fall back to a generic voice but with reduced fidelity.
-
----
-
-## Step 2.5 — Foundational: autonomy policy acknowledgment (v4.21+)
-
-If `<config-root>/memory/CLAUDE.md` lacks an Autonomy policy section (pre-refactor installs), or the user has never acknowledged it (no `.autonomy-acknowledged` marker):
-
-Read the Autonomy policy from `<config-root>/memory/CLAUDE.md` (ALWAYS / ASK FIRST / NEVER tiers). Present it plainly:
-
-> "One more foundational thing — Nucleus follows an autonomy policy that governs what it can do without asking. By default: it reads memory and stages proposals freely, but it always asks before sending anything, changing CRM records, deleting/archiving a node, registering a schedule, or spending API credits — and it never sends on your behalf without per-message approval, writes memory unattended (only staged drafts), or stores secrets."
->
-> "This applies to every command, skill, and agent across the whole stack — including the `chief-of-staff` agent (`/cos` in core-ops). Want to customize any of these tiers, or accept the defaults? (accept / customize)"
-
-On `accept`: write a `.autonomy-acknowledged` marker to `<config-root>/memory/` (empty file, just a marker — the policy itself lives in `memory/CLAUDE.md`, this only records that the user has seen it). Continue.
-
-On `customize`: walk each tier's items one at a time, letting the user move an item between ALWAYS/ASK FIRST/NEVER or add a firm-specific rule. Write the customized policy back to `<config-root>/memory/CLAUDE.md`'s Autonomy policy section, then write the marker.
-
-If `<config-root>/memory/CLAUDE.md` doesn't exist yet at all (first-ever run, no cortex memory initialized), skip this step silently — it'll fire on the next `/start-nucleus` re-run once memory exists.
-
----
-
-## Step 3 — Foundational: note sources
-
-If `<config-root>/plugins/cortex.user-context.md` lacks a `note_sources` section:
-
-> "If you use Granola, Gemini, Fireflies, Otter, or a Drive folder for meeting notes, I can connect them. This enables the `/listen` overnight ingest pipeline — yesterday's transcripts get mined into memory while you sleep, and `/morning` walks the proposals. ~5 minutes."
->
-> "Skip if you don't have any note adapters. Run `/setup-sources`? (y / skip)"
-
-On `y`: invoke `/setup-sources`. On `skip`: `/listen` will still work but transcript-mining will be empty.
-
----
-
-## Step 4 — Foundational: Obsidian vault (recommended)
-
-If `<config-root>/.obsidian/` is missing:
-
-> "Want a graph-view of your memory? `/setup-obsidian` scaffolds an Obsidian vault config over `<config-root>/` so you can open it in Obsidian (free, https://obsidian.md) and see your people, clients, topics connected by wikilinks. Works on mobile too. ~1 minute."
->
-> "Recommended. Run `/setup-obsidian`? (y / skip)"
-
-On `y`: invoke `/setup-obsidian`. On `skip`: silent.
-
----
-
-## Step 5 — Per-plugin setups
-
-Detect which Nucleus plugins are installed. The detection mechanism depends on runtime:
-- **Cowork:** check the installed-plugins list via runtime API if available; otherwise infer from `<config-root>/plugins/*.user-context.md` and from which command files are visible in the session.
-- **Claude Code:** check `~/.claude/plugins/` (or wherever the plugins are mounted).
-
-For each installed plugin that has a setup command but no `<config-root>/plugins/<plugin>.user-context.md`:
-
-| Plugin | Setup command | Captures |
-|---|---|---|
-| core-ops | `/setup-core` | CRM, brand, deliverable conventions |
-| daily-brief | `/setup-brief` + `/setup-plan` | Section toggles, sort defaults, working hours, calendar conventions (also covers next-day planning via `/brief --tomorrow`) |
-| relationships | `/setup-relationships` | ICP, tier definitions, voices, time-budget, Apollo/signal sourcing, referral cooling (natively — absorbs the retired lead-engine + referral-engine plugins) |
-| delivery | `/setup-projects` + `/setup-status` | Offerings catalog, drive layout, communication defaults, status cadence, per-client overrides (also covers deliverable QA via `/review-deliverable`, absorbed from core-ops) |
-| news-curator | `/setup-news` | Topic, audience, sources, post format |
-| time-tracking | `/setup-time` | Clients, billing models, calendar tagging |
-| voice | `/setup-style` | Style file location, learning thresholds |
-| weekly-alignment | `/setup` (in that plugin's skills) | Slack channels, teams, risk patterns |
-
-Surface them as a single grouped menu:
-
-```
-Plugin setups needed:
-
-  [1] /setup-core                    (core-ops — ~5 min)
-  [2] /setup-brief + /setup-plan     (daily-brief — ~5 min)
-  [3] /setup-relationships           (relationships — ~5 min; covers Apollo/signals + referral cooling natively)
-  [4] /setup-projects + /setup-status (delivery — ~10 min)
-  ...
-
-Pick: all / numbered list (e.g., "1,3,4") / skip-all / one-at-a-time
-
-Estimated: ~30 minutes for all.
+```json
+{
+  "schema_version": "1.0.0",
+  "policy_version": "1.0.0",
+  "policy_sha256": "sha256:...",
+  "acknowledged_at": "<ISO-8601>",
+  "actor_id": "<identity Actor ID>",
+  "host": "<cowork|claude-code|codex|chatgpt-work|other>"
+}
 ```
 
-Walk each chosen setup in order. Between each, offer: "Continue with the next setup or pause here?" Pausing means re-running `/start-nucleus` later will resume from where they left off (since the marker files persist).
+An old empty `.autonomy-acknowledged` file is legacy evidence that the policy was
+once shown, not a valid current acknowledgment. Preserve it, explain the one-time
+upgrade, and write the versioned record only after the user accepts or customizes the
+current policy. A changed policy hash always requires acknowledgment again.
 
----
+## Step 4 — Optional note sources and Obsidian (~3 minutes)
 
-## Step 6 — Verify with /diagnose
+If note sources are unconfigured, offer `/setup-sources`. Missing connectors are
+optional and must be disclosed. If the user wants an Obsidian view, offer
+`/setup-obsidian`; otherwise skip it without treating the foundation as unhealthy.
 
-If core-ops is installed:
+## Step 5 — Core Ops starter verification (~2 minutes)
 
-> "Let's verify everything is wired up. Running `/diagnose` — this checks for missing setups, connector gaps, subagent availability."
+The minimum supported bundle is Cortex plus Core Ops. If Core Ops is installed but
+unconfigured, offer the quick `/setup-core` path for CRM name/stages and omit brand
+customization for later. Then run `/diagnose` read-only.
 
-Invoke `/diagnose`. Surface its output.
+Foundation success means:
 
-If issues are surfaced, offer to fix them inline: "Want to go back to `<step>` to address this?"
+- one resolved config root;
+- identity present;
+- current policy hash acknowledged;
+- Cortex workflows discoverable;
+- Core Ops discoverable when installed;
+- missing optional connectors clearly listed.
 
-If core-ops isn't installed, skip this step with a one-line note: "(Skipping /diagnose — core-ops not installed.)"
+Do not require specialist setup or schedule registration to call the foundation
+complete.
 
----
+## Step 6 — Optional automation
 
-## Step 7 — Optional: register standing schedules
+If the user wants nightly ingest and the host exposes a scheduler:
 
-If core-ops is installed AND its schedule library has not yet been registered:
+1. Require one successful manual `/listen` run so connector permissions are known.
+2. Offer `/register-schedules`, which reads user-owned definitions from
+   `<config-root>/plugins/core-ops/schedules.md` and confirms before registration.
+3. Report registration separately from execution. A registered task is not proof of
+   a successful run; run receipts or host history provide that evidence.
 
-> "Last thing — Nucleus has a standing-schedules library for daily/weekly/monthly automation (nightly /listen, daily /end-day at 5pm, daily /relationships morning brief, Friday /end-week, monthly /generate-invoices, etc.). Want to register them with Cowork's scheduled-tasks system? You can always opt out of individual ones in `core-ops/references/schedules.md`."
->
-> "Run `/register-schedules`? (y / skip)"
+If the host has no scheduler, return the validated definition for manual setup.
 
-On `y`: invoke `/register-schedules`. On `skip`: silent.
+## Step 7 — Specialist setup (outside the 15-minute foundation)
 
----
+After foundation completion, show only installed specialists that still need setup:
 
-## Step 8 — Closing summary + next steps
+| Plugin | Setup | Typical time |
+|---|---|---:|
+| daily-brief | `/setup-brief` | 5 min |
+| relationships | `/setup-relationships` | 5–10 min |
+| delivery | `/setup-projects`, `/setup-status` | 10–20 min |
+| time-tracking | `/setup-time` | 10 min |
+| voice | `/setup-style` | 5 min |
+| news-curator | `/setup-news` | 5 min |
+| weekly-alignment | `/setup` | 5 min |
 
-```
-Nucleus onboarding complete.
+Default to "do later." Let the user select one, several, or pause. Re-running
+`/start-nucleus` resumes from canonical config files; specialist duration is never
+included in the foundation estimate.
 
-Foundation:
-  ✓ Identity captured
-  ✓ Voice captured
-  ✓ Autonomy policy acknowledged
-  ✓ Note sources connected (Granola, Gemini)
-  ✓ Obsidian vault scaffolded — open <config-root> in Obsidian
+## Closing summary
 
-Per-plugin (configured today):
-  ✓ core-ops
-  ✓ daily-brief
-  ✓ relationships
+Report foundation status, policy version/hash prefix, optional capabilities skipped,
+schedule registration state, and specialists deferred. Suggest three outcomes rather
+than command memorization: start the day, recall a client, and ask Core Ops to route a
+Nucleus task.
 
-Schedules:
-  ✓ Registered with Cowork (nightly /listen, daily /end-day, ...)
+Log one metadata-only `start-nucleus` run through Core Ops when available: host,
+foundation items completed, specialists configured/deferred, elapsed time, and skipped
+capabilities. Do not log identity values or connector payloads.
 
-Try these:
-  • Say "what's on my plate today" → chief-of-staff (/cos in core-ops) suggests /brief
-  • Say "I just met Sarah at the AI Summit" → /remember + person page
-  • Tonight: /listen runs on cron; tomorrow morning say "good morning" → /morning
-  • Anytime: /cos describes what it can route to, based on what's installed
+## Idempotency and reset
 
-You're set up. Run /diagnose any time to check stack health.
-```
+Re-runs compare canonical files and the policy hash; they do not rely on an umbrella
+"onboarded" flag. New specialists appear as optional follow-ups.
 
-Append one line to `<config-root>/memory/log.md` via the `log-writer` skill:
-- **op_name:** `start-nucleus`
-- **summary:** `onboarding completed — <N> foundational + <M> per-plugin setups run, <S> skipped, schedules <registered|skipped>.`
-
----
-
-## Idempotent re-runs
-
-`/start-nucleus` is safe to re-run any time. Steps with completed markers are silently skipped. New plugins installed since last run are detected and offered. If a setup was previously skipped, it's offered again (the user might want to come back to it).
-
-`/start-nucleus --reset` (advanced) deletes all marker files and walks from scratch. Requires explicit confirmation per file before deletion. Rare; mostly for development or testing.
-
----
+`/start-nucleus --reset` is a diagnostic mode, not a bulk delete. It lists each
+foundation record that would be reset and requires explicit confirmation per file.
+Never delete identity, voice, memory nodes, plugin settings, or scheduler tasks as part
+of onboarding reset. Normally only the versioned autonomy acknowledgment is eligible.
 
 ## Behavior rules
 
-- **Every step has a skip.** Nothing is mandatory beyond `/setup-identity` (and even that can be skipped with a warning).
-- **Honor pauses.** Users will get partway and stop. Re-running picks up exactly where they left off.
-- **No silent setup writes.** Each setup-X has its own confirmation gate; `/start-nucleus` doesn't bypass them.
-- **Honor autonomy.** If the user has set `autonomy: /start-nucleus: auto`, the menu collapses to "Going through all setups now — interrupt any time." Still walks each setup-X interactively (those have their own gates).
-- **Telemetry (optional).** Log via core-ops `/log-agent-run` if installed: `skill: start-nucleus, setups_run: [...], skipped: [...], runtime_ms`.
-
-## What this command does NOT do
-
-- Does not modify identity / voice / source / Obsidian / plugin configs directly. Each setup-X owns its own file writes.
-- Does not install plugins. The user uses Cowork's marketplace install for that.
-- Does not run any non-setup workflows (`/brief`, `/listen`, `/end-day` etc.). Onboarding only.
-- Does not bypass the per-setup confirmation gates. Each setup-X command is autonomous within its scope.
-- Does not fail the run if a single setup errors. Reports the error, moves to the next, surfaces all errors in the closing summary.
+- Keep the foundation within 15 minutes; specialist setup is separate.
+- Every step can pause or skip, with honest consequences.
+- Installed plugin directories are read-only at runtime.
+- All host-specific behavior goes through the capability matrix.
+- External writes, sends, spending, and schedule registration retain their immediate
+  confirmation gates.
+- Do not claim a connector, chained workflow, schedule, or write succeeded without
+  evidence from that capability.

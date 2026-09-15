@@ -1,10 +1,10 @@
 ---
-description: Capture your writing voice once (descriptors, banned phrases, sentence-length preference, hook patterns, sign-off style) in one canonical voice.md. All drafting plugins (relationships, lead-engine, news-curator, post-assembler, client-status, referral-engine, voice) read from this file so your voice stays consistent and you only update it in one place. Honors `~/Documents/.claude-plugin-config-root` if set; otherwise writes to `~/Documents/Claude/voice.md` by default. Re-run anytime to refine.
+description: Capture your writing voice once in `<config-root>/memory/me/voice.md`. Relationships, Delivery, News Curator, Voice, and Daily Brief read the same canonical file. Uses the vendor-neutral config-root resolver. Re-run anytime to refine.
 ---
 
 # /setup-voice
 
-One-time voice bootstrap. Captures the writing-voice rules every drafting plugin needs and writes them to a canonical shared file. Lives in whatever folder you've designated as your plugin config root (or `~/Documents/Claude/` by default for backward compatibility).
+One-time voice bootstrap. Captures the writing-voice rules every drafting plugin needs and writes them to the private canonical voice file under the resolved config root.
 
 After this runs, every drafting plugin reads voice from this file. You update voice in one place, every drafter benefits.
 
@@ -12,27 +12,29 @@ After this runs, every drafting plugin reads voice from this file. You update vo
 
 ## Step 0 — Resolve plugin config root
 
-Per-plugin config in this marketplace lives under a user-chosen folder, recorded at `~/Documents/.claude-plugin-config-root` (a single-line text file in the user's home directory containing the absolute path of the chosen folder).
+Resolve `<config-root>` through explicit override → `CORTEX_CONFIG_ROOT` →
+`~/.cortex/config-root` → legacy pointer → default. A malformed higher-priority
+pointer is an error. Request access only to the resolved directory.
 
-### A — Try the pointer
+If an intentional root already resolves, continue to Step 1. Otherwise continue to
+first-time bootstrap.
 
-Ensure access to `~/Documents`. In Cowork, call `request_cowork_directory(~/Documents)` once if not already granted. In Claude Code (or any environment with direct filesystem access), no mount is needed. Then read `~/Documents/.claude-plugin-config-root`.
-
-- **Pointer exists**: read line 1 → that's the config root path. Ensure access to `<config-root>`. If running in Cowork and the folder isn't already mounted in this session, call `request_cowork_directory(<config-root>)`. If running in Claude Code or another environment with direct filesystem access, no mount call is needed. Skip to Step 1.
-- **Pointer missing**: continue to section B.
-
-### B — First-time bootstrap
+### First-time bootstrap
 
 The pointer doesn't exist, so this is the user's first plugin setup of any kind. Prompt:
 
-> "First-time plugin setup. Where should I store your plugin config — identity, voice, and per-plugin settings? Pick a folder you control (e.g., `~/Documents/Claude/`, `~/Documents/PluginConfig/`, or any path you prefer). The folder will hold `identity.md`, `voice.md`, and a `plugins/` subdirectory with one file per plugin."
+> "First-time Nucleus setup. Where should the shared config root live? Pick a folder you control (for example `~/Documents/Cortex/`). It will contain private identity/voice files under `memory/me/`, shared memory nodes, and a `plugins/` settings directory."
 
 Once the user provides the path:
 
 1. Ensure access to `<path>`. If running in Cowork and the folder isn't already mounted in this session, call `request_cowork_directory(<path>)`. If running in Claude Code or another environment with direct filesystem access, no mount call is needed — proceed to read or write the file.
-2. Create `<path>/plugins/` if it doesn't exist.
-3. Write the absolute path to `~/Documents/.claude-plugin-config-root`.
-4. Confirm: "Saved. All marketplace plugin configs will live under `<path>` from now on. You can change this later by editing `~/Documents/.claude-plugin-config-root` directly."
+2. Invoke the bundled deterministic configurator:
+   `python3 scripts/configure_cortex.py --config-root <path>`. It creates the
+   vendor-neutral pointer atomically and seeds only missing foundation files.
+3. If the configurator refuses because the pointer resolves elsewhere, show both
+   resolved paths and request a second explicit confirmation. Only after that
+   confirmation may it be rerun with `--force-pointer`.
+4. Confirm: "Saved. All Nucleus hosts and plugins will resolve `<path>` from the vendor-neutral Cortex pointer."
 
 For the rest of this document, **`<voice-path>`** refers to `<config-root>/memory/me/voice.md`.
 
@@ -164,9 +166,11 @@ Logic:
      ```
 5. Write user.md back.
 
-Symmetric note: `/setup-identity` Step 3.7 does the same for `[[identity]]`. Both are idempotent. The end state: `user.md` Canonical Files section links to every root-level canonical file so Obsidian's graph view shows the connections.
+Symmetric note: `/setup-identity` Step 3.7 does the same for `[[identity]]`. Both are idempotent. The end state: `user.md` Canonical Files section links to the canonical private profile files so Obsidian's graph view shows the connections.
 
-**Why this matters:** voice.md lives at `<config-root>/` root, NOT inside `memory/`. `/relink-memory` scans only `memory/` so it can never auto-fix this. `/setup-voice` is the only place where the link can be reliably written.
+**Why this matters:** `voice.md` lives under the private `memory/me/` scope,
+which the shared-memory index and relinker intentionally exclude. `/setup-voice`
+is therefore responsible for wiring the link.
 
 No user gate. Best-effort — if user.md doesn't exist or the write fails, log and continue.
 
@@ -176,7 +180,7 @@ No user gate. Best-effort — if user.md doesn't exist or the write fails, log a
 
 Summarize what was saved (one short paragraph). Then offer:
 
-> "Voice saved to `<voice-path>`. All drafting plugins (relationships, lead-engine, news-curator/post-assembler, client-status, referral-engine, voice) will read this automatically — your voice stays consistent across every channel. Update anytime by re-running `/setup-voice` or editing `<voice-path>` directly."
+> "Voice saved to `<voice-path>`. Relationships, Delivery, News Curator, Voice, and Daily Brief will read it automatically. Update anytime by re-running `/setup-voice` or editing `<voice-path>` directly."
 
 ---
 
@@ -189,5 +193,5 @@ Summarize what was saved (one short paragraph). Then offer:
 
 ## What this is NOT for
 
-- Plugin-specific voice rules (e.g., "lead-engine DMs follow the 27-word opener pattern") — those stay in plugin-specific reference files. The shared voice.md is for global-to-you rules.
+- Plugin-specific voice rules (for example, Relationships touchpoint length) stay in plugin-specific settings. The shared voice file is for global-to-you rules.
 - Tonal customization per audience or per channel — that's drafting-time logic. The shared voice.md captures *your default voice*; specific situations adjust.

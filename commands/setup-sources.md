@@ -12,10 +12,10 @@ This is a standalone command. It does not replace any other setup. It can be re-
 
 ## Step 0 — Resolve plugin config root
 
-Ensure access to `~/Documents`. In Cowork, call `request_cowork_directory(~/Documents)` once if not already granted. In Claude Code (or any environment with direct filesystem access), no mount is needed. Then read `~/Documents/.claude-plugin-config-root`.
-
-- **Pointer exists** → read line 1 → that's `<config-root>`. Ensure access to `<config-root>`. If running in Cowork and not already mounted, call `request_cowork_directory(<config-root>)`.
-- **Pointer missing** → stop with: "No plugin config root found. Run `/setup-identity` first to establish the pointer."
+Resolve `<config-root>` through the canonical precedence chain in
+`references/core-contract.md` §1. Request access only to the resolved root in
+Cowork. If it is inaccessible, stop with: "No accessible Cortex config root.
+Run `/setup-identity` first."
 
 Sources config file lives at `<config-root>/plugins/cortex.note-sources.md`.
 

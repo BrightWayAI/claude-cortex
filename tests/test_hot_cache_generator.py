@@ -84,7 +84,7 @@ class RenderHotCacheTests(unittest.TestCase):
         self.assertIn("finalize contract", output)
         self.assertIn("awaiting signature", output)
 
-    def test_excludes_staged_and_archive(self) -> None:
+    def test_excludes_private_proposals_staged_and_archive(self) -> None:
         _write(
             self.memory_root,
             "staged/commit-drafts/draft.md",
@@ -95,8 +95,20 @@ class RenderHotCacheTests(unittest.TestCase):
             "archive/old.md",
             "## Changelog\n- 2026-06-09 — should not appear either\n",
         )
+        _write(
+            self.memory_root,
+            "proposals/alice/2026-06-09/p1.md",
+            "## Changelog\n- 2026-06-09 — proposed only\n",
+        )
+        _write(
+            self.memory_root,
+            "me/user.md",
+            "## Changelog\n- 2026-06-09 — private only\n",
+        )
         output = render_hot_cache(self.memory_root, self.today, self.now)
         self.assertNotIn("should not appear", output)
+        self.assertNotIn("proposed only", output)
+        self.assertNotIn("private only", output)
 
     def test_trigger_is_recorded(self) -> None:
         output = render_hot_cache(self.memory_root, self.today, self.now, trigger="listen")

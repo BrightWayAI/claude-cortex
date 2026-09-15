@@ -64,13 +64,14 @@ If delegation fails or the agent isn't available, fall through to inline executi
 
 ### How to Search
 
-**Before searching**: Check if `~/Documents/Claude/memory/` is accessible.
-- **Cowork**: Use `mcp__cowork__request_cowork_directory(path="~/Documents/Claude")` to request access. Wait for the user to approve.
+Resolve `<config-root>` per `references/core-contract.md` §1, then check whether
+`<config-root>/memory/` is accessible.
+- **Cowork**: Use `mcp__cowork__request_cowork_directory(path=<config-root>)` to request access. Wait for the user to approve.
 - **Claude Code**: The directory is accessible directly via the filesystem.
 
 If the directory cannot be accessed, explain that memory cannot be searched without this folder and stop.
 
-1. Read `~/Documents/Claude/memory/DASHBOARD.md` to get the list of all nodes
+1. Read `<config-root>/memory/DASHBOARD.md` to get the list of all nodes
 2. For each active/warm node, read the node file and search for entries matching the query
 3. Use the entry type headers (## Knowledge, ### Models, ### Gotchas, etc.) to quickly navigate to relevant sections
 4. For person queries, search the ## People section of each node file

@@ -10,15 +10,16 @@ You are constructing a chronological view of session history from working memory
 
 ### Data Source
 
-**Before loading**: Check if `~/Documents/Claude/memory/` is accessible.
-- **Cowork**: Use `mcp__cowork__request_cowork_directory(path="~/Documents/Claude")` to request access. Wait for the user to approve.
+Resolve `<config-root>` per `references/core-contract.md` §1, then check whether
+`<config-root>/memory/` is accessible.
+- **Cowork**: Use `mcp__cowork__request_cowork_directory(path=<config-root>)` to request access. Wait for the user to approve.
 - **Claude Code**: The directory is accessible directly via the filesystem.
 
 If the directory cannot be accessed, explain that the timeline cannot be built without this folder and stop.
 
-1. If a project is specified: read that node's file from `~/Documents/Claude/memory/`, extract all LOG entries, sort chronologically
+1. If a project is specified: read that node's file from `<config-root>/memory/`, extract all LOG entries, sort chronologically
 2. If no project: read all node files, extract all LOG entries, sort chronologically across all nodes
-3. Use `~/Documents/Claude/memory/DASHBOARD.md` to identify which nodes to scan
+3. Use `<config-root>/memory/DASHBOARD.md` to identify which nodes to scan
 
 ---
 

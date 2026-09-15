@@ -450,7 +450,7 @@ See `CHANGELOG.md` for the full version-by-version history (this section only tr
 - **The learning loop**: Every conversation makes the next one better
 
 ### v3.0.0
-- File-based storage at `~/Documents/Claude/memory/`
+- File-based storage under the resolved `<config-root>/memory/`
 - Two-tier structure: DASHBOARD.md + individual node files
 - Dynamic directory creation from node prefixes
 - Archive support
