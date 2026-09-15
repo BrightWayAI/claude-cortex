@@ -4,6 +4,16 @@ All notable changes to the Cortex Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [4.21.1] — Fix: /morning should stay model-invocable (2026-09-15)
+
+### Fixed
+- Reverted `skills/morning/SKILL.md`'s `disable-model-invocation: true` from
+  the Phase 3.7 skill audit — `/morning` is the required daily touch and is
+  specifically designed to fire on "good morning"/"what's on my plate"
+  phrasing (see `/start-nucleus`'s own "Try these" example). Caught while
+  writing Phase 4 step 4.2's eval suite for it. 28 model-invocable skills
+  now (was 27; still under the ≤30 target).
+
 ## [4.21.0] — /start-nucleus gains autonomy acknowledgment, catalog fixed (2026-09-15)
 
 Nucleus Operating Model Refactor Phase 4 step 4.1.
