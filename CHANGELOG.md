@@ -4,6 +4,11 @@ All notable changes to the Cortex Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [4.26.0] — Eval suite: onboarding + morning natural-language cases (2026-09-15)
+
+### Added
+- Four new `claude plugin eval` cases in `evals/`: `start-nucleus-natural-language` ("start nucleus"), `lets-get-started-natural-language` ("let's get started") — both check `/start-nucleus` fires without an explicit command — and `run-my-morning-natural-language` / `good-morning-natural-language`, extending the existing `morning-natural-language` case with two more phrasings that must fire `/morning`. All `llm`-graded, matching the existing suite's frontmatter/grader pattern.
+
 ## [4.25.0] — Phase 3 consistency fixes (2026-09-15)
 
 ### Fixed
