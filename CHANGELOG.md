@@ -4,6 +4,14 @@ All notable changes to the Cortex Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [4.18.6] — Autonomy docs updated for nucleus-router retirement (2026-09-15)
+
+### Changed
+- `references/autonomy.md` — references to `nucleus-router` updated to the
+  new `chief-of-staff` agent (`/cos` in core-ops), which replaces it (Nucleus
+  Operating Model Refactor Phase 3 step 3.1). No behavior change to the
+  autonomy-slider mechanism itself.
+
 ## [Unreleased]
 
 ## [4.18.5] — writing-style renamed to voice (2026-09-15)
