@@ -1,11 +1,11 @@
 ---
-description: Complete the ≤15-minute Nucleus foundation: resolve one shared config root, capture identity and voice, acknowledge the versioned autonomy policy, configure optional note sources, and verify Cortex plus Core Ops. Specialist-plugin setup is a separate, resumable follow-up rather than part of the 15-minute promise.
+description: Complete the ≤15-minute Nucleus foundation: resolve one shared config root, capture identity and voice, acknowledge the versioned autonomy policy, configure optional note sources, and verify Cortex plus Ops. Specialist-plugin setup is a separate, resumable follow-up rather than part of the 15-minute promise.
 ---
 
 # /start-nucleus
 
 This is the foundational onboarding walker. Its success condition is a useful Cortex
-plus Core Ops installation in 15 minutes or less. It does not include every specialist
+plus Ops installation in 15 minutes or less. It does not include every specialist
 plugin interview in that time budget.
 
 Each mutating step previews its change and uses the owning setup workflow. If the host
@@ -36,7 +36,7 @@ Check these foundation markers:
 | Autonomy acknowledgment | `<config-root>/memory/me/autonomy-acknowledgment.json` |
 | Cortex settings | `<config-root>/plugins/cortex.user-context.md` |
 | Obsidian settings | `<config-root>/.obsidian/` |
-| Core Ops settings | `<config-root>/plugins/core-ops.user-context.md` |
+| Ops settings | `<config-root>/plugins/ops.user-context.md` |
 
 Show only missing or stale foundation items, the active host, and an honest time
 estimate. If the foundation is current, offer `/diagnose` and specialist setup.
@@ -50,7 +50,7 @@ later steps will be thinner; do not fabricate identity values.
 ## Step 2 — Voice (~4 minutes)
 
 If voice is missing, offer `/setup-voice` using two representative writing samples.
-Explain that Cortex owns the canonical voice file while the Voice plugin applies and
+Explain that Cortex owns the canonical voice file while the Comms plugin applies and
 learns medium-specific patterns. If skipped, drafting remains available but generic.
 
 ## Step 3 — Versioned autonomy acknowledgment (~2 minutes)
@@ -94,9 +94,9 @@ If note sources are unconfigured, offer `/setup-sources`. Missing connectors are
 optional and must be disclosed. If the user wants an Obsidian view, offer
 `/setup-obsidian`; otherwise skip it without treating the foundation as unhealthy.
 
-## Step 5 — Core Ops starter verification (~2 minutes)
+## Step 5 — Ops starter verification (~2 minutes)
 
-The minimum supported bundle is Cortex plus Core Ops. If Core Ops is installed but
+The minimum supported bundle is Cortex plus Ops. If Ops is installed but
 unconfigured, offer the quick `/setup-core` path for CRM name/stages and omit brand
 customization for later. Then run `/diagnose` read-only.
 
@@ -106,7 +106,7 @@ Foundation success means:
 - identity present;
 - current policy hash acknowledged;
 - Cortex workflows discoverable;
-- Core Ops discoverable when installed;
+- Ops discoverable when installed;
 - missing optional connectors clearly listed.
 
 Do not require specialist setup or schedule registration to call the foundation
@@ -118,7 +118,7 @@ If the user wants nightly ingest and the host exposes a scheduler:
 
 1. Require one successful manual `/listen` run so connector permissions are known.
 2. Offer `/register-schedules`, which reads user-owned definitions from
-   `<config-root>/plugins/core-ops/schedules.md` and confirms before registration.
+   `<config-root>/plugins/ops/schedules.md` and confirms before registration.
 3. Report registration separately from execution. A registered task is not proof of
    a successful run; run receipts or host history provide that evidence.
 
@@ -130,13 +130,13 @@ After foundation completion, show only installed specialists that still need set
 
 | Plugin | Setup | Typical time |
 |---|---|---:|
-| daily-brief | `/setup-brief` | 5 min |
-| relationships | `/setup-relationships` | 5–10 min |
-| delivery | `/setup-projects`, `/setup-status` | 10–20 min |
-| time-tracking | `/setup-time` | 10 min |
-| voice | `/setup-style` | 5 min |
-| news-curator | `/setup-news` | 5 min |
-| weekly-alignment | `/setup` | 5 min |
+| briefing | `/setup-brief` | 5 min |
+| growth | `/setup-relationships` | 5–10 min |
+| clients | `/setup-projects`, `/setup-status` | 10–20 min |
+| admin | `/setup-time` | 10 min |
+| comms | `/setup-style` | 5 min |
+| research | `/setup-news` | 5 min |
+| alignment | `/setup` | 5 min |
 
 Default to "do later." Let the user select one, several, or pause. Re-running
 `/start-nucleus` resumes from canonical config files; specialist duration is never
@@ -146,10 +146,10 @@ included in the foundation estimate.
 
 Report foundation status, policy version/hash prefix, optional capabilities skipped,
 schedule registration state, and specialists deferred. Suggest three outcomes rather
-than command memorization: start the day, recall a client, and ask Core Ops to route a
+than command memorization: start the day, recall a client, and ask Ops to route a
 Nucleus task.
 
-Log one metadata-only `start-nucleus` run through Core Ops when available: host,
+Log one metadata-only `start-nucleus` run through Ops when available: host,
 foundation items completed, specialists configured/deferred, elapsed time, and skipped
 capabilities. Do not log identity values or connector payloads.
 

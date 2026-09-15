@@ -9,9 +9,9 @@ disable-model-invocation: true
 
 End-of-day closing chain. Reads the day, captures commitments, updates memory with cost discipline, and pre-stages tomorrow so the morning has a working surface waiting.
 
-This rewrite (v4.2) ties together the second-brain v2 phases — inbox triage, transcript review, person-page graduation via cheap-tier commit triage, daily-brief pre-stage. Each step has a user gate so the chain never blocks on something the user wants to defer.
+This rewrite (v4.2) ties together the second-brain v2 phases — inbox triage, transcript review, person-page graduation via cheap-tier commit triage, briefing pre-stage. Each step has a user gate so the chain never blocks on something the user wants to defer.
 
-Run once per work day, ideally 4-6pm. If a downstream plugin isn't installed (e.g., `daily-brief` not yet adopted), the chain skips that step silently and continues.
+Run once per work day, ideally 4-6pm. If a downstream plugin isn't installed (e.g., `briefing` not yet adopted), the chain skips that step silently and continues.
 
 ---
 
@@ -331,12 +331,12 @@ The brief is the user's most explicit daily signal, yet historically it was the 
 
 The brief's action state lives in the artifact's `localStorage`. Cowork exposes **no widget-context handle for persisted artifacts** (`read_widget_context` only works for in-conversation widgets), so `localStorage` alone is invisible to the close — without a workaround, Done/Skip/Not-important clicks are lost and completed items resurface in the next brief. Read the state through this fallback chain, **stopping at the first source that yields a blob**:
 
-1. **State-mirror file (primary — D2a).** Read `<config-root>/briefs/<today_local>.state.json`. The daily-brief ≥0.6.1 artifact auto-mirrors its full localStorage blob here on every action — but **only when `/brief` resolved a filesystem MCP write tool at render time** and declared it in the artifact's `mcp_tools` allowlist (the Cowork sandbox rejects undeclared tools; there is no built-in file access). Where no such tool is connected, this file exists only if the user pasted a sync blob earlier today (paste path, below). This is the canonical read path. Sanity-check freshness: if the file's `last_interaction_at` is from a prior day, treat it as absent.
+1. **State-mirror file (primary — D2a).** Read `<config-root>/briefs/<today_local>.state.json`. The briefing ≥0.6.1 artifact auto-mirrors its full localStorage blob here on every action — but **only when `/brief` resolved a filesystem MCP write tool at render time** and declared it in the artifact's `mcp_tools` allowlist (the Cowork sandbox rejects undeclared tools; there is no built-in file access). Where no such tool is connected, this file exists only if the user pasted a sync blob earlier today (paste path, below). This is the canonical read path. Sanity-check freshness: if the file's `last_interaction_at` is from a prior day, treat it as absent.
 2. **Widget context (legacy).** If no state file exists, try `mcp__cowork__read_widget_context(artifact_id="todays-brief")` for the blob at key `brief-<today_local>`. Works only where in-conversation widget context is exposed; usually empty for the persisted artifact.
 3. **Paste path (Step 2c.0p — try BEFORE the multi-select gate).** Ask once: "I couldn't read today's brief state. Open Today's Brief, click **🔄 Sync for end-day** (bottom of the artifact — it copies your action state), and paste it here. Or say 'skip' and I'll walk the list with you." If the user pastes a blob: validate it parses as a JSON object (tolerate surrounding whitespace/code fences), **write it verbatim to `<config-root>/briefs/<today_local>.state.json`**, then proceed exactly as if source 1 succeeded. This is one click + one paste versus re-stating every item by hand.
 4. **Explicit fallback gate (Step 2c.0a).** If the user skips the paste (or the paste doesn't parse twice), run the fallback gate below — do **not** silently skip. Silently skipping is what let completed items resurface.
 
-Canonical v0.6.0 blob shape (see `daily-brief/commands/brief.md` localStorage contract):
+Canonical v0.6.0 blob shape (see `briefing/commands/brief.md` localStorage contract):
 
 ```json
 {
@@ -372,7 +372,7 @@ For each entry in `tasks`, apply the action's write-back (taxonomy is canonical 
 
 **Step 2c.1a — Reprioritizations (D3).** For any `tasks` entry with `reprioritized: true`, edit the priority on the source-node action (`## Next Actions` `[P0]`/`[P1]`/`[P2]` tag on the matching item) to the entry's `priority`. This applies whether or not the entry also has a disposition `action`. Carry the new priority into Step 4.5's tomorrow-priority ordering so the change is reflected in the next day's brief.
 
-`annotations` that weren't already handled by `/process-brief` route the same way `/process-brief` Step 2 routes them (draft_reply / reschedule_task / dismiss / clarify). If `/process-brief` already ran today (check `daily-brief.dismissed-log.md` / the brief's processed section), don't double-act — only handle annotations with no recorded downstream action.
+`annotations` that weren't already handled by `/process-brief` route the same way `/process-brief` Step 2 routes them (draft_reply / reschedule_task / dismiss / clarify). If `/process-brief` already ran today (check `briefing.dismissed-log.md` / the brief's processed section), don't double-act — only handle annotations with no recorded downstream action.
 
 ### Step 2c.2 — Write back outreach actions
 
@@ -384,7 +384,7 @@ For each entry in `outreach_actions`, write to the relevant person/bizdev node (
 - `let_go` / `dead` → mark dead, remove from the active queue.
 - `skip` → defer reappearance by `detail` (the v2 brief UI has no outreach detail prompt, so `detail` is usually absent — default to a 3-day defer when it's empty).
 
-Bucket/value-add/signal roll up into outreach analytics over time (append a line to `<config-root>/relationships/outreach-analytics.jsonl` if relationships is installed: `{date, contact, action, bucket, signal, value_add}`).
+Bucket/value-add/signal roll up into outreach analytics over time (append a line to `<config-root>/growth/outreach-analytics.jsonl` if growth is installed: `{date, contact, action, bucket, signal, value_add}`).
 
 ### Step 2c.3 — Suppression learning (writes surfacing-prefs.md)
 
@@ -516,7 +516,7 @@ These three answers also feed Step 5's pre-stage as section 5 (Yesterday's Refle
 
 Keep conversational. If the user says "nothing major today," that's valid — skip to Step 5.
 
-If the user provides answers, **append them to today's brief markdown snapshot** at `<config-root>/briefs/<today_local>.md` under a `## Reflection` section (v4.6+ — was Section 7 prior to daily-brief v0.3.0). Idempotent: if a `## Reflection` section already exists from a prior `/end-day` run today, replace its contents rather than duplicating.
+If the user provides answers, **append them to today's brief markdown snapshot** at `<config-root>/briefs/<today_local>.md` under a `## Reflection` section (v4.6+ — was Section 7 prior to briefing v0.3.0). Idempotent: if a `## Reflection` section already exists from a prior `/end-day` run today, replace its contents rather than duplicating.
 
 Format:
 
@@ -554,7 +554,7 @@ Append-only; never rewrite prior entries. Idempotent for the same day (replace t
 
 After memory is settled, propose **tomorrow's priority tasks and outreach** so the morning surface is ready. This is where deliberateness matters most, so walk items **individually** — but offer a batch path when sensible.
 
-Candidate priorities come from: surviving incomplete P0/P1 tasks (Step 2c.4), the "one thing tomorrow has to move" reflection answer, accepted `[P0]` next-actions from Step 3, and any `skip`-deferred tasks whose snooze elapses tomorrow. Candidate outreach comes from the relationships/lead-engine pipeline tier for tomorrow plus any `nudge`/deferred contacts.
+Candidate priorities come from: surviving incomplete P0/P1 tasks (Step 2c.4), the "one thing tomorrow has to move" reflection answer, accepted `[P0]` next-actions from Step 3, and any `skip`-deferred tasks whose snooze elapses tomorrow. Candidate outreach comes from the growth pipeline tier for tomorrow plus any `nudge`/deferred contacts.
 
 - **Respect `surfacing-prefs.md`** — never propose suppressed or noise-class items.
 - Walk each proposed priority and outreach item individually: `(k)eep / (e)dit / (d)rop`.
@@ -594,7 +594,7 @@ If connected, ask the single open question above. Then:
    ```
    On Y → batch-write; report successes/failures. On N → no writes. On E → per-row toggle, then batch.
    In `auto` autonomy, skip the confirmation table and write directly (still logging what was written).
-4. **Cross-link to memory.** For any HubSpot object that maps to a cortex person/bizdev/client node, append a one-line Recent Interactions / Changelog entry noting the CRM write, so the memory trail and CRM stay in sync. Reuse the relationships `/touchpoint` path if relationships is installed.
+4. **Cross-link to memory.** For any HubSpot object that maps to a cortex person/bizdev/client node, append a one-line Recent Interactions / Changelog entry noting the CRM write, so the memory trail and CRM stay in sync. Reuse the growth `/touchpoint` path if growth is installed.
 
 Record what was logged for the Step 6 close summary ("Logged to HubSpot: 1 note, 1 task, 1 stage move.").
 
@@ -604,13 +604,13 @@ Record what was logged for the Step 6 close summary ("Logged to HubSpot: 1 note,
 
 **Goal:** when tomorrow morning hits, the brief is already waiting AS THE SAME ARTIFACT FORMAT `/brief` produces — not a degraded markdown-only fallback.
 
-If the `daily-brief` plugin is installed:
+If the `briefing` plugin is installed:
 
 1. Invoke its `/brief` command with `target_date: tomorrow_local`. `/brief` reads `<config-root>/briefs/<tomorrow_local>.seed.json` (written by Steps 4.5/4.6) if present and seeds sections 3 (Priority Tasks) & 4 (Outreach Queue) from it, then merges live pulls — so the priorities/outreach the user just walked are already on tomorrow's surface.
 2. If Step 1 ran (full mode only), pass the inbox-triage results so the brief doesn't re-query Gmail. In quick mode, the brief queries Gmail itself in the morning — no shared state needed.
-3. **Today's reflection is read by tomorrow's `/brief` Section 5 (Yesterday's Reflection) directly from today's markdown's `## Reflection` section** (daily-brief v0.5.0+). No explicit handoff from this step.
+3. **Today's reflection is read by tomorrow's `/brief` Section 5 (Yesterday's Reflection) directly from today's markdown's `## Reflection` section** (briefing v0.5.0+). No explicit handoff from this step.
 4. **Artifact consistency rule (v4.12.0+):** the brief generator MUST call `mcp__cowork__update_artifact` with id `todays-brief` to refresh the persistent Cowork artifact. **Never** create a new artifact and never produce only a markdown-only fallback when Cowork is available — the artifact id must remain stable so the user always opens the same persistent surface. If no `todays-brief` artifact exists yet, create it once with that id; update it on every subsequent `/end-day` and `/brief` run. The markdown snapshot at `<config-root>/briefs/<tomorrow_local>.md` is still written as the canonical text record, but the Cowork artifact is the working surface and must also be updated.
-5. **Canonical artifact format (v4.13+ — 5 fixed sections per the End-Day Routine Improvement Spec Part A):** the `todays-brief` artifact always includes these sections in this order — (1) **Center of Gravity** accent banner (the single most important thing; not interactive), (2) **Calendar Block** = visual timeline strip + written block list with per-meeting notes, (3) **Priority Tasks** with richer per-row actions (done / delegate / skip / not_important / **reprioritize** / annotate) + progress bar, (4) **Outreach Queue** tiered (today / this week / backlog) with per-contact actions + optional category tags (bucket / value-add; signal auto-fills), (5) **Yesterday's Reflection** (read-only). A sticky header carries the date + counts line. localStorage key is `brief-YYYY-MM-DD` (schema_version 0.6.0); the artifact also mirrors its state to `briefs/<date>.state.json` for the close to read (D2a). All interactive controls are inline — the template uses **no** `prompt()`/`confirm()`/`alert()` (blocked in Cowork's artifact sandbox). Reference implementation: daily-brief v0.6.0+ ships this as `references/brief-artifact-template.html`; this Step 5 routes to that. Formatting MUST be identical whether produced by `/brief` or this pre-stage.
+5. **Canonical artifact format (v4.13+ — 5 fixed sections per the End-Day Routine Improvement Spec Part A):** the `todays-brief` artifact always includes these sections in this order — (1) **Center of Gravity** accent banner (the single most important thing; not interactive), (2) **Calendar Block** = visual timeline strip + written block list with per-meeting notes, (3) **Priority Tasks** with richer per-row actions (done / delegate / skip / not_important / **reprioritize** / annotate) + progress bar, (4) **Outreach Queue** tiered (today / this week / backlog) with per-contact actions + optional category tags (bucket / value-add; signal auto-fills), (5) **Yesterday's Reflection** (read-only). A sticky header carries the date + counts line. localStorage key is `brief-YYYY-MM-DD` (schema_version 0.6.0); the artifact also mirrors its state to `briefs/<date>.state.json` for the close to read (D2a). All interactive controls are inline — the template uses **no** `prompt()`/`confirm()`/`alert()` (blocked in Cowork's artifact sandbox). Reference implementation: briefing v0.6.0+ ships this as `references/brief-artifact-template.html`; this Step 5 routes to that. Formatting MUST be identical whether produced by `/brief` or this pre-stage.
 6. If Cowork artifact tools aren't available (Claude Code), produce the markdown snapshot only with a clear notice — but explicitly flag the degraded surface so the user knows to open the Cowork app for the full working brief.
 
 ### User gate after Step 5
@@ -620,7 +620,7 @@ If the `daily-brief` plugin is installed:
 - "Review now" → render section summaries inline (don't dump full sections — that's what the artifact / snapshot is for)
 - "Wait" (default) → confirm and close
 
-If `daily-brief` is NOT installed, skip Step 5 entirely. The chain still produced value (triage results visible in chat, commitments converted, memory committed, reflections captured to today's snapshot).
+If `briefing` is NOT installed, skip Step 5 entirely. The chain still produced value (triage results visible in chat, commitments converted, memory committed, reflections captured to today's snapshot).
 
 ---
 
@@ -660,7 +660,7 @@ Invoke the `log-writer` skill (see `skills/log-writer/SKILL.md`) with:
 - **op_name:** `end-day`
 - **summary:** `<quick|full> mode. <N> commitments captured, <M> reflection answers, <K> memory entries committed. tomorrow brief pre-staged.`
 
-Adjust the metric counts based on what actually ran (don't include reflection-count if Step 4 was skipped; omit "tomorrow brief pre-staged" if daily-brief isn't installed).
+Adjust the metric counts based on what actually ran (don't include reflection-count if Step 4 was skipped; omit "tomorrow brief pre-staged" if briefing isn't installed).
 
 ---
 
@@ -817,8 +817,8 @@ The chain should never block. If the user is engaged, gates pause for input. If 
 - **Skip what doesn't apply.** Missing plugins → skip that step silently.
 - **Don't over-capture.** Step 3's cheap-tier triage exists to prevent over-capture; respect its decisions.
 - **Honor user gates.** Never auto-convert transcript commitments to CRM tasks without explicit per-item confirmation (full mode).
-- **Pre-stage is opt-in default.** If `daily-brief` isn't installed, the chain ends after Step 4. No nag.
-- **Telemetry (optional).** If core-ops is installed, log one line at completion: `skill: end-day, mode: quick|full, steps_run: [...], commits_count, runtime_ms`.
+- **Pre-stage is opt-in default.** If `briefing` isn't installed, the chain ends after Step 4. No nag.
+- **Telemetry (optional).** If ops is installed, log one line at completion: `skill: end-day, mode: quick|full, steps_run: [...], commits_count, runtime_ms`.
 
 ## What this command is NOT for
 

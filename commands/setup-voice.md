@@ -1,5 +1,5 @@
 ---
-description: Capture your writing voice once in `<config-root>/memory/me/voice.md`. Relationships, Delivery, News Curator, Voice, and Daily Brief read the same canonical file. Uses the vendor-neutral config-root resolver. Re-run anytime to refine.
+description: Capture your writing voice once in `<config-root>/memory/me/voice.md`. Growth, Clients, Research, Comms, and Today's Brief read the same canonical file. Uses the vendor-neutral config-root resolver. Re-run anytime to refine.
 ---
 
 # /setup-voice
@@ -180,7 +180,7 @@ No user gate. Best-effort — if user.md doesn't exist or the write fails, log a
 
 Summarize what was saved (one short paragraph). Then offer:
 
-> "Voice saved to `<voice-path>`. Relationships, Delivery, News Curator, Voice, and Daily Brief will read it automatically. Update anytime by re-running `/setup-voice` or editing `<voice-path>` directly."
+> "Voice saved to `<voice-path>`. Growth, Clients, Research, Comms, and Today's Brief will read it automatically. Update anytime by re-running `/setup-voice` or editing `<voice-path>` directly."
 
 ---
 
@@ -193,5 +193,5 @@ Summarize what was saved (one short paragraph). Then offer:
 
 ## What this is NOT for
 
-- Plugin-specific voice rules (for example, Relationships touchpoint length) stay in plugin-specific settings. The shared voice file is for global-to-you rules.
+- Plugin-specific voice rules (for example, Growth touchpoint length) stay in plugin-specific settings. The shared voice file is for global-to-you rules.
 - Tonal customization per audience or per channel — that's drafting-time logic. The shared voice.md captures *your default voice*; specific situations adjust.

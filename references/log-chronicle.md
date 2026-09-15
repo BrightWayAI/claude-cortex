@@ -7,7 +7,7 @@ A single append-only chronological log of every audit-worthy Nucleus operation. 
 - **One file to answer "what did I do on date X?"** — `grep '## \[2026-05-12' log.md`.
 - **Audit trail for /listen runs, /morning merges, /research-gaps runs, /cleanup actions.** Useful when something went wrong, when telemetry is missing, or when reconstructing a decision chain.
 - **Onboarding context for any agent.** A fresh Claude session or a non-cortex agent can read the last ~50 entries to learn what's been happening without traversing every node's changelog.
-- **Lightweight observability.** Not a substitute for `/log-agent-run` (core-ops telemetry, structured), but complementary — `log.md` is human-readable.
+- **Lightweight observability.** Not a substitute for `/log-agent-run` (ops telemetry, structured), but complementary — `log.md` is human-readable.
 
 ## Format
 
@@ -96,7 +96,7 @@ In skill prose, this is a "## Step N — Log" section at the end of each logged 
 
 - **Not a substitute for `triage-log.md`** (cortex commit-triage decisions; meta-state).
 - **Not a substitute for per-node changelogs** (each node's `## Changelog` captures node-specific history).
-- **Not a substitute for `/log-agent-run`** (structured agent telemetry via core-ops).
+- **Not a substitute for `/log-agent-run`** (structured agent telemetry via ops).
 - **Not an event bus.** Other plugins don't subscribe to it; they don't watch for new entries.
 - **Not memory content.** The log is observability; memory is knowledge.
 

@@ -9,7 +9,7 @@ This reference defines the autonomy model and how it's configured.
 | Mode | Behavior |
 |---|---|
 | **auto** | Command executes immediately on invocation. No confirmation. No "ok to run?" prompt. Use for capabilities you trust completely. |
-| **suggest** (default) | The chief-of-staff (`/cos` in core-ops) pattern: when an utterance matches a command, suggest it and ask "run it?" Wait for yes. Don't auto-dispatch. |
+| **suggest** (default) | The chief-of-staff (`/cos` in ops) pattern: when an utterance matches a command, suggest it and ask "run it?" Wait for yes. Don't auto-dispatch. |
 | **confirm** | Stronger than suggest. Even when invoked explicitly (e.g., user typed `/lead-draft`), the command pauses at decision points and re-confirms each material action before executing. Use for high-stakes operations where you want to review every move. |
 
 A fourth implicit mode, `manual`, means the command exists but the router never auto-suggests it — the user must type the slash command literally. Useful for capabilities the user wants to keep "out of band."
@@ -144,7 +144,7 @@ The chief-of-staff agent consults `autonomy` for the routed command. When the us
 
 The autonomy slider is consulted at three levels:
 
-1. **Chief-of-staff level (core-ops `/cos`, replaces the retired nucleus-router).** Before suggesting confirmation for any routed command, the agent reads the autonomy mode. `auto` skips the suggest+confirm prompt entirely; `confirm` adds emphasis. This affects ALL commands routed through the chief of staff.
+1. **Chief-of-staff level (ops `/cos`, replaces the retired nucleus-router).** Before suggesting confirmation for any routed command, the agent reads the autonomy mode. `auto` skips the suggest+confirm prompt entirely; `confirm` adds emphasis. This affects ALL commands routed through the chief of staff.
 2. **Command-level confirmation gates (cortex v4.7.2+).** Three cortex commands have their internal "Proceed?" gates updated to consult autonomy mode and conditionally skip:
    - `/forget` Step 3 (default mode: `confirm`)
    - `/cleanup` Step 3 (default mode: `suggest`)

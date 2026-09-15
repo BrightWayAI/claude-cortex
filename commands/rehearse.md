@@ -170,7 +170,7 @@ python3 scripts/cortex_cli.py write-file --memory-root <config-root>/memory \
 - **Diversify across nodes.** Don't make all 5 entries from one node; the rehearsal is about overall memory health, not one node's audit.
 - **Never auto-act.** Every entry's disposition is user-chosen. No "demote all aged" shortcut here (that's `/cleanup`'s job).
 - **No interruption mode.** This command is always user-invoked or invoked by `/end-week`. It does not auto-fire mid-conversation.
-- **Telemetry (optional).** If `core-ops` is installed, log one line at completion: `skill: rehearse, batch_size, confirmed, updated, demoted, archived, skipped`.
+- **Telemetry (optional).** If `ops` is installed, log one line at completion: `skill: rehearse, batch_size, confirmed, updated, demoted, archived, skipped`.
 
 ## What this command is NOT for
 

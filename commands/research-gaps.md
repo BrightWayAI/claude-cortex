@@ -144,7 +144,7 @@ The end-week integration is purely additive; running `/research-gaps` standalone
 
 ## Schedule
 
-Default: weekly, Saturday morning, scope `all`. Optional registration in `core-ops/references/schedules.md`:
+Default: weekly, Saturday morning, scope `all`. Optional registration in `ops/references/schedules.md`:
 
 ```yaml
 - name: research-gaps-weekly
@@ -153,7 +153,7 @@ Default: weekly, Saturday morning, scope `all`. Optional registration in `core-o
   args: ""
 ```
 
-Skip if the user hasn't opted into scheduled tasks via core-ops.
+Skip if the user hasn't opted into scheduled tasks via ops.
 
 ---
 

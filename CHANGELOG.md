@@ -4,6 +4,11 @@ All notable changes to the Cortex Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [4.22.0] — local dir rename + cross-plugin reference sync (2026-09-15)
+
+### Changed
+- Renamed from `claude-cortex` local dir convention updated; no plugin ID change (cortex). Cross-plugin references updated for the 2026-09-15 Nucleus plugin rename (core-ops->ops, daily-brief->briefing, relationships->growth, delivery->clients, voice->comms, time-tracking->admin, news-curator->research, weekly-alignment->alignment).
+
 ## [4.21.4] — operating-model architecture hardening (2026-09-15)
 
 ### Added

@@ -234,7 +234,7 @@ Do not silently substitute an expensive or side-effecting capability. Missing op
 
 Separate Cortex core from broader Nucleus orchestration:
 
-- Core memory commands must work without daily-brief, HubSpot, Granola, relationships, core-ops, or other sibling plugins.
+- Core memory commands must work without briefing, HubSpot, Granola, growth, ops, or other sibling plugins.
 - Integration workflows may enhance behavior when those capabilities are present.
 - Cross-plugin references must identify the owning plugin and must not look like missing local files.
 - Required versions or contracts between plugins must be documented.

@@ -212,7 +212,7 @@ After this step, the morning's `/recall` auto-fire will load the freshest possib
 
 ## Step 6 — Telemetry (optional)
 
-If `core-ops` is installed, log one line via `/log-agent-run`:
+If `ops` is installed, log one line via `/log-agent-run`:
 ```
 skill: listen, date: <target_date>, archive_size_bytes: <N>, proposals_count: <M>, runtime_ms: <T>
 ```
@@ -275,7 +275,7 @@ Exit with status 0 on success; non-zero only on hard failures (config-root missi
 
 ## Scheduling
 
-Recommended schedule (register via `/register-schedules` in core-ops):
+Recommended schedule (register via `/register-schedules` in ops):
 
 ```yaml
 - name: listen-nightly

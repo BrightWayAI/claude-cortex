@@ -32,7 +32,7 @@ Cortex has two tiers of behavior:
   stores on disk** — verbatim content from external systems, immutable
   once written (see `references/archive-layout.md`).
 - `<config-root>/briefs/**` — daily brief snapshots (optional, if the
-  daily-brief sibling plugin is in use).
+  briefing sibling plugin is in use).
 - `<config-root>/.cortex/config-root`, `~/.cortex/config-root`,
   `~/Documents/.claude-plugin-config-root` — pointer files read to resolve
   `<config-root>` itself. Never written except by explicit setup steps.

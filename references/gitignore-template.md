@@ -44,12 +44,12 @@ memory/triage-log.md
 plugins/*.dismissed-log.md
 plugins/*.user-context.md.bak
 
-# Relationships plugin runtime state (v0.2.1+) — contains person names + free-form summaries
-relationships/events.jsonl
-relationships/snoozes.json
-relationships/inbox/
-relationships/today.json
-relationships/<YYYY-MM-DD>.json
+# Growth (relationships) plugin runtime state (v0.2.1+) — contains person names + free-form summaries
+growth/events.jsonl
+growth/snoozes.json
+growth/inbox/
+growth/today.json
+growth/<YYYY-MM-DD>.json
 
 # Local-only Obsidian state
 .obsidian/workspace.json

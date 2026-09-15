@@ -212,7 +212,7 @@ Invoke the `log-writer` skill (see `skills/log-writer/SKILL.md`) with:
 
 ## Step 4.6 — Reflect on yesterday, seed today's brief (v4.16+)
 
-_Ported from `/end-day` Steps 4.1/4.5/4.6 as part of the Nucleus Operating Model Refactor — `/end-day` is now optional, so this is the one required daily touch that keeps tomorrow's (today's) brief deliberately curated rather than purely auto-mined. Skip this step entirely if `daily-brief` isn't installed._
+_Ported from `/end-day` Steps 4.1/4.5/4.6 as part of the Nucleus Operating Model Refactor — `/end-day` is now optional, so this is the one required daily touch that keeps tomorrow's (today's) brief deliberately curated rather than purely auto-mined. Skip this step entirely if `briefing` isn't installed._
 
 Ask three questions conversationally, one at a time, pre-filled from candidates in the just-merged draft where available (accepted DECISION/INSIGHT entries → "biggest thing done"; GOTCHA entries or rejected/deferred items tagged blocked → "what blocked you"; any surviving P0 next-action or a proposal explicitly flagged urgent → "one thing today has to move"). If no draft was merged this run (e.g. `/morning` found nothing to walk), ask cold with no pre-fill.
 
@@ -235,7 +235,7 @@ Write the answers to `<config-root>/briefs/<today_local>.md` under a `## Reflect
 
 Idempotent: replace an existing `## Reflection` section from today rather than duplicating.
 
-Then propose **today's priority tasks and outreach**, walked individually (`(k)eep / (e)dit / (d)rop`, with a batch shortcut when items obviously carry over unchanged). Candidates: the "one thing today has to move" answer, any surviving P0/P1 next-actions from cortex nodes, and the relationships/lead-engine pipeline tier for today plus any `nudge`/deferred contacts. Respect `surfacing-prefs.md` — never propose a suppressed item. If there's nothing material, say so and move on.
+Then propose **today's priority tasks and outreach**, walked individually (`(k)eep / (e)dit / (d)rop`, with a batch shortcut when items obviously carry over unchanged). Candidates: the "one thing today has to move" answer, any surviving P0/P1 next-actions from cortex nodes, and the growth pipeline tier for today plus any `nudge`/deferred contacts. Respect `surfacing-prefs.md` — never propose a suppressed item. If there's nothing material, say so and move on.
 
 Write the accepted set to `<config-root>/briefs/<today_local>.seed.json` as `{priorities:[...], outreach:[...]}` — `/brief` reads this file if present and seeds sections 3 (Priority Tasks) & 4 (Outreach Queue) from it before merging live pulls.
 

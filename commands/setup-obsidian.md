@@ -8,7 +8,7 @@ You are configuring `<config-root>/` as an Obsidian vault. After this runs, the 
 
 1. Open Obsidian → File → Open vault → select `<config-root>/`.
 2. See the graph view of all cortex memory nodes (person, client, topic, domain — connected by `[[wikilinks]]`).
-3. Open today's brief from daily-brief as today's Obsidian daily note.
+3. Open today's brief from briefing as today's Obsidian daily note.
 4. Use `VAULT.md` as the home page with Dataview-powered active-entity tables.
 5. Sync the same vault to a phone via iCloud / Obsidian Sync.
 
@@ -95,13 +95,13 @@ If it exists, leave it alone and report: "Preserved existing VAULT.md."
 
 ---
 
-## Step 5 — Verify daily-brief integration (informational only)
+## Step 5 — Verify briefing integration (informational only)
 
 Check whether `<config-root>/briefs/` exists. If it does, confirm:
 > "Daily-brief snapshots at `<config-root>/briefs/YYYY-MM-DD.md` will appear as Obsidian daily notes (the daily-notes plugin is configured to use this folder)."
 
-If it doesn't exist (daily-brief not installed or not yet run), note:
-> "Heads up: daily-brief is not yet generating `<config-root>/briefs/`. Once you install the `daily-brief` plugin and run `/brief`, today's brief will automatically become today's daily note in Obsidian. No additional config needed."
+If it doesn't exist (briefing not installed or not yet run), note:
+> "Heads up: briefing is not yet generating `<config-root>/briefs/`. Once you install the `briefing` plugin and run `/brief`, today's brief will automatically become today's daily note in Obsidian. No additional config needed."
 
 This step writes nothing — just informs the user.
 
@@ -150,7 +150,7 @@ If the user wants to FORCE-overwrite everything (e.g., reset to defaults), they 
 
 - Does not install Obsidian itself. The user installs from obsidian.md.
 - Does not install community plugins. Obsidian's plugin API doesn't permit external installs; the user clicks through Settings.
-- Does not modify daily-brief, daily-notes, or any other plugin's output. Pure config-only scaffolding.
+- Does not modify briefing, daily-notes, or any other plugin's output. Pure config-only scaffolding.
 - Does not sync to mobile. The user chooses iCloud / Obsidian Sync / etc. on their own.
 - Does not create memory/index.md (that's the indexer's job).
 - Does not touch existing user content in `<config-root>/` outside of writing `.obsidian/` config files and a fresh VAULT.md.

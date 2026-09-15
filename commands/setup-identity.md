@@ -301,7 +301,7 @@ No user gate. Best-effort — if user.md doesn't exist or the write fails, log a
 
 Summarize what was captured (one short paragraph). Then offer:
 
-> "Identity saved to `<identity-path>`. Other plugins (Relationships, Delivery, Daily Brief, etc.) will read this automatically — you won't be asked these questions again. To configure a specific plugin's domain settings (CRM properties, ICP, voice, offerings catalog, etc.), run that plugin's setup command — those interviews skip identity questions and only ask plugin-specific things."
+> "Identity saved to `<identity-path>`. Other plugins (Growth, Clients, Today's Brief, etc.) will read this automatically — you won't be asked these questions again. To configure a specific plugin's domain settings (CRM properties, ICP, voice, offerings catalog, etc.), run that plugin's setup command — those interviews skip identity questions and only ask plugin-specific things."
 
 ---
 

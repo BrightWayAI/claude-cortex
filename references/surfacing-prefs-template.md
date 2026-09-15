@@ -1,8 +1,8 @@
 # surfacing-prefs
 
 > Canonical store for what Nucleus should and should not surface in the daily brief and mining proposals.
-> Read by: `daily-brief` (`/brief` filters its priority-task + outreach pulls before render), cortex miners (skip dismissed classes), and `/end-day` (Step 2c updates this file from brief actions + the repeat-ignore rule).
-> Created by `/end-day` Step 2c.3 the first time the user marks something "not important" (or via the daily-brief setup).
+> Read by: `briefing` (`/brief` filters its priority-task + outreach pulls before render), cortex miners (skip dismissed classes), and `/end-day` (Step 2c updates this file from brief actions + the repeat-ignore rule).
+> Created by `/end-day` Step 2c.3 the first time the user marks something "not important" (or via the briefing setup).
 
 ## Do-not-resurface (explicit suppressions)
 
