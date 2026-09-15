@@ -1,12 +1,12 @@
 ---
-description: Complete the ≤15-minute Nucleus foundation: resolve one shared config root, capture identity and voice, acknowledge the versioned autonomy policy, configure optional note sources, and verify Cortex plus Ops. Specialist-plugin setup is a separate, resumable follow-up rather than part of the 15-minute promise.
+description: Complete the ≤15-minute Nucleus foundation: resolve one shared config root, capture identity and voice, acknowledge the versioned autonomy policy, configure optional note sources, and verify the Cortex, Ops, and Comms Desk starter set. Specialist-plugin setup is a separate, resumable follow-up rather than part of the 15-minute promise.
 ---
 
 # /start-nucleus
 
-This is the foundational onboarding walker. Its success condition is a useful Cortex
-plus Ops installation in 15 minutes or less. It does not include every specialist
-plugin interview in that time budget.
+This is the foundational onboarding walker. Its success condition is a useful Cortex,
+Ops, and Comms Desk installation in 15 minutes or less. It does not include every
+specialist plugin interview in that time budget.
 
 Each mutating step previews its change and uses the owning setup workflow. If the host
 cannot programmatically invoke another skill, follow that workflow inline under the
@@ -37,6 +37,7 @@ Check these foundation markers:
 | Cortex settings | `<config-root>/plugins/cortex.user-context.md` |
 | Obsidian settings | `<config-root>/.obsidian/` |
 | Ops settings | `<config-root>/plugins/ops.user-context.md` |
+| Comms Desk settings | `<config-root>/plugins/comms.user-context.md` |
 
 Show only missing or stale foundation items, the active host, and an honest time
 estimate. If the foundation is current, offer `/diagnose` and specialist setup.
@@ -49,9 +50,15 @@ later steps will be thinner; do not fabricate identity values.
 
 ## Step 2 — Voice (~4 minutes)
 
-If voice is missing, offer `/setup-voice` using two representative writing samples.
-Explain that Cortex owns the canonical voice file while the Comms plugin applies and
-learns medium-specific patterns. If skipped, drafting remains available but generic.
+If voice is missing and Comms Desk is installed, offer `comms:setup-voice` using two
+representative writing samples. Explain that Cortex owns the canonical voice file
+(`<config-root>/memory/me/voice.md`) while Comms Desk runs the one-time capture
+interview and applies and learns medium-specific patterns.
+
+**If Comms Desk is not installed:** skip this step. Note in the final output that
+voice setup isn't available without Comms Desk, and offer to continue without it —
+drafting remains available but generic until Comms Desk is installed and
+`comms:setup-voice` is run.
 
 ## Step 3 — Versioned autonomy acknowledgment (~2 minutes)
 
@@ -94,11 +101,13 @@ If note sources are unconfigured, offer `/setup-sources`. Missing connectors are
 optional and must be disclosed. If the user wants an Obsidian view, offer
 `/setup-obsidian`; otherwise skip it without treating the foundation as unhealthy.
 
-## Step 5 — Ops starter verification (~2 minutes)
+## Step 5 — Ops and Comms Desk starter verification (~2 minutes)
 
-The minimum supported bundle is Cortex plus Ops. If Ops is installed but
+The minimum supported bundle is Cortex, Ops, and Comms Desk. If Ops is installed but
 unconfigured, offer the quick `/setup-core` path for CRM name/stages and omit brand
-customization for later. Then run `/diagnose` read-only.
+customization for later. If Comms Desk is installed but voice hasn't been captured,
+that was already offered in Step 2 — here just confirm its status. Then run
+`/diagnose` read-only.
 
 Foundation success means:
 
@@ -107,6 +116,7 @@ Foundation success means:
 - current policy hash acknowledged;
 - Cortex workflows discoverable;
 - Ops discoverable when installed;
+- Comms Desk discoverable when installed;
 - missing optional connectors clearly listed.
 
 Do not require specialist setup or schedule registration to call the foundation
