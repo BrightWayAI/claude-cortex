@@ -39,6 +39,16 @@ If `<config-root>/memory/staged/queues/reindex` exists, delete it. The marker on
 
 ---
 
+## Step 2.5 — Cap check (v4.16+, Nucleus Operating Model Refactor Phase 2 step 2.3)
+
+```
+python3 scripts/cortex_cli.py check-caps --memory-root <config-root>/memory
+```
+
+Read-only, deterministic (`scripts/lib/cap_check.py`). Warns at 150 / fails at 200 lines for any node's `## Current state` section; warns at 200 lines for always-loaded files (`hot.md`, `CLAUDE.md`, `user.md`). Include any output in Step 4's report. A non-zero exit means at least one FAIL — surface it prominently, but don't block the rest of reindexing on it.
+
+---
+
 ## Step 3 — Log to chronicle (v4.7.1+, centralized in v4.7.2+)
 
 Invoke the `log-writer` skill (see `skills/log-writer/SKILL.md`) with:
@@ -54,6 +64,8 @@ Read the regenerated `index.md`'s header line and report it back in one line:
 ```
 Indexed <N> nodes (<X> fresh, <Y> stale, <Z> dormant, <W> cold).
 ```
+
+Append the Step 2.5 cap-check output if non-clean, e.g.: `Cap check: 1 FAIL, 2 WARN — see above.` Omit the line entirely when caps are clean.
 
 If counts are surprising (e.g., a sudden jump in cold nodes), note it: "Heads up — <count> entries crossed into Dormant since last index. Consider `/rehearse` or `/cleanup`."
 

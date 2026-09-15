@@ -33,6 +33,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from scripts.lib.atomic_write import atomic_move, atomic_write, delete_node_file, safe_append  # noqa: E402
 from scripts.lib.hot_cache_generator import generate_and_write_hot_cache  # noqa: E402
 from scripts.lib.index_generator import generate_and_write_index  # noqa: E402
+from scripts.lib.cap_check import check_caps  # noqa: E402
 from scripts.lib.locking import (  # noqa: E402
     LockTimeoutError,
     MemoryLock,
@@ -196,6 +197,18 @@ def cmd_reindex(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_check_caps(args: argparse.Namespace) -> int:
+    violations = check_caps(Path(args.memory_root))
+    if not violations:
+        print("OK: no cap violations")
+        return 0
+    for v in violations:
+        print(v.render())
+    if any(v.severity == "fail" for v in violations):
+        return 1
+    return 0
+
+
 def cmd_refresh_hot(args: argparse.Namespace) -> int:
     path = generate_and_write_hot_cache(Path(args.memory_root), trigger=args.trigger)
     print(f"OK: regenerated {path}")
@@ -254,6 +267,10 @@ def build_parser() -> argparse.ArgumentParser:
     reindex_p = sub.add_parser("reindex")
     reindex_p.add_argument("--memory-root", required=True)
     reindex_p.set_defaults(func=cmd_reindex)
+
+    check_caps_p = sub.add_parser("check-caps")
+    check_caps_p.add_argument("--memory-root", required=True)
+    check_caps_p.set_defaults(func=cmd_check_caps)
 
     hot_p = sub.add_parser("refresh-hot")
     hot_p.add_argument("--memory-root", required=True)

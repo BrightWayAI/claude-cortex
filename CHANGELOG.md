@@ -6,6 +6,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 
 ## [Unreleased]
 
+## [4.17.0] — /recall load boundary + cap enforcement (2026-09-15)
+
+Nucleus Operating Model Refactor, Phase 2 steps 2.2/2.3. Companion to the
+summary-layer restructure (v4.16.0's node changes) — this is where the token
+savings actually get enforced.
+
+### Added
+- `scripts/lib/cap_check.py` + `cortex_cli.py check-caps` — read-only,
+  deterministic scan for cap violations: warns at 150 / fails at 200 lines
+  for a node's `## Current state` section, warns at 200 for always-loaded
+  files (`hot.md`, `CLAUDE.md`, `user.md`). Wired into `/reindex` Step 2.5
+  and `/cleanup` Section M.
+
+### Changed
+- `/recall <node>` now defaults to loading only frontmatter + `## Current
+  state` + `## Open loops` on restructured nodes — stops at the `---`/`##
+  Record` divider and never opens a sibling `.record.md` file. `/recall
+  <node> --full` loads everything, same as the old default. Nodes not yet
+  restructured (no `## Current state`) behave exactly as before.
+
 ## [4.16.0] — /end-day demoted to optional; /morning seeds today's brief (2026-09-15)
 
 Nucleus Operating Model Refactor, Phase 1 step 1.5. The nightly `/listen` loop covers
