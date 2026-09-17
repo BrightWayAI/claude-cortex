@@ -139,7 +139,14 @@ Ready to walk through the proposals? (y/n/skim)
 
 ## Step 2 — Walk proposals interactively
 
-Group proposals by priority (Critical / High / Medium / Low) and within priority by source agent.
+**Brief-derived proposals go first (v4.27+).** Before the priority/source-agent grouping below, separate out any proposal tagged `from: listen-step-1.5` (brief mining — closures, delegations, reprioritizations, annotation carries, touch-logs, "likely done" inferences) into its own group, headed **"From yesterday's brief."** Within that group, split further:
+
+- **Explicit marks** (done/delegate/skip/not_important/reprioritized/annotations — anything the user directly clicked in the artifact) — these are already the user's decision, not a proposal to second-guess. Offer a single **bulk-accept**: "N items from yesterday's brief — done/delegated/skipped/annotated as you marked them. Accept all? (y / walk individually)". Default `y` still shows the list first (one line each), it just doesn't gate per-item.
+- **Inferred closures** ("likely done" from Step 1.5d, no explicit mark) — walk these **one at a time** like any other proposal, since they're a guess, not a click. Same `(a)ccept / (r)eject / (e)dit / (d)efer / (s)kip-remaining` controls.
+
+After the brief-derived group is resolved, continue to the regular grouping below for everything else (transcript/conversation/activity mining).
+
+Group remaining proposals by priority (Critical / High / Medium / Low) and within priority by source agent.
 
 For each proposal:
 
@@ -213,6 +220,13 @@ Invoke the `log-writer` skill (see `skills/log-writer/SKILL.md`) with:
 ## Step 4.6 — Reflect on yesterday, seed today's brief (v4.16+)
 
 _Ported from `/end-day` Steps 4.1/4.5/4.6 as part of the Nucleus Operating Model Refactor — `/end-day` is now optional, so this is the one required daily touch that keeps tomorrow's (today's) brief deliberately curated rather than purely auto-mined. Skip this step entirely if `briefing` isn't installed._
+
+### Step 4.6.0 — Check for an artifact-authored reflection first (v4.27+)
+
+Before asking anything, check whether `/listen` Step 1.5g already wrote (or found) a `## Reflection` section in `<config-root>/briefs/<yesterday_local>.md` for yesterday's date — this happens whenever the user filled in "Today's Reflection" directly in the brief artifact.
+
+- **Found, written by `/listen`** → show it: "You filled in yesterday's reflection in the brief. Here's what you wrote: [biggest / blocked / one thing]. Want to edit it, or keep it as-is?" On "keep" → skip straight to the priorities/outreach proposal below (no re-asking). On "edit" → walk the three questions below, pre-filled with the existing answers, and overwrite on confirm.
+- **Not found** → proceed to ask cold, per below.
 
 Ask three questions conversationally, one at a time, pre-filled from candidates in the just-merged draft where available (accepted DECISION/INSIGHT entries → "biggest thing done"; GOTCHA entries or rejected/deferred items tagged blocked → "what blocked you"; any surviving P0 next-action or a proposal explicitly flagged urgent → "one thing today has to move"). If no draft was merged this run (e.g. `/morning` found nothing to walk), ask cold with no pre-fill.
 

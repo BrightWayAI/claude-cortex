@@ -4,6 +4,18 @@ All notable changes to the Cortex Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [4.27.0] — /listen mines the daily brief; /end-day and /morning stop depending on it (2026-09-17)
+
+### Added
+- `/listen` Step 1.5 — "Mine yesterday's brief." Reads `briefs/<date>.state.json` (tolerating `tasks_checked`-only and priority-only entries), maps ids back to titles/nodes via the brief markdown/seed, and stages explicit-mark proposals (done/delegate/skip/not_important/reprioritized/annotations/calendar notes/outreach actions) using the same semantics `/end-day` Step 2c always used. Runs an always-on inference pass for unmarked items against the freshly pulled archive ("likely done" with cited evidence, never auto-closed). Writes `briefs/<date>.closures.json` (the machine-readable handoff `/brief` now reads), the new cross-plugin snooze ledger `briefs/.snooze-ledger.json` (mirrored into growth's `relationships/snoozes.json` for outreach items), and carries the artifact's own "Today's Reflection" into that day's `## Reflection` section without overwriting an existing one. Idempotent against `--remine` and against a same-day `/end-day` run (via a new `briefs/<date>.state.processed` marker).
+- Hosted claude.ai artifact-capabilities discovery path in `/brief` Step 3.0 (documented in `briefing/commands/brief.md`, mirrored here since `/listen` shares the same preflight): a shared-state read-back capability, not localStorage, for the case where the brief renders as a hosted artifact with no MCP bridge at all.
+
+### Changed
+- `/morning` Step 2 now walks brief-derived proposals first, under "From yesterday's brief" — explicit marks get a bulk-accept, inferred closures still walk one at a time.
+- `/morning` Step 4.6 checks for an artifact-authored reflection before asking cold; offers edit instead of re-asking when one exists.
+- `/end-day` Step 2c now writes (and checks) a `briefs/<date>.state.processed` marker so a same-day `/listen --remine` doesn't duplicate write-backs.
+- `references/surfacing-prefs-template.md` action taxonomy extended with `reprioritized`, calendar-note annotations, and the snooze-ledger fields (`return_on`, `skip_count`, `last_detail`).
+
 ## [4.26.0] — Eval suite: onboarding + morning natural-language cases (2026-09-15)
 
 ### Added
