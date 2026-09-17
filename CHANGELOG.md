@@ -15,6 +15,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `
 - `/morning` Step 4.6 checks for an artifact-authored reflection before asking cold; offers edit instead of re-asking when one exists.
 - `/end-day` Step 2c now writes (and checks) a `briefs/<date>.state.processed` marker so a same-day `/listen --remine` doesn't duplicate write-backs.
 - `references/surfacing-prefs-template.md` action taxonomy extended with `reprioritized`, calendar-note annotations, and the snooze-ledger fields (`return_on`, `skip_count`, `last_detail`).
+- Codex/OpenAI manifests now carry v4.27.0, and both generated Agent Skill discovery trees describe `/listen`'s brief-state mining plus `/morning`'s brief-derived proposal review.
 
 ## [4.26.0] — Eval suite: onboarding + morning natural-language cases (2026-09-15)
 

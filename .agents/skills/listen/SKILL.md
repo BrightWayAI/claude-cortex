@@ -1,7 +1,7 @@
 ---
 disable-model-invocation: true
 name: listen
-description: Ingest configured daily sources into Cortex archives and refresh the hot cache.
+description: Ingest configured daily sources and yesterday's brief state, stage memory proposals, and refresh the hot cache.
 metadata:
   cortex-canonical: commands/listen.md
   codex-status: partial
@@ -33,6 +33,6 @@ If the canonical step has no deterministic CLI/library path, show a proposed cha
 
 ## Adapter status: partial
 
-This adapter is intentionally partial. Never imply that its unavailable steps completed. Connectors are optional and archive writes remain partly prose-only; skip unavailable sources and never invent records. In ChatGPT Work, preview or skip any step for which the bounded MCP bridge has no mutation tool.
+This adapter is intentionally partial. Never imply that its unavailable steps completed. Connectors are optional and archive writes remain partly prose-only. Brief-state mining works from the canonical local state file and Markdown twin; without explicit state it runs inference-only. Skip unavailable sources and never invent records. In ChatGPT Work, preview or skip any step for which the bounded MCP bridge has no mutation tool.
 
 End with a concise account of what was read, what changed, which optional capabilities were unavailable, and which partial steps were left unapplied.

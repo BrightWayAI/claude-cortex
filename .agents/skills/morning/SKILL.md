@@ -1,6 +1,6 @@
 ---
 name: morning
-description: Load Cortex's morning context, priorities, people, and relevant hot memory.
+description: Review overnight Cortex proposals, including yesterday's brief actions, then seed today's priorities and context.
 metadata:
   cortex-canonical: commands/morning.md
   codex-status: partial
@@ -32,6 +32,6 @@ If the canonical step has no deterministic CLI/library path, show a proposed cha
 
 ## Adapter status: partial
 
-This adapter is intentionally partial. Never imply that its unavailable steps completed. Recall and cache refresh are available; optional sources and any prose-only writes degrade. In ChatGPT Work, preview or skip any step for which the bounded MCP bridge has no mutation tool.
+This adapter is intentionally partial. Never imply that its unavailable steps completed. Brief-derived proposals and cache refresh are available from local files; optional sources and any prose-only writes degrade. In ChatGPT Work, preview or skip any step for which the bounded MCP bridge has no mutation tool.
 
 End with a concise account of what was read, what changed, which optional capabilities were unavailable, and which partial steps were left unapplied.
