@@ -14,6 +14,29 @@ The output is a single review-ready draft the user merges via `/morning` the nex
 
 Standard config-root pattern.
 
+**Config-root reachability check (hard gate — v4.28+).** Once `<config-root>` is
+resolved, verify it is actually readable AND writable before doing anything else:
+stat the directory, then write and immediately delete a probe file at
+`<config-root>/memory/staged/queues/.listen-probe`. This is not a graceful no-op —
+`/listen` is a scheduled task that can fire on a device/context that never had
+`<config-root>` attached (e.g. a schedule registered without folder binding, or a
+Mac where an external volume is unmounted), and a silent skip here is exactly the
+failure mode this check exists to catch. If either the stat or the probe write/delete
+fails:
+
+1. Write a receipt using the same field names as ops's Step 5 schema (see
+   `ops/commands/register-schedules.md` Step 5) to
+   `<config-root or best-effort fallback path>/plugins/ops/schedule-runs/nightly-listen/<run_id>.json`
+   if any writable location can be reached at all; otherwise emit the receipt to
+   stdout so the scheduler's own run log captures it.
+2. Set `status: "failed"`, `error_code: "config_root_unreachable"` on the receipt.
+3. Exit non-zero. Do not report success, and do not proceed to Step 0.5 or beyond.
+
+This hard gate applies only to the whole config root being unreachable. Graceful
+degradation (log to `_index.md` under `## Errors` and continue) remains the correct
+behavior for an individual connector failing — e.g. one calendar/Gmail/Slack source
+being down does not abort the run; an unreachable config root does.
+
 ## Step 0.5 — Privacy defaults (v4.7.2+)
 
 Before pulling any external data, ensure `<config-root>/.gitignore` exists and contains the privacy-sensitive paths. This is defensive — `/listen` is about to write raw email / Slack / transcript content to `archive/`, and we don't want that committed to a git repo silently.
@@ -107,7 +130,7 @@ The brief is the user's most explicit daily signal. This step is what makes mark
 
 ### Step 1.5a — Read and archive the brief state
 
-**Preflight:** if the brief was rendered as a hosted claude.ai artifact and `/brief` Step 3.0 discovered a shared-state capability via the artifact-capabilities skill, read that store back first and write it to `<config-root>/briefs/<target_date>.state.json` before continuing. No-op on desktop Cowork or when no capability was ever discovered.
+**Preflight:** read `<config-root>/briefs/.artifact-runtime.json` (written and overwritten on every publish by `/brief` Step 3.0). If it names a hosted artifact with a `capability: "db"`, read document `briefs/<target_date>` from that artifact's database (collection `<collection>` from the runtime file, doc_id `<target_date>` per `doc_id_pattern`) and write it to `<config-root>/briefs/<target_date>.state.json` before continuing. If `.artifact-runtime.json` is absent, or names no `db` capability, this is a no-op (desktop Cowork mirrors the state file directly and never needs this). If the file is present but the read fails (capability unreachable, doc missing, malformed runtime file), log it to `archive/<target_date>/_index.md` under `## Errors` and continue with whatever `<target_date>.state.json` already exists on disk — never block the rest of `/listen` on this read.
 
 Read `<config-root>/briefs/<target_date>.state.json`. Tolerate:
 - `tasks_checked`-only blobs (v0.4.x) — treat each `true` as `{action: "done"}`.
@@ -157,6 +180,8 @@ Write `<config-root>/briefs/<target_date>.closures.json`:
 
 `closed` entries from Step 1.5c get `source: "marked"`; `closed` entries from Step 1.5d's high-confidence inferences that the user hasn't reviewed yet do NOT belong here — this file only records what's actually decided (explicit marks). Inferred-likely-done items stay as commit-draft proposals until `/morning` accepts them; only then does a follow-up `/listen --remine` (or the next night's run, once `/morning` has merged) add them here. This is the machine-readable handoff `/brief` Step 0D0 reads to drop closed/suppressed items and hide snoozed ones.
 
+**Authority note:** if `<target_date>.closures.json` already exists when `/listen` reaches this step (e.g. `briefing`'s `/brief` Step 0D0 wrote one under its own `written_by: "/brief fallback"` marker because `/listen` hadn't run yet for that date), treat the existing file as authoritative and do NOT overwrite it — `/listen` merges its own findings by writing a `-remine` companion (per Step 0's `--remine` naming) instead of clobbering the fallback record. This keeps whichever command ran first as the source of truth rather than letting a later run silently discard it.
+
 ### Step 1.5f — Unattended-safe
 
 No prompts, no paste path, no fallback gate — this step runs exactly like the rest of `/listen`. If `<target_date>.state.json` is unreadable and no fallback source yields a blob, log one honest line to `archive/<target_date>/_index.md` ("Brief state: absent, inference pass only") and continue to Step 1.5d. If the brief markdown/seed list is also missing, log "Brief state: absent, no task list on disk, skipped" and continue to Step 2.
@@ -192,6 +217,34 @@ For every `skip` action from Step 1.5c: write or update this entry (increment `s
 For every ledger entry with `kind: "outreach"` whose `node` resolves to a known `memory/person/<slug>.md`: **also** write/update the matching entry in `<config-root>/relationships/snoozes.json` (growth's existing file, read by `/relationships` Step 3) — `{"slug": <slug>, "until_date": <return_on>, "reason": <last_detail>, "snoozed_at": <ISO now>}`. `/listen` is the only writer that keeps both files in sync; growth's file stays the single source `/relationships` reads, the brief ledger stays the single source `/brief` reads.
 
 `let_go` / `dead` outreach actions and `not_important` task actions **delete** the corresponding ledger entry (and, for outreach, the matching `snoozes.json` entry) rather than updating it — the item is dead, not snoozed.
+
+### Step 1.5j — Write the scheduled-run receipt
+
+After closures.json (1.5e), the snooze ledger + growth sync (1.5h), and the
+`## Reflection` section (1.5g) are all written, emit one metadata-only receipt using
+the same field names as ops's Step 5 schema (`ops/commands/register-schedules.md`
+Step 5), to `<config-root>/plugins/ops/schedule-runs/nightly-listen/<run_id>.json`:
+
+```json
+{
+  "schema_version": "1.0.0",
+  "run_id": "<host run id or UUID>",
+  "schedule": "nightly-listen",
+  "started_at": "<ISO-8601>",
+  "ended_at": "<ISO-8601>",
+  "outcome": "succeeded",
+  "state_source": "state.json | artifact-db | none",
+  "counts": {"closed": 0, "carried": 0, "snoozed": 0, "suppressed": 0, "reflection_written": false},
+  "error_codes": []
+}
+```
+
+`counts` reflects what Step 1.5e/1.5g actually produced for `target_date`. If
+`<target_date>.state.json` was missing on disk AND the `.artifact-runtime.json`
+preflight (1.5a) yielded nothing, set `state_source: "none"` and all counts to zero
+except whatever the inference pass (1.5d) staged as commit-draft proposals — a run
+that mined zero brief items because state was genuinely absent must say so plainly
+in the receipt rather than being indistinguishable from "nothing happened to mine."
 
 ### Constraints on this step specifically
 

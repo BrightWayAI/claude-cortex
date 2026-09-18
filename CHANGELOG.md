@@ -4,6 +4,18 @@ All notable changes to the Cortex Plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [4.28.0] — Nightly-listen loud-failure hardening (2026-09-18)
+
+### Fixed
+- Root-caused why `nightly-listen` could "succeed" every night without ever reaching `<config-root>`: schedules registered by ops's `/register-schedules` without `requires_local_device`/folder binding can fire on a device that has no path to the user's config root, and the scheduler still reports success.
+
+### Added
+- `/listen` Step 0 is now a hard gate on config-root reachability: stat `<config-root>` then write+delete a probe file at `memory/staged/queues/.listen-probe`. On failure, write a receipt (ops's Step 5 schema) with `status: "failed"`, `error_code: "config_root_unreachable"`, and exit non-zero instead of degrading gracefully — graceful degradation is preserved only for individual connector failures.
+- `/listen` Step 1.5a preflight now reads `<config-root>/briefs/.artifact-runtime.json` (written by briefing's `/brief` Step 3.0) to locate a hosted artifact's `db` capability and read back `briefs/<target_date>` before mining, instead of relying on undocumented shared state.
+- `/listen` Step 1.5j writes a scheduled-run receipt with counts (`closed`, `carried`, `snoozed`, `suppressed`, `reflection_written`) and `state_source: "none"` when no brief state was found for the target date — a zero-item run now says why.
+- `/listen` now treats an existing `<date>.closures.json` (e.g. one written by briefing's `/brief` Step 0D0 fallback) as authoritative and never overwrites it.
+- `commands/start-nucleus.md` Step 6 now states the device/folder-binding requirement for `nightly-listen` up front and points to `/register-schedules --verify` for confirming it.
+
 ## [4.27.0] — /listen mines the daily brief; /end-day and /morning stop depending on it (2026-09-17)
 
 ### Added

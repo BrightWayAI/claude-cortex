@@ -128,9 +128,17 @@ If the user wants nightly ingest and the host exposes a scheduler:
 
 1. Require one successful manual `/listen` run so connector permissions are known.
 2. Offer `/register-schedules`, which reads user-owned definitions from
-   `<config-root>/plugins/ops/schedules.md` and confirms before registration.
+   `<config-root>/plugins/ops/schedules.md` and confirms before registration. Tell
+   the user plainly: `nightly-listen` (and every other schedule) requires binding
+   the task to this specific computer and its config-root folder — the registration
+   flow requests "Require this computer" plus the `<config-root>` folder attachment
+   automatically, but the Mac must actually be awake with the Claude desktop app
+   running at the scheduled fire time, or the run-window guard makes the catch-up
+   run a no-op rather than firing late.
 3. Report registration separately from execution. A registered task is not proof of
-   a successful run; run receipts or host history provide that evidence.
+   a successful run; run receipts or host history provide that evidence, and
+   `/register-schedules --verify` (or ops's `/status`) is how to confirm the folder
+   binding actually took.
 
 If the host has no scheduler, return the validated definition for manual setup.
 
